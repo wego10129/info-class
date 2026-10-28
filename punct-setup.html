@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>標點符號・教師設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+/* 流程圖 */
+.flow{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+.flow a{flex:1 1 120px;display:grid;justify-items:center;gap:2px;text-decoration:none;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:14px;padding:8px 6px;box-shadow:3px 3px 0 var(--ink);text-align:center;font-weight:900;font-size:15px;line-height:1.3}
+.flow a:hover{background:var(--hl)}
+.flow a b{font:600 22px 'Fredoka',sans-serif;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+.flow a small{font-size:12px;color:var(--soft);font-weight:700}
+.flow a.done b{background:var(--good)}
+.flow .arr{align-self:center;font-size:22px;color:var(--soft);font-weight:900}
+@media (max-width:700px){ .flow .arr{display:none} .flow a{flex-basis:40%} }
+
+/* 步驟卡 */
+.step{scroll-margin-top:16px}
+.step h2{font-size:23px;display:flex;align-items:center;gap:10px}
+.step h2 .n{font:600 20px 'Fredoka',sans-serif;width:34px;height:34px;flex:none;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+.step h2 .ok{font:900 13px 'Noto Sans TC',sans-serif;color:var(--good);border:2px solid var(--good);border-radius:999px;padding:0 8px}
+.kb{background:var(--case);border:3px solid var(--ink);border-radius:16px;padding:10px;display:grid;gap:6px;width:fit-content;max-width:100%}
+.kr{display:flex;gap:6px}
+.kr{flex-wrap:wrap}
+.k{min-width:clamp(92px,13vw,120px);padding:6px 8px;display:grid;gap:2px;justify-items:center;border:none;border-radius:8px;background:var(--dim);color:#8593A1;font:600 clamp(15px,3vw,22px) 'Fredoka',sans-serif;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 -5px 0 var(--edge)}
+.k b{font:700 30px/1 var(--f-body,'Noto Sans TC'),sans-serif;color:inherit}
+.k small{font:700 13px 'Noto Sans TC',sans-serif;color:inherit;text-transform:none}
+.k[aria-pressed=true]{background:var(--hl);color:var(--ink);box-shadow:inset 0 -5px 0 #D9A400}
+.field{display:grid;gap:4px;font-weight:900}
+.field small{font-weight:700;color:var(--soft);font-size:13px}
+/* 可以打字的欄位：白底、粗框、I 形游標；加上 ✎ 讓老師知道「這裡可以打字」 */
+.typein{position:relative;display:inline-flex;align-items:center}
+.typein input{font:700 18px 'Noto Sans TC',sans-serif;border:3px solid var(--ink);border-radius:10px;padding:5px 34px 5px 12px;background:#fff;cursor:text;width:100%}
+.typein input:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 4px rgba(58,159,239,.25)}
+.typein::after{content:"✎";position:absolute;right:10px;color:var(--soft);pointer-events:none;font-size:16px}
+.typein.wide{width:min(100%,460px)}
+.typein.num{width:9em}
+.typein.time{width:11em}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:700}
+.sum dt{color:var(--soft)}
+.sum dd{margin:0;font-weight:900}
+/* 發給學生：兩個選項卡 */
+.outs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.out{border:3px solid var(--ink);border-radius:14px;padding:12px 14px;display:grid;gap:8px;background:#fff}
+.out h3{font-size:19px}
+.out p{font-size:14px;color:var(--soft);font-weight:700}
+.out .btn{justify-self:start}
+details{font-size:14px}
+details summary{cursor:pointer;font-weight:900;color:var(--soft)}
+.link{font:13px/1.5 ui-monospace,Consolas,monospace;background:var(--wash);border:2px dashed var(--soft);border-radius:10px;padding:8px 10px;word-break:break-all;user-select:all;margin-top:6px}
+.msg{font-weight:900;min-height:1.5em}
+.msg.ok{color:var(--good)}
+.msg.err{color:var(--bad)}
+.sublinks{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="crumb"><a href="index.html">資訊課練習遊戲</a> ／ <a href="typing.html">中英文打字修練</a> ／ 標點符號・教師設定</p>
+    <div class="brand"><span class="tag">⚙</span><h1>標點符號・教師設定</h1></div>
+    <p class="sub">照下面的步驟設定，最後把連結或捷徑檔發給學生。設定裡只有標點符號、練習目標和時間，沒有任何學生資料。</p>
+  </header>
+
+  <nav class="flow" aria-label="設定流程">
+    <a href="#s1" id="f1"><b>1</b>選符號<small>至少 2 個</small></a><span class="arr">→</span>
+    <a href="#s2" id="f2"><b>2</b>練習目標<small>當作網頁名稱</small></a><span class="arr">→</span>
+    <a href="#s3" id="f3"><b>3</b>其他設定<small>頒獎時間、班級座號</small></a><span class="arr">→</span>
+    <a href="#s4" id="f4"><b>4</b>預覽<small>看學生畫面</small></a><span class="arr">→</span>
+    <a href="#s5" id="f5"><b>5</b>發給學生<small>連結或捷徑檔</small></a>
+  </nav>
+
+  <section class="card step" id="s1">
+    <h2><span class="n">1</span>選要練習的標點符號 <span class="ok" id="ok1" hidden>✓ 完成</span></h2>
+    <div class="row"><b>快速選：</b>
+      <button class="btn" type="button" data-p="，。？！">基本 ，。？！</button>
+      <button class="btn" type="button" data-p="、；：">進階 、；：</button>
+      <button class="btn" type="button" data-p="，。">逗號、句號</button>
+      <button class="btn" type="button" data-p="，。、；：？！">全部</button>
+      <button class="btn" type="button" data-p="">清空</button></div>
+    <div class="kb" id="kb"></div>
+    <p class="note">已選：<b id="picked">—</b>　點卡片可以加入或取消。按法依微軟注音輸入法（Ctrl＋符號鍵＝全形符號）。</p>
+  </section>
+
+  <section class="card step" id="s2">
+    <h2><span class="n">2</span>本次練習的目標（作為網頁名稱）</h2>
+    <label class="field">
+      <span class="typein wide"><input type="text" id="goal" maxlength="20" placeholder="例：逗號和句號"></span>
+      <small>可以不填。填了會變成學生網頁的名稱和捷徑檔的檔名；沒填就叫「老師指定」。</small>
+    </label>
+  </section>
+
+  <section class="card step" id="s3">
+    <h2><span class="n">3</span>其他設定</h2>
+    <div class="grid3">
+      <label class="field">下課自動頒獎時間
+        <span class="typein time"><input type="text" id="end" inputmode="numeric" maxlength="5" placeholder="11:59" value="11:59" list="endList"></span>
+        <small>直接打數字（例：1159 或 11:59），或從清單選。</small></label>
+      <label class="field">班級最多幾班
+        <span class="typein num"><input type="text" id="classes" inputmode="numeric" maxlength="2" value="20" list="clsList"></span>
+        <small>直接打數字，或從清單選。</small></label>
+      <label class="field">座號最多幾號
+        <span class="typein num"><input type="text" id="seats" inputmode="numeric" maxlength="2" value="40" list="seatList"></span>
+        <small>直接打數字，或從清單選。</small></label>
+    </div>
+    <datalist id="endList"><option value="08:40"><option value="09:30"><option value="10:20"><option value="11:10"><option value="11:59"><option value="14:10"><option value="15:00"><option value="15:50"></datalist>
+    <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
+    <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
+    <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
+    <p class="msg err" id="msg3"></p>
+  </section>
+
+  <section class="card step" id="s4">
+    <h2><span class="n">4</span>預覽</h2>
+    <dl class="sum">
+      <dt>練習目標</dt><dd id="sumGoal">—</dd>
+      <dt>符號</dt><dd id="sumKeys">—</dd>
+      <dt>下課頒獎</dt><dd id="sumEnd">—</dd>
+      <dt>班級座號</dt><dd id="sumCls">—</dd>
+    </dl>
+    <div class="sublinks">
+      <button class="btn" type="button" id="open">👀 預覽學生畫面</button>
+      <button class="btn" type="button" id="demo">🔓 老師示範（全部打開、不存紀錄）</button>
+    </div>
+  </section>
+
+  <section class="card step" id="s5">
+    <h2><span class="n">5</span>發給學生（選一種）</h2>
+    <div class="outs">
+      <div class="out">
+        <h3>🔗 複製連結</h3>
+        <p>貼到班級網頁、投影、或傳到學生電腦的瀏覽器。</p>
+        <button class="btn primary" type="button" id="copy">複製連結</button>
+      </div>
+      <div class="out">
+        <h3>🖱️ 下載捷徑檔</h3>
+        <p>下載一個 .url 檔，用派送軟體放到學生桌面，學生點兩下就打開。</p>
+        <button class="btn primary" type="button" id="shortcut">下載捷徑檔</button>
+      </div>
+    </div>
+    <p class="msg" id="msg"></p>
+    <details><summary>查看完整連結</summary><p class="link" id="link"></p></details>
+  </section>
+
+  <nav class="footnav">
+    <a class="btn" href="typing.html">⬅ 回上頁</a>
+    <a class="btn" href="index.html">🏠 回目錄</a>
+  </nav>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+/* 按法依 Microsoft 注音輸入法官方說明：Ctrl＋符號鍵＝全形符號（要 Shift 的符號先按住 Shift） */
+const PUNC = [['，','逗號','Ctrl＋,'],['。','句號','Ctrl＋.'],['、','頓號',"Ctrl＋'"],['；','分號','Ctrl＋;'],['：','冒號','Ctrl＋Shift＋;'],['？','問號','Ctrl＋Shift＋/'],['！','驚嘆號','Ctrl＋Shift＋1']];
+const picked = new Set([...'，。？！']);
+const ORDER = PUNC.map(p => p[0]).join('');
+$('#kb').innerHTML = `<div class="kr">${PUNC.map(([c,n,h]) => `<button class="k" type="button" data-k="${c}" aria-pressed="false" aria-label="${n}"><b>${c}</b><small>${n}</small><small>${h}</small></button>`).join('')}</div>`;
+const keysNow = () => [...ORDER].filter(c => picked.has(c));
+function base(){ return new URL('punctuation.html', location.href).href.split('#')[0]; }
+/* 時間：接受 1159、11:59、9:5 等寫法 */
+function normTime(v){
+  v = String(v).trim().replace(/[：.]/g, ':');
+  let h, m;
+  if (/^\d{3,4}$/.test(v)){ h = +v.slice(0, v.length-2); m = +v.slice(-2); }
+  else { const r = /^(\d{1,2}):(\d{1,2})$/.exec(v); if (!r) return null; h = +r[1]; m = +r[2]; }
+  if (h > 23 || m > 59) return null;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+const numIn = (id, lo, hi, d) => { const n = parseInt($('#'+id).value, 10); return n >= lo && n <= hi ? n : null; };
+function state(){
+  const end = normTime($('#end').value), c = numIn('classes',1,30), s = numIn('seats',1,60);
+  return {keys:keysNow(), goal:$('#goal').value.trim(), end, c, s, ok: keysNow().length >= 2 && end && c && s};
+}
+function params(st, demo){
+  const p = new URLSearchParams();
+  p.set('keys', st.keys.join(''));
+  if (st.goal) p.set('goal', st.goal);
+  if (st.end !== '11:59') p.set('end', st.end);
+  if (st.c !== 20) p.set('classes', st.c);
+  if (st.s !== 40) p.set('seats', st.s);
+  if (demo) p.set('demo', '1');
+  return p.toString();
+}
+const linkOf = (st, demo) => base() + '#' + params(st, demo);
+function render(){
+  document.querySelectorAll('.k').forEach(b => b.setAttribute('aria-pressed', picked.has(b.dataset.k)));
+  const st = state(), k = st.keys;
+  $('#picked').textContent = k.length ? k.join(' ') + `（${k.length} 個）` : '—';
+  $('#ok1').hidden = k.length < 2;
+  const errs = [];
+  if (k.length < 2) errs.push('第 1 步：至少選 2 個符號');
+  if (!st.end) errs.push('頒獎時間要像 11:59 或 1159');
+  if (!st.c) errs.push('班級要是 1～30');
+  if (!st.s) errs.push('座號要是 1～60');
+  $('#msg3').textContent = errs.filter(e => !e.startsWith('第 1')).join('；');
+  $('#sumGoal').textContent = st.goal || '老師指定（沒有填目標）';
+  $('#sumKeys').textContent = k.length ? k.join(' ') : '還沒選';
+  $('#sumEnd').textContent = st.end || '時間格式不對';
+  $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
+  ['open','demo','copy','shortcut'].forEach(id => $('#'+id).disabled = !st.ok);
+  $('#link').textContent = st.ok ? linkOf(st) : '設定完成後才會出現連結';
+  const m = $('#msg'); if (!st.ok){ m.className = 'msg err'; m.textContent = '還不能發給學生：' + errs.join('；'); } else if (m.classList.contains('err')){ m.className = 'msg'; m.textContent = ''; }
+  $('#f1').classList.toggle('done', k.length >= 2); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.end && st.c && st.s));
+}
+$('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; picked.has(b.dataset.k) ? picked.delete(b.dataset.k) : picked.add(b.dataset.k); render(); });
+document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { picked.clear(); [...b.dataset.p].forEach(c => picked.add(c)); render(); });
+['goal','end','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
+$('#end').addEventListener('blur', () => { const t = normTime($('#end').value); if (t) $('#end').value = t; render(); });
+['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
+document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));
+function say(t, ok){ const m = $('#msg'); m.className = 'msg' + (ok ? ' ok' : ''); m.textContent = t; }
+$('#copy').onclick = async () => {
+  const t = linkOf(state());
+  try{ await navigator.clipboard.writeText(t); say('✓ 已複製連結！貼到派送軟體、班級網頁或投影給學生。', true); }
+  catch(e){ $('details').open = true; const r = document.createRange(); r.selectNodeContents($('#link')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say('已幫你選取連結，請按 Ctrl＋C 複製。'); }
+};
+/* 捷徑檔：Windows 的 .url 格式（[InternetShortcut]），點兩下用瀏覽器打開連結 */
+$('#shortcut').onclick = () => {
+  const st = state(), name = (st.goal || '標點符號・' + st.keys.join('')).replace(/[\\/:*?"<>|]/g, '').slice(0, 40);
+  const body = '[InternetShortcut]\r\nURL=' + linkOf(st) + '\r\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([body], {type:'application/octet-stream'}));
+  a.download = name + '.url'; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  say(`✓ 已下載「${name}.url」。用派送軟體放到學生桌面，學生點兩下就會打開練習。`, true);
+};
+$('#open').onclick = () => window.open(linkOf(state()), '_blank');
+$('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
+render();
+</script>
+</body>
+</html>
