@@ -1,0 +1,46 @@
+/* 資訊課網站：目錄頁、分類頁、老師設定頁共用樣式（遊戲頁各自獨立） */
+:root{--paper:#E3EDF2;--grid:#D0DEE6;--ink:#1B2836;--soft:#4C5D6E;--card:#fff;--wash:#F3F7FA;--hl:#FFE066;--good:#1FA963;--bad:#E5484D;
+  --c1:#3A9FEF;--c2:#EE4F8B;--c3:#9466EE;--c4:#3B2F5C;--c5:#1FA963;--case:#26323F;--dim:#D9E1E8;--edge:#AEBBC7;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;color:var(--ink);font:16px/1.6 'Noto Sans TC','Microsoft JhengHei',sans-serif;padding:24px 16px 40px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:20px}
+h1,h2,h3{font-family:'LXGW WenKai TC','Noto Sans TC',sans-serif;margin:0;line-height:1.25;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand h1{font-size:32px;letter-spacing:.04em}
+.tag{display:inline-block;background:var(--hl);border:3px solid var(--ink);border-radius:10px;padding:0 8px;box-shadow:3px 3px 0 var(--ink);font:600 20px 'Fredoka',sans-serif;transform:rotate(-4deg)}
+.crumb{font-size:14px;font-weight:700;color:var(--soft)}
+.crumb a{color:var(--soft)}
+.sub{color:var(--soft);font-weight:700}
+.note{font-size:13px;color:var(--soft);font-weight:700}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:18px;display:grid;gap:12px}
+
+/* 大卡片（目錄、分類） */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+a.tile,div.tile{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden;transition:transform .08s}
+a.tile:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+a.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+a.tile:focus-visible,.btn:focus-visible,.k:focus-visible{outline:3px solid var(--c1);outline-offset:3px}
+.tile .band{height:16px;border-bottom:3px solid var(--ink)}
+.tile .body{padding:14px 18px 16px;display:grid;gap:8px}
+.tile h2{font-size:26px;display:flex;align-items:center;gap:8px}
+.tile ul{margin:0;padding-left:1.2em;font-size:15px;font-weight:700;color:var(--soft);display:grid;gap:2px}
+.tile li b{color:var(--ink)}
+.tile .go{justify-self:start;font-weight:900;background:var(--hl);border:2px solid var(--ink);border-radius:999px;padding:0 14px;font-size:15px}
+div.tile.off{opacity:.6}
+div.tile.off .go{background:var(--wash)}
+.pill{display:inline-block;font:600 13px 'Fredoka','Noto Sans TC',sans-serif;background:#fff;border:2px solid var(--ink);border-radius:8px;padding:0 8px}
+.prog{display:flex;flex-wrap:wrap;gap:6px;font-size:13px;font-weight:900}
+.prog span{border:2px solid var(--ink);border-radius:999px;padding:0 8px;background:var(--wash)}
+.prog span.on{background:var(--hl)}
+
+/* 按鈕與頁尾導覽 */
+.btn{display:inline-flex;align-items:center;gap:6px;font:700 15px 'Noto Sans TC',sans-serif;padding:6px 16px;border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--wash)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.primary{background:var(--hl)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.footnav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:8px;border-top:3px dashed var(--edge);margin-top:4px}

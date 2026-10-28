@@ -39,6 +39,8 @@ button,input{font-family:inherit}
 .top:has(#hud:not([hidden])) .hud-item{padding:0 10px}
 .who{font-weight:900;font-size:15px;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 12px;cursor:pointer}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.footnav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:10px;border-top:3px dashed var(--cap-edge)}
 .btn{font:700 16px var(--f-body);padding:8px 16px;border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
 .btn:hover{background:var(--wash)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
@@ -272,11 +274,13 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
       <div class="intro"><h2>選擇要練習的字母</h2><p>先選一排，三個關卡都會用這一排的字母出題。每一排的紀錄分開算。</p></div>
       <div id="demoBar1"></div>
       <div class="sets" id="sets"></div>
+      <nav class="footnav"><a class="btn sm" href="typing.html">⬅ 回上頁</a><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="home" hidden>
       <div id="demoBar2"></div>
       <div id="entries" class="entries"></div>
       <div id="tpanel" class="card tpanel" hidden></div>
+      <nav class="footnav"><button class="btn sm" type="button" id="backSets">⬅ 換練習範圍</button><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="drill" hidden>
       <div class="stage"><div class="dojo"><div class="scroll"><p class="lbl" id="dLbl"></p><div class="target" id="target"></div></div></div>
@@ -362,7 +366,9 @@ const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:
 let DEMO = Q.has('demo');
 const ALL = 'qwertyuiopasdfghjklzxcvbnm';
 const qKeys = [...new Set((Q.get('keys')||'').toLowerCase().split('').filter(c => ALL.includes(c)))].join('');
-if (qKeys.length >= 2) SETS.cus = {name:'老師指定' + (Q.get('name') ? '・' + Q.get('name').slice(0,10) : ''), keys:qKeys, color:'var(--c-cus)'};
+/* goal＝老師在設定頁填的「本次練習的目標」，當作網頁名稱（舊連結的 name 也接受） */
+const GOAL = (Q.get('goal') || Q.get('name') || '').trim().slice(0, 20);
+if (qKeys.length >= 2){ SETS.cus = {name: GOAL || '老師指定', keys:qKeys, color:'var(--c-cus)'}; if (GOAL) document.title = GOAL + '・打字忍者'; }
 
 /* ---------- 小工具 ---------- */
 const $ = s => document.querySelector(s);
@@ -500,6 +506,7 @@ function show(name){
 }
 $('#homeBtn').onclick = () => { stopAll(); show('home'); };
 $('#setsBtn').onclick = () => show('sets');
+$('#backSets').onclick = () => show('sets');
 function stopAll(){ if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } $('#enemyLayer').innerHTML = ''; tin.blur(); }
 
 function renderSets(){
@@ -945,7 +952,7 @@ setInterval(() => {
       <button class="btn sm" type="button" id="tUnlock">解鎖全部</button>
       <button class="btn sm" type="button" id="tReset">清除這台電腦的紀錄</button>
       <button class="btn sm" type="button" id="tClose">關閉</button></div>
-      <p class="tnote">下課頒獎時間：${H(CFG.end)}。老師示範：網址後面加 #demo。要指定字母、改頒獎時間，請用老師設定頁 typing-setup.html 產生連結給學生。</p>`;
+      <p class="tnote">下課頒獎時間：${H(CFG.end)}。老師示範：網址後面加 #demo。要指定字母、改頒獎時間，請到「中英文打字修練 → 英文打字・教師設定」（typing-setup.html）。</p>`;
     $('#tAward').onclick = () => showAward(true);
     $('#tUnlock').onclick = () => { P.unlock = true; save(); renderHome(); };
     let arm = false;

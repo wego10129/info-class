@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鍵盤小勇士</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="crumb"><a href="index.html">資訊課練習遊戲</a> ／ 鍵盤小勇士</p>
+    <div class="brand"><span class="tag">Esc</span><h1>鍵盤小勇士</h1></div>
+    <p class="sub">選擇這週要練習的關卡。卡片上顯示的是這台電腦的進度。</p>
+  </header>
+
+  <div class="tiles" id="weeks"></div>
+
+  <nav class="footnav"><a class="btn" href="index.html">⬅ 回目錄</a></nav>
+</div>
+<script>
+const WEEKS = [
+  {id:'w1', file:'keyboard-w1.html', game:'left',  week:'第 1 週', name:'左側鍵',   keys:'Esc・Tab・Caps Lock・Shift・空白鍵', color:'var(--c1)', first:'複習一下（5 個鍵都按到）'},
+  {id:'w2', file:'keyboard-w2.html', game:'right', week:'第 2 週', name:'右側鍵',   keys:'Backspace・Delete・Enter・方向鍵',   color:'var(--c2)', first:'複習一下（4 種鍵都按到）'},
+  {id:'w3', file:'keyboard-w3.html', game:'mix',   week:'第 3 週', name:'混合練習', keys:'左側鍵＋右側鍵全部一起',              color:'var(--c3)', first:'熱身（9 種鍵都想起來）'},
+];
+const LV = ['easy','normal','hard','boss'], LVN = ['簡單','普通','困難','魔王'];
+function read(id){ try{ return JSON.parse(localStorage.getItem('kbhero6_' + id) || 'null'); }catch(e){ return null; } }
+document.getElementById('weeks').innerHTML = WEEKS.map(w => {
+  const P = read(w.id) || {};
+  const crown = P.crown || {}, stars = P.stars || {};
+  const crowns = LV.filter(l => crown[w.game + '_' + l] === 'gold').length;
+  const firstDone = w.id==='w3' ? !!P.warm : Object.keys(P.review || {}).length > 0;
+  const lvTag = LV.map((l,i) => `<span class="${crown[w.game+'_'+l]==='gold' ? 'on' : ''}" title="${LVN[i]}">${crown[w.game+'_'+l]==='gold' ? '👑' : (stars[w.game+'_'+l] ? '★' + stars[w.game+'_'+l] : '・')} ${LVN[i]}</span>`).join('');
+  const started = firstDone || Object.keys(stars).length;
+  return `<a class="tile" href="${w.file}"><span class="band" style="background:${w.color}"></span>
+    <span class="body"><span><span class="pill">${w.week}</span></span>
+      <h2>${w.name}</h2>
+      <ul><li>${w.keys}</li><li>${w.first} → 電腦救援隊 → 病毒挑戰</li></ul>
+      <span class="prog">${started ? lvTag : '<span>還沒開始</span>'}${P.title ? '<span class="on">⌨️ 鍵盤小勇士</span>' : ''}</span>
+      <span class="go">開始 →</span></span></a>`;
+}).join('');
+</script>
+</body>
+</html>

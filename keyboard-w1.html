@@ -205,6 +205,8 @@ main>[data-screen="home"],main>[data-screen="result"]{overflow:auto;padding:0 6p
 .crown{font-style:normal;margin-right:4px}
 .crown.grey{filter:grayscale(1);opacity:.45}
 .tpanel{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.footnav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:10px;border-top:3px dashed var(--cap-edge)}
 
 /* ---------- 熱身、複習一下的打勾列 ---------- */
 .checks{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
@@ -360,6 +362,7 @@ main>[data-screen="home"],main>[data-screen="result"]{overflow:auto;padding:0 6p
     <!-- 首頁 -->
     <section data-screen="home">
       <div id="entries" class="entries"></div>
+      <nav class="footnav"><a class="btn" href="keyboard.html">⬅ 回上頁</a><a class="btn" href="index.html">🏠 回目錄</a></nav>
       <div id="tpanel" class="card tpanel" hidden>
         <b>老師設定</b>
         <button class="btn sm" type="button" id="tDemo">老師示範（全部打開、不存紀錄）</button>
