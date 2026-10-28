@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打字忍者・老師設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<style>
+:root{--paper:#E3EDF2;--grid:#D0DEE6;--ink:#1B2836;--soft:#4C5D6E;--card:#fff;--wash:#F3F7FA;--hl:#FFE066;--good:#1FA963;--case:#26323F;--cap:#F5F7F9;--dim:#D9E1E8;--edge:#AEBBC7;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:16px/1.6 'Noto Sans TC','Microsoft JhengHei',sans-serif;padding:20px 16px}
+.wrap{max-width:900px;margin:0 auto;display:grid;gap:16px}
+h1,h2{font-family:'LXGW WenKai TC','Noto Sans TC',sans-serif;margin:0;line-height:1.25}
+h1{font-size:30px}
+h2{font-size:22px}
+p{margin:0}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:16px;display:grid;gap:12px}
+.note{color:var(--soft);font-weight:700;font-size:14px}
+.btn{font:700 15px 'Noto Sans TC',sans-serif;padding:6px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.btn:hover{background:var(--wash)}
+.btn.primary{background:var(--hl)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:focus-visible,.k:focus-visible{outline:3px solid #3A9FEF;outline-offset:3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kb{background:var(--case);border:3px solid var(--ink);border-radius:16px;padding:10px;display:grid;gap:6px;width:fit-content;max-width:100%}
+.kr{display:flex;gap:6px}
+.k{width:clamp(32px,7vw,52px);aspect-ratio:1;border:none;border-radius:8px;background:var(--dim);color:#8593A1;font:600 clamp(16px,3vw,22px) 'Fredoka',sans-serif;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 -5px 0 var(--edge)}
+.k[aria-pressed=true]{background:var(--hl);color:var(--ink);box-shadow:inset 0 -5px 0 #D9A400}
+label{font-weight:700}
+input[type=text],input[type=time],input[type=number]{font:700 16px 'Noto Sans TC',sans-serif;border:2px solid var(--ink);border-radius:8px;padding:3px 8px}
+.link{font:14px/1.5 ui-monospace,Consolas,monospace;background:var(--wash);border:2px dashed var(--soft);border-radius:10px;padding:8px 10px;word-break:break-all;user-select:all}
+.ok{color:var(--good);font-weight:900}
+.err{color:#E5484D;font-weight:900}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>⌨️ 打字忍者・老師設定</h1>
+    <p class="note">勾選要練習的字母、設定下課頒獎時間，產生一條連結給學生打開。連結裡只有字母和時間，沒有任何學生資料。</p></header>
+
+  <section class="card">
+    <h2>1. 選字母（至少 2 個）</h2>
+    <div class="row"><b>快速選：</b>
+      <button class="btn" type="button" data-p="asdfghjkl">中排</button>
+      <button class="btn" type="button" data-p="qwertyuiop">上排</button>
+      <button class="btn" type="button" data-p="zxcvbnm">下排</button>
+      <button class="btn" type="button" data-p="fj">F J</button>
+      <button class="btn" type="button" data-p="qwertyuiopasdfghjklzxcvbnm">全部</button>
+      <button class="btn" type="button" data-p="">清空</button></div>
+    <div class="kb" id="kb"></div>
+    <p class="note">已選：<b id="picked">—</b></p>
+    <label>這組字母的名稱（可不填，學生會看到「老師指定・名稱」）<br><input type="text" id="name" maxlength="10" placeholder="例：左手練習"></label>
+  </section>
+
+  <section class="card">
+    <h2>2. 其他設定</h2>
+    <div class="row" style="gap:16px">
+      <label>下課自動頒獎時間 <input type="time" id="end" value="11:59"></label>
+      <label>班級最多 <input type="number" id="classes" min="1" max="30" value="20" style="width:5em"> 班</label>
+      <label>座號最多 <input type="number" id="seats" min="1" max="60" value="40" style="width:5em"> 號</label>
+    </div>
+    <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
+  </section>
+
+  <section class="card">
+    <h2>3. 給學生的連結</h2>
+    <p class="link" id="link"></p>
+    <p id="msg" class="note"></p>
+    <div class="row">
+      <button class="btn primary" type="button" id="copy">複製連結</button>
+      <button class="btn" type="button" id="open">打開看看（學生畫面）</button>
+      <button class="btn" type="button" id="demo">老師示範（全部打開、不存紀錄）</button>
+    </div>
+    <p class="note">不需要指定字母時，學生直接打開 typing-ninja.html，自己選中排、上排或下排。用老師連結打開時，除了三排之外，還會多一個「老師指定」。</p>
+  </section>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const picked = new Set('asdfghjkl'.split(''));
+const rows = ['qwertyuiop','asdfghjkl','zxcvbnm'];
+$('#kb').innerHTML = rows.map((r,i) => `<div class="kr" style="padding-left:${[0,14,40][i]}px">${r.split('').map(c => `<button class="k" type="button" data-k="${c}" aria-pressed="false">${c}</button>`).join('')}</div>`).join('');
+const ORDER = rows.join('');
+function base(){ const u = new URL('typing-ninja.html', location.href); u.hash = ''; return u.href.replace(/#$/,''); }
+function params(demo){
+  const p = new URLSearchParams();
+  const keys = ORDER.split('').filter(c => picked.has(c)).join('');
+  if (keys) p.set('keys', keys);
+  const n = $('#name').value.trim(); if (n) p.set('name', n);
+  const end = $('#end').value; if (end && end !== '11:59') p.set('end', end);
+  const c = +$('#classes').value, s = +$('#seats').value;
+  if (c && c !== 20) p.set('classes', c); if (s && s !== 40) p.set('seats', s);
+  if (demo) p.set('demo', '1');
+  return p.toString();
+}
+function render(){
+  document.querySelectorAll('.k').forEach(b => b.setAttribute('aria-pressed', picked.has(b.dataset.k)));
+  const keys = ORDER.split('').filter(c => picked.has(c));
+  $('#picked').textContent = keys.length ? keys.join(' ').toUpperCase() + `（${keys.length} 個）` : '—';
+  const ok = keys.length >= 2;
+  $('#link').textContent = ok ? base() + '#' + params(false) : '請至少選 2 個字母';
+  $('#msg').className = ok ? 'note' : 'err'; $('#msg').textContent = ok ? '' : '字母太少，至少要 2 個。';
+  ['copy','open','demo'].forEach(id => $('#'+id).disabled = !ok);
+}
+$('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; picked.has(b.dataset.k) ? picked.delete(b.dataset.k) : picked.add(b.dataset.k); render(); });
+document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { picked.clear(); b.dataset.p.split('').forEach(c => picked.add(c)); render(); });
+['name','end','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
+$('#copy').onclick = async () => {
+  const t = $('#link').textContent;
+  try{ await navigator.clipboard.writeText(t); $('#msg').className = 'ok'; $('#msg').textContent = '已複製！貼到派送軟體或投影給學生。'; }
+  catch(e){ const r = document.createRange(); r.selectNodeContents($('#link')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#msg').className = 'note'; $('#msg').textContent = '已幫你選取連結，請按 Ctrl＋C 複製。'; }
+};
+$('#open').onclick = () => window.open(base() + '#' + params(false), '_blank');
+$('#demo').onclick = () => window.open(base() + '#' + params(true), '_blank');
+render();
+</script>
+</body>
+</html>

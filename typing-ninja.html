@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打字忍者</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<style>
+:root{
+  --paper:#E3EDF2; --grid:#D0DEE6; --ink:#1B2836; --ink-soft:#4C5D6E; --card:#fff; --wash:#F3F7FA;
+  --case:#26323F; --cap:#F5F7F9; --cap-edge:#AEBBC7; --cap-dim:#D9E1E8; --dim-txt:#8593A1;
+  --good:#1FA963; --bad:#E5484D; --hl:#FFE066; --gold:#F2B400; --mid:#B07D00;
+  --c-mid:#3A9FEF; --c-top:#EE4F8B; --c-bot:#9466EE; --c-cus:#1FA963; --c-ninja:#3B2F5C;
+  --f-display:'LXGW WenKai TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-body:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --f-key:'Fredoka','Noto Sans TC',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:16px/1.6 var(--f-body);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.wrap{height:100%;display:flex;flex-direction:column;gap:10px;max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;line-height:1.25;text-wrap:balance}
+p{margin:0}
+button,input{font-family:inherit}
+.top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:28px;letter-spacing:.04em;user-select:none}
+.tagk{display:inline-block;background:var(--hl);border:3px solid var(--ink);border-radius:10px;padding:0 8px;box-shadow:3px 3px 0 var(--ink);font:600 18px var(--f-key);transform:rotate(-4deg)}
+.badge{display:inline-block;font-size:13px;font-weight:700;border:2px solid var(--ink);border-radius:999px;padding:0 10px;background:var(--wash)}
+.ver{background:var(--hl);font-size:14px}
+.ver.demo{background:#FF6B4A;color:#fff}
+.top:has(#hud:not([hidden])) .ver,.top:has(#hud:not([hidden])) .tagk{display:none}
+.top:has(#hud:not([hidden])) .brand h1{font-size:22px}
+.top:has(#hud:not([hidden])) .hud-item{padding:0 10px}
+.who{font-weight:900;font-size:15px;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 12px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:700 16px var(--f-body);padding:8px 16px;border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.btn:hover{background:var(--wash)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.primary{background:var(--hl)}
+.btn.sm{font-size:14px;padding:4px 12px}
+.btn:focus-visible,.diff:focus-visible,.setcard:focus-visible{outline:3px solid var(--c-mid);outline-offset:3px}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:18px}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.hud-item{background:var(--card);border:3px solid var(--ink);border-radius:12px;padding:1px 12px;display:flex;align-items:center;gap:8px;box-shadow:3px 3px 0 var(--ink)}
+.hud-l{font-size:12px;color:var(--ink-soft)}
+.hud-item b{font:600 20px var(--f-key);font-variant-numeric:tabular-nums}
+.hud-item b.t{font:900 17px var(--f-body)}
+.hearts{font-size:20px;letter-spacing:2px;color:var(--bad)}
+.hearts .off{color:var(--cap-dim)}
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+main>[data-screen]{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overflow:auto;padding:0 6px 6px 0}
+.demo-bar{background:#FF6B4A;color:#fff;font-weight:900;border:3px solid var(--ink);border-radius:12px;padding:6px 14px}
+
+/* 範圍選擇 */
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.setcard{display:grid;gap:6px;text-align:left;cursor:pointer;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:0 0 14px;overflow:hidden;font:inherit;color:inherit}
+.setcard:hover{background:#FFFBE6}
+.setcard .band{height:14px;border-bottom:3px solid var(--ink)}
+.setcard h2{font-size:26px;padding:0 16px}
+.setcard .keys{padding:0 16px;font:600 22px var(--f-key);letter-spacing:.12em}
+.setcard .st{padding:0 16px;font-size:13px;font-weight:900;color:var(--ink-soft)}
+.intro{display:grid;gap:4px}
+.intro h2{font-size:28px}
+.intro p{color:var(--ink-soft);font-weight:700}
+
+/* 首頁卡片 */
+.entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;align-items:start}
+.entry{display:flex;flex-direction:column;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden}
+.entry-band{height:58px;border-bottom:3px solid var(--ink);position:relative;display:flex;align-items:flex-end;padding:10px 14px}
+.entry-band .num{font:600 15px var(--f-key);background:#fff;border:2px solid var(--ink);border-radius:8px;padding:0 9px}
+.entry-band .deco{position:absolute;right:14px;top:12px;display:flex;gap:6px}
+.entry-band .deco span{font:600 15px var(--f-key);background:#fff;border:2px solid var(--ink);border-radius:7px;padding:1px 8px;box-shadow:0 3px 0 var(--ink)}
+.entry-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.entry-body h2{font-size:25px}
+.entry.locked .entry-band,.entry.locked .entry-body h2{opacity:.45}
+.lockmsg{font-size:14px;font-weight:900;background:var(--wash);border:2px dashed var(--ink-soft);border-radius:10px;padding:4px 10px}
+.diffs{display:grid;gap:8px}
+.diff{display:flex;justify-content:space-between;align-items:center;gap:10px;font:900 18px var(--f-body);border:3px solid var(--ink);border-radius:12px;background:var(--wash);padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);color:var(--ink);width:100%;text-align:left}
+.diff:hover:not(:disabled){background:var(--hl)}
+.diff:disabled{cursor:not-allowed;opacity:.6}
+.diff small{display:block;font-size:13px;font-weight:700;color:var(--ink-soft);line-height:1.3}
+.lv-r{display:grid;justify-items:end;line-height:1.25;flex:none}
+.stars{color:var(--gold);letter-spacing:1px;font-size:16px;white-space:nowrap}
+.stars .off{color:var(--cap-dim)}
+.lv-best{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.dots{font-size:15px;letter-spacing:3px;color:var(--good)}
+.dots .off{color:var(--cap-dim)}
+.titlebar{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;border:2px dashed var(--gold);border-radius:12px;padding:6px 12px;background:#FFF9DB;font-size:14px;font-weight:900}
+.titlebar b{color:var(--mid);font-size:17px}
+.ladder{display:flex;gap:4px;flex-wrap:wrap}
+.ladder span{border:2px solid var(--ink);border-radius:999px;padding:0 8px;font-size:12px;background:#fff;opacity:.4}
+.ladder span.on{opacity:1;background:var(--hl)}
+.tnote{font-size:13px;color:var(--ink-soft);font-weight:700}
+.tpanel{display:grid;gap:10px}
+.tpanel label{font-weight:700;font-size:14px}
+.tpanel input{font:700 15px var(--f-body);border:2px solid var(--ink);border-radius:8px;padding:2px 6px}
+
+/* 道場（第一關、第二關） */
+.stage{position:relative;flex:1;min-height:0;border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden}
+.dojo{position:absolute;inset:0;background:linear-gradient(#F6E7C8 0 62%,#C99A62 62% 100%);display:grid;place-items:center}
+.dojo::before{content:"";position:absolute;left:0;right:0;top:62%;height:10px;background:#8A5A2B}
+.dojo::after{content:"";position:absolute;inset:0 0 38%;background:repeating-linear-gradient(90deg,transparent 0 118px,rgba(138,90,43,.45) 118px 124px)}
+.scroll{position:relative;z-index:2;background:#FFFDF4;border:4px solid var(--ink);border-radius:14px;box-shadow:0 8px 0 rgba(0,0,0,.2);padding:10px 40px 14px;text-align:center;min-width:min(520px,80%)}
+.scroll .lbl{font-size:14px;font-weight:900;color:var(--ink-soft)}
+.target{font:600 clamp(56px,13vh,120px)/1.1 var(--f-key);letter-spacing:.12em;text-transform:uppercase}
+.target span{display:inline-block;border-radius:10px;padding:0 4px;transition:color .1s}
+.target .ok{color:var(--good)}
+.target .next{background:var(--hl);box-shadow:0 5px 0 var(--gold)}
+.target .bad{background:#FFD6D8;color:var(--bad)}
+.timer{position:relative;height:14px;flex:none;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--wash)}
+.timer div{height:100%;width:100%;background:var(--good);transform-origin:left}
+.timer div.warn{background:#FFC233}
+.timer-zones{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-soft);font-weight:700;padding:0 4px;margin-top:-6px;flex-wrap:wrap}
+.fixfx{position:absolute;inset:0;pointer-events:none;z-index:7;display:grid;place-items:center}
+.fixfx span{font:700 44px var(--f-display);color:var(--good);background:#fff;border:4px solid var(--good);border-radius:20px;padding:0 22px;animation:fix .8s ease-out forwards;text-align:center}
+.fixfx.mid span{color:var(--mid);border-color:var(--gold)}
+.fixfx.no span{color:var(--bad);border-color:var(--bad);font-size:32px}
+@keyframes fix{0%{transform:scale(.4);opacity:0}25%{transform:scale(1.1);opacity:1}100%{transform:scale(1) translateY(-20px);opacity:0}}
+.go-cover{position:absolute;inset:0;background:rgba(27,40,54,.86);z-index:9;display:grid;place-items:center;align-content:center;gap:12px;color:#fff;text-align:center;padding:16px}
+.go-cover h2{font-size:34px}
+.go-cover p{font-size:18px;font-weight:700}
+.count{font:600 72px/1 var(--f-key)}
+.remind{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:8;background:#FFC233;border:3px solid var(--ink);border-radius:12px;padding:2px 14px;font-weight:900;white-space:nowrap}
+
+/* 忍者場景 */
+.scene{position:absolute;inset:0;transition:background .8s}
+.scene .far{position:absolute;left:0;right:0;bottom:24%;height:46%;transition:background .8s;clip-path:polygon(0 100%,0 55%,10% 30%,22% 60%,34% 18%,48% 58%,60% 26%,74% 62%,86% 34%,100% 52%,100% 100%)}
+.scene .near{position:absolute;left:0;right:0;bottom:24%;height:22%;transition:background .8s}
+.scene .ground{position:absolute;left:0;right:0;bottom:0;height:24%;border-top:4px solid var(--ink);transition:background .8s}
+.scene .ground::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 60px,rgba(0,0,0,.08) 60px 64px);animation:run 1.2s linear infinite}
+@keyframes run{to{background-position:-64px 0}}
+.scene .moon{position:absolute;right:12%;top:10%;width:70px;height:70px;border-radius:50%;background:#FFF6CC;box-shadow:0 0 30px #FFF6CC;opacity:0;transition:opacity .8s}
+.scene[data-th="3"] .moon,.scene[data-th="4"] .moon{opacity:1}
+.scene[data-th="5"]{animation:storm 4s infinite}
+@keyframes storm{0%,92%,100%{filter:none}94%{filter:brightness(2.2)}96%{filter:none}97%{filter:brightness(1.8)}}
+.scene .rain{position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(105deg,transparent 0 14px,rgba(255,255,255,.25) 14px 16px);animation:rain .5s linear infinite;pointer-events:none}
+.scene[data-th="5"] .rain{opacity:1}
+@keyframes rain{to{background-position:30px 60px}}
+.player{position:absolute;left:6%;bottom:22%;width:clamp(80px,16vh,130px);z-index:3;transition:transform .12s}
+.player.dash{transform:translateX(30px) scale(1.05)}
+.player.hurt{animation:hurt .5s}
+@keyframes hurt{25%,75%{transform:translateX(-10px);filter:brightness(1.8) saturate(0)}50%{transform:translateX(8px)}}
+.enemy{position:absolute;bottom:22%;width:clamp(76px,15vh,124px);transform:translateX(-50%);z-index:4;display:grid;justify-items:center}
+.enemy svg{width:100%;display:block;animation:bob .5s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-6px)}}
+.enemy.poof svg{animation:poof .35s forwards}
+@keyframes poof{to{transform:scale(1.6) rotate(25deg);opacity:0}}
+.word{font:600 clamp(26px,5.6vh,46px)/1.1 var(--f-key);background:#fff;border:3px solid var(--ink);border-radius:12px;padding:2px 12px;margin-bottom:6px;box-shadow:0 4px 0 rgba(0,0,0,.25);white-space:nowrap;letter-spacing:.06em;text-transform:uppercase}
+.word span.ok{color:var(--good)}
+.word span.cur{text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:6px;text-decoration-color:var(--gold)}
+.word.err{animation:err .3s;border-color:var(--bad)}
+@keyframes err{25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.star{position:absolute;z-index:5;font-size:28px;pointer-events:none;transition:left .18s linear,bottom .18s linear;color:#2D3748;text-shadow:0 0 2px #fff}
+.pts{position:absolute;z-index:6;font:600 26px var(--f-key);color:var(--mid);background:#fff;border:2px solid var(--ink);border-radius:10px;padding:0 8px;animation:pts .9s forwards;pointer-events:none}
+@keyframes pts{to{transform:translateY(-50px);opacity:0}}
+.stagebig{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);z-index:8;font:700 clamp(28px,6vh,46px) var(--f-display);color:#fff;background:var(--ink);border:4px solid var(--hl);border-radius:20px;padding:4px 26px;white-space:nowrap;opacity:0;pointer-events:none}
+.stagebig.go{animation:stagein 1.6s ease-out forwards}
+@keyframes stagein{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}
+.flash{position:absolute;inset:0;z-index:6;pointer-events:none;animation:fl .45s}
+@keyframes fl{from{background:rgba(229,72,77,.5)}to{background:transparent}}
+
+/* 打字欄位（訓練學生自己切換英文輸入法） */
+.typebox{flex:none;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px;width:min(100%,760px);margin-inline:auto}
+.tlabel{font-weight:900;font-size:15px;line-height:1.3}
+.tlabel small{display:block;font-size:12px;color:var(--ink-soft);font-weight:700}
+.tin{font:600 30px/1.2 var(--f-key);letter-spacing:.2em;text-transform:uppercase;text-align:center;border:4px solid var(--ink);border-radius:14px;padding:4px 12px;background:#FBFDFF;outline:none;box-shadow:0 4px 0 var(--ink);min-width:0}
+.tin:focus{border-color:var(--c-mid);box-shadow:0 4px 0 var(--c-mid)}
+.tin.bad{border-color:var(--bad);box-shadow:0 4px 0 var(--bad);background:#FFF1F1;color:var(--bad)}
+.tin.ime{border-color:#F59E0B;box-shadow:0 4px 0 #F59E0B;background:#FFF7E0}
+.thint{grid-column:1/-1;min-height:1.4em;font-size:14px;font-weight:900;text-align:center;color:var(--ink-soft)}
+.thint.warn{color:#B45309}
+.thint.bad{color:var(--bad)}
+.word.dim{opacity:.55}
+@media (max-height:700px){ .kb-case{display:none!important} }
+
+/* 鍵盤（字母三排） */
+.kb-case{flex:none;background:var(--case);border:3px solid var(--ink);border-radius:18px;padding:1.2%;box-shadow:5px 5px 0 var(--ink);width:min(100%,calc(clamp(110px,22vh,200px)*3.6));margin-inline:auto}
+.kb{position:relative;width:100%;aspect-ratio:10.6/3;container-type:inline-size}
+.k{--u:calc(100cqw / 10.6);position:absolute;width:calc(var(--u));height:33.33%;padding:calc(var(--u)*.05)}
+.cap{width:100%;height:100%;border-radius:calc(var(--u)*.14);background:var(--cap-dim);color:var(--dim-txt);display:grid;place-items:center;font:600 calc(var(--u)*.4) var(--f-key);box-shadow:inset 0 calc(var(--u)*-.11) 0 var(--cap-edge);text-transform:uppercase;position:relative}
+.k.in .cap{background:var(--cap);color:var(--ink)}
+.k.home .cap::after{content:"";position:absolute;bottom:22%;left:38%;right:38%;height:calc(var(--u)*.05);background:var(--ink-soft);border-radius:2px}
+.kb.blank .k .lbl{opacity:0}
+.k.down .cap{background:var(--hl)!important;transform:translateY(calc(var(--u)*.06))}
+.k.glow .cap{outline:calc(var(--u)*.1) solid var(--hl);animation:pulse 1s infinite;z-index:2}
+@keyframes pulse{50%{outline-color:#fff}}
+.k.ok .cap{background:var(--good)!important;color:#fff}
+.k.no .cap{background:var(--bad)!important;color:#fff}
+.k.show .cap{outline:calc(var(--u)*.12) solid #5BF08F;z-index:2}
+.kb.blank .k.show .lbl{opacity:1}
+
+/* 結算 */
+.result{display:grid;gap:14px;justify-items:start}
+.result h2{font-size:30px}
+.r-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.trend{font-weight:900;font-size:18px;border:3px solid var(--ink);border-radius:999px;padding:2px 16px;background:var(--wash)}
+.trend.best{background:var(--hl)}
+.trend.up{background:#DDF5E7;color:#127A45}
+.r-mid{display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap}
+.r-stars{font-size:44px;letter-spacing:4px;color:var(--gold);line-height:1}
+.r-stars .off{color:var(--cap-dim)}
+.r-score{font:600 46px/1 var(--f-key);font-variant-numeric:tabular-nums}
+.r-score small{font:900 18px var(--f-body);margin-left:4px}
+.r-crown{display:flex;align-items:center;gap:8px;font-weight:900;border:3px solid var(--ink);border-radius:14px;padding:2px 14px 2px 8px;background:#FFF6CC}
+.r-crown i{font-size:34px;font-style:normal;line-height:1.2}
+.r-stats{display:flex;gap:10px;flex-wrap:wrap}
+.r-stats div{border:2px solid var(--ink);border-radius:10px;padding:4px 14px;background:var(--wash)}
+.r-stats b{font:600 22px var(--f-key);margin-left:6px}
+.r-stats .fc{background:var(--hl);font-weight:900}
+.unlock-note{background:var(--hl);border:3px solid var(--ink);border-radius:12px;padding:6px 14px;font-weight:900}
+.unlock-note.tip{background:var(--wash)}
+.missed{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chipk{font:600 18px var(--f-key);border:2px solid var(--ink);border-radius:8px;padding:0 10px;background:#fff;text-transform:uppercase}
+.r-btns{display:flex;gap:10px;flex-wrap:wrap}
+.hist{width:100%;max-width:600px;display:grid;gap:6px}
+.hist-row{display:grid;grid-template-columns:4.5em 1fr 6em 5.5em;gap:8px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.hist-row .bar{height:16px;border-radius:6px;background:var(--cap-dim);overflow:hidden}
+.hist-row .bar i{display:block;height:100%;background:var(--c-mid);border-radius:6px}
+.hist-row.best .bar i{background:var(--gold)}
+.hist-row.now{font-weight:900}
+.hist-row.now .bar i{background:var(--c-top)}
+.hist-row span:nth-child(3),.hist-row span:nth-child(4){text-align:right}
+.hs{color:var(--gold)}
+
+/* 簽到、獎狀 */
+.modal-wrap{position:fixed;inset:0;z-index:40;background:rgba(27,40,54,.6);display:grid;place-items:center;padding:16px;overflow:auto}
+.signin{width:min(480px,100%);display:grid;gap:12px}
+.signin h2{font-size:30px}
+.signin input{font:600 40px var(--f-key);letter-spacing:.3em;text-align:center;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;width:100%}
+.signin .hint{font-size:15px;color:var(--ink-soft);font-weight:700}
+.signin .preview{font:900 24px var(--f-display);min-height:1.5em;text-align:center}
+.signin .preview.err{color:var(--bad);font:900 16px var(--f-body)}
+.cert-wrap{position:fixed;inset:0;z-index:50;background:rgba(27,40,54,.65);display:grid;place-items:center;padding:16px;overflow:auto}
+.cert{width:min(720px,100%);background:#FFFDF4;border:4px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:14px;animation:popcert .4s ease-out}
+@keyframes popcert{from{transform:scale(.7);opacity:0}}
+.cert-in{position:relative;border:6px double var(--gold);border-radius:10px;padding:18px 22px 24px;text-align:center;background:radial-gradient(circle at 0 0,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 100% 0,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 0 100%,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 100% 100%,#FFE9A8 0 40px,transparent 41px)}
+.cert-kicker{font-weight:900;color:var(--ink-soft);letter-spacing:.3em}
+.cert-sub{font:700 24px var(--f-display);letter-spacing:.6em;margin:2px 0 8px}
+.cert-title{font-size:clamp(38px,7vh,58px);letter-spacing:.12em;color:var(--mid);margin:4px 0}
+.cert-body{font-size:19px;line-height:2;font-weight:700}
+.cert-scores{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.cert-scores div{border:2px solid var(--ink);border-radius:12px;padding:2px 12px;background:#fff;font-weight:900;font-size:14px}
+.cert-date{color:var(--ink-soft);font-weight:700;margin-top:6px}
+.cert-seal{position:absolute;right:18px;bottom:16px;width:78px;height:78px;border-radius:50%;border:4px solid var(--bad);color:var(--bad);display:grid;place-items:center;font-weight:900;font-size:15px;line-height:1.2;transform:rotate(-12deg);background:rgba(255,255,255,.6)}
+.cert-empty{font-size:20px;font-weight:900;padding:30px 10px;line-height:1.8}
+@media print{ body>*:not(.cert-wrap){display:none!important} .cert-wrap{position:static;background:none;padding:0} .cert{box-shadow:none} .cert .r-btns{display:none} }
+.focus-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:#fff;border:3px solid var(--hl);border-radius:999px;padding:10px 22px;font:700 16px var(--f-body);cursor:pointer;max-width:calc(100% - 32px)}
+@media (max-width:720px){ html,body{height:auto} .wrap{height:auto} .stage{min-height:360px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="tagk">ASDF</span><h1 id="title">打字忍者</h1><span class="badge ver" id="verBadge">字母打字</span><span class="who" id="who" hidden title="點一下可以重新輸入班級座號"></span></div>
+    <div id="hud" class="hud" hidden></div>
+    <div class="row">
+      <button class="btn sm" id="soundBtn" type="button">聲音：開</button>
+      <button class="btn sm" id="setsBtn" type="button" hidden>換練習範圍</button>
+      <button class="btn sm" id="homeBtn" type="button" hidden>回關卡選單</button>
+    </div>
+  </header>
+  <main>
+    <section data-screen="sets" hidden>
+      <div class="intro"><h2>選擇要練習的字母</h2><p>先選一排，三個關卡都會用這一排的字母出題。每一排的紀錄分開算。</p></div>
+      <div id="demoBar1"></div>
+      <div class="sets" id="sets"></div>
+    </section>
+    <section data-screen="home" hidden>
+      <div id="demoBar2"></div>
+      <div id="entries" class="entries"></div>
+      <div id="tpanel" class="card tpanel" hidden></div>
+    </section>
+    <section data-screen="drill" hidden>
+      <div class="stage"><div class="dojo"><div class="scroll"><p class="lbl" id="dLbl"></p><div class="target" id="target"></div></div></div>
+        <div id="dRemind" class="remind" hidden></div><div id="dFx" class="fixfx"></div><div id="dCover" class="go-cover" hidden></div></div>
+      <div class="timer" id="timerWrap"><div id="timerBar"></div></div>
+      <div id="zones" class="timer-zones"></div>
+    </section>
+    <section data-screen="ninja" hidden>
+      <div class="stage" id="nStage">
+        <div class="scene" id="scene" data-th="1"><div class="moon"></div><div class="far"></div><div class="near"></div><div class="ground"></div><div class="rain"></div></div>
+        <div class="player" id="player"></div>
+        <div id="enemyLayer"></div>
+        <div id="stageBig" class="stagebig"></div>
+        <div id="nRemind" class="remind" hidden></div><div id="nFx" class="fixfx"></div><div id="nCover" class="go-cover" hidden></div>
+      </div>
+    </section>
+    <section data-screen="result" hidden><div class="card result" id="resultBox"></div></section>
+  </main>
+  <div class="typebox" id="typeZone" hidden>
+    <label for="tin" class="tlabel">在這裡打字<small>（要用英文輸入法；打對了會自動送出，不用按 Enter）</small></label>
+    <input id="tin" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="打字欄位">
+    <p class="thint" id="thint"></p>
+  </div>
+  <div class="kb-case" id="kbZone" hidden><div class="kb" id="kb"></div></div>
+</div>
+
+<div id="signWrap" class="modal-wrap" hidden><form class="card signin" id="signForm" autocomplete="off">
+  <h2>👋 輸入班級座號</h2>
+  <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
+  <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼" placeholder="30101">
+  <p class="preview" id="sPrev"></p>
+  <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
+</form></div>
+<div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
+  <div class="r-btns" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certClose">關閉</button></div></div></div>
+<button id="focusPill" class="focus-pill" type="button" hidden>點一下這裡，讓鍵盤連上遊戲</button>
+
+<script>
+/* =====================================================================
+   打字忍者（主題設定表：01_主題設定-打字忍者.md；規格書 v3.7）
+   參數集中在這裡，改數字不用動下面的程式
+   ===================================================================== */
+/* 練習範圍：中排、上排、下排；老師可用 typing-setup.html 產生「#keys=...」的連結指定字母 */
+const SETS = {
+  mid:{name:'中排', keys:'asdfghjkl', color:'var(--c-mid)'},
+  top:{name:'上排', keys:'qwertyuiop', color:'var(--c-top)'},
+  bot:{name:'下排', keys:'zxcvbnm', color:'var(--c-bot)'},
+};
+/* 第一關：單一字母 n 題；要完成 plays 次才打開第二關；第 2 次起依錯題權重多出不熟的字母 */
+const L1 = {name:'第一關・單一字母', n:10, plays:3, good:2, limit:5};
+/* 第二關：2～4 個字母的組合；秒數＝base＋每個字母 per */
+const L2 = {name:'第二關・字母組合', n:10, minLen:2, maxLen:4, goodBase:1, goodPer:1, limitBase:2, limitPer:2.5};
+const STAR_AT = [60,70,80,90,95];
+const L2_CROWN_STARS = 5;              /* 第二關 5 顆星＝皇冠（老師 2026-10-28 決定） */
+/* 忍者三級：第二關拿到 open 顆星就打開；前一級通關也會打開下一級
+   goal＝要擊退的敵人數；len[關卡]＝字串長度範圍；time[關卡]＝一個字母時敵人走到忍者的秒數，每多一個字母加 per 秒
+   strict＝打錯也扣命（新手不扣，只閃紅）；glow＝鍵盤提示下一個字母；blank＝鍵帽沒有字 */
+const NINJA = {
+  novice:{name:'新手', open:3, goal:15, lives:3, strict:false, glow:true,  blank:false, len:[[1,1],[1,2],[2,2]],               time:[6,5.5,5],        per:1.4, multi:[1,1,1]},
+  brave: {name:'勇者', open:4, goal:30, lives:3, strict:true,  glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],    time:[5,4.6,4.3,4,3.8], per:1.1, multi:[1,1,1,2,2]},
+  master:{name:'大師', open:5, goal:50, lives:3, strict:true,  glow:false, blank:true,  len:[[2,2],[2,3],[3,3],[3,4],[4,4]],    time:[4.5,4.2,3.9,3.6,3.3], per:.95, multi:[1,1,2,2,2]},
+};
+/* multi[關卡]＝畫面上同時最多幾個敵人（字串變多）；SPAWN_GAP＝同時有多個敵人時，下一個出現的間隔秒數 */
+const SPAWN_GAP = 1.8;
+const NINJA_ORDER = ['novice','brave','master'];
+const SCORE = {base:100, speed:100};   /* 每擊退一隻：100 分＋越快越多（最多再加 100） */
+const THEMES = [
+  {name:'竹林早晨', sky:'linear-gradient(#9ED8FF,#E6F6FF)', far:'#7FB77E', near:'#4E8F4A', ground:'#C9A46A'},
+  {name:'黃昏山路', sky:'linear-gradient(#F59E42,#FCE3B0)', far:'#B5654A', near:'#7A3E2E', ground:'#B57A44'},
+  {name:'月夜屋頂', sky:'linear-gradient(#1E2A55,#4A5A8F)', far:'#2E3A66', near:'#1B2340', ground:'#4A4F6A'},
+  {name:'城堡決戰', sky:'linear-gradient(#5B2A86,#B57BD6)', far:'#3E1F5E', near:'#2A1440', ground:'#6B4A3A'},
+  {name:'雷雨大將', sky:'linear-gradient(#1F2933,#4B5563)', far:'#111827', near:'#0B1220', ground:'#374151'},
+];
+const TITLES = ['見習忍者','下忍','中忍','上忍'];
+const TITLE_RULE = ['第一關完成 3 次','忍者「新手」通關','忍者「勇者」通關','忍者「大師」通關'];
+const AWARD_LINE = ['認真完成第一關 3 次','擊退忍者「新手」的 15 個敵人','擊退忍者「勇者」的 30 個敵人','擊退忍者「大師」的 50 個敵人'];
+const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
+const HISTORY_MAX = 10;
+/* 網址參數（老師設定頁產生）：keys 字母、name 名稱、end 下課頒獎時間、grades/classes/seats 範圍、demo 示範 */
+const Q = new URLSearchParams(location.hash.replace(/^#/,''));
+const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:59',
+  classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40)};
+let DEMO = Q.has('demo');
+const ALL = 'qwertyuiopasdfghjklzxcvbnm';
+const qKeys = [...new Set((Q.get('keys')||'').toLowerCase().split('').filter(c => ALL.includes(c)))].join('');
+if (qKeys.length >= 2) SETS.cus = {name:'老師指定' + (Q.get('name') ? '・' + Q.get('name').slice(0,10) : ''), keys:qKeys, color:'var(--c-cus)'};
+
+/* ---------- 小工具 ---------- */
+const $ = s => document.querySelector(s);
+const H = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const starsOf = s => STAR_AT.filter(t => s >= t).length;
+const starStr = n => Array.from({length:5},(_,i)=>`<span class="${i<n?'':'off'}">★</span>`).join('');
+const nowHM = () => { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`; };
+const chip = k => `<span class="chipk">${H(k)}</span>`;
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const Sound = {
+  ac:null, muted:false,
+  init(){ if (!this.ac){ try{ this.ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if (this.ac && this.ac.state==='suspended') this.ac.resume(); },
+  tone(f,d,type,when,vol){ const ac = this.ac; if (!ac || this.muted) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime+(when||0);
+    o.type = type||'sine'; o.frequency.value = f; g.gain.setValueAtTime(vol||.12,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.03); },
+  key(){ this.tone(880,.05,'triangle',0,.06); },
+  good(){ this.tone(660,.1,'triangle'); this.tone(990,.18,'triangle',.07); },
+  mid(){ this.tone(560,.14,'triangle'); },
+  bad(){ this.tone(170,.25,'square',0,.07); },
+  tick(){ this.tone(520,.06,'sine',0,.08); },
+  slash(){ this.tone(1200,.08,'sawtooth',0,.05); this.tone(600,.12,'triangle',.05,.08); },
+  win(){ [523,659,784,1047].forEach((f,i)=>this.tone(f,.22,'triangle',i*.11)); },
+  soft(){ [392,440,523].forEach((f,i)=>this.tone(f,.22,'triangle',i*.12,.08)); }
+};
+$('#soundBtn').onclick = () => { Sound.init(); Sound.muted = !Sound.muted; $('#soundBtn').textContent = Sound.muted ? '聲音：關' : '聲音：開'; };
+
+/* ---------- 班級座號碼（規格書 10 節）：5 位數＝年級 1 碼＋班級 2 碼＋座號 2 碼 ---------- */
+const CN = ['','一','二','三','四','五','六','七','八','九','十'];
+const cnNum = n => n <= 10 ? CN[n] : n < 20 ? '十' + CN[n-10] : CN[Math.floor(n/10)] + '十' + CN[n%10];
+function parseCode(s){
+  if (!/^\d{5}$/.test(s)) return {err: s.length ? `要打 5 個數字（現在 ${s.length} 個）` : ''};
+  const g = +s[0], c = +s.slice(1,3), n = +s.slice(3,5);
+  if (g < 1 || g > 6) return {err:'第 1 個數字是年級，要是 1～6'};
+  if (c < 1 || c > CFG.classes) return {err:`第 2、3 個數字是班級，要是 01～${String(CFG.classes).padStart(2,'0')}`};
+  if (n < 1 || n > CFG.seats) return {err:`最後 2 個數字是座號，要是 01～${String(CFG.seats).padStart(2,'0')}`};
+  return {code:s, cls:`${CN[g]}年${cnNum(c)}班`, seat:n, text:`${CN[g]}年${cnNum(c)}班 ${n} 號`};
+}
+let WHO = null;
+$('#sCode').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,5);
+  const r = parseCode(e.target.value), p = $('#sPrev');
+  p.className = 'preview' + (r.err ? ' err' : ''); p.textContent = r.err || r.text;
+});
+$('#signForm').addEventListener('submit', e => {
+  e.preventDefault(); const r = parseCode($('#sCode').value);
+  if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
+  WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); show(SET ? 'home' : 'sets');
+});
+function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sPrev').textContent = WHO ? WHO.text : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
+function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
+$('#who').onclick = () => { if (screen==='home' || screen==='sets') openSignin(); };
+
+/* ---------- 紀錄（每一排分開；課堂內紀錄存 localStorage，規格書 2.2） ---------- */
+const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, best:null, stars:0, crown:false, hist:[]},
+  ninja:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}},
+  weight:{}, rtSum:0, rtN:0, unlock:false});
+let SET = null, P = null;
+const keyOf = id => 'ninjatype1_' + (id==='cus' ? 'cus_' + SETS.cus.keys : id);
+function loadSet(id){
+  SET = id;
+  P = DEMO ? Object.assign(fresh(), {unlock:true}) : Object.assign(fresh(), store.get(keyOf(id), {}));
+  $('#verBadge').textContent = `${SETS[id].name}・${SETS[id].keys.toUpperCase().split('').join(' ')}`;
+}
+const save = () => { if (!DEMO && SET) store.set(keyOf(SET), P); };
+const KEYS = () => SETS[SET].keys.split('');
+const l2Open = () => P.unlock || P.l1.plays >= L1.plays;
+const ninjaOpen = id => { if (P.unlock) return true; const i = NINJA_ORDER.indexOf(id);
+  return l2Open() && (P.l2.stars >= NINJA[id].open || (i > 0 && P.ninja[NINJA_ORDER[i-1]].cleared)); };
+function titleIndex(){ if (P.ninja.master.cleared) return 3; if (P.ninja.brave.cleared) return 2; if (P.ninja.novice.cleared) return 1; if (P.l1.plays >= L1.plays) return 0; return -1; }
+
+/* ---------- 錯題權重（規格書第 7 節，以字母為單位） ---------- */
+const wOf = k => Math.min(WEIGHT.max, P.weight[k] || WEIGHT.base);
+function pickWeighted(pool, avoid){
+  const c = pool.filter(k => k !== avoid); const tot = c.reduce((s,k) => s + wOf(k), 0);
+  let r = Math.random()*tot; for (const k of c){ r -= wOf(k); if (r < 0) return k; } return c[c.length-1];
+}
+function learn(k, judge, rt){
+  const avg = P.rtN >= WEIGHT.minSamples ? P.rtSum/P.rtN : null;
+  let w = P.weight[k] || WEIGHT.base, weak = false;
+  if (judge==='bad'){ w += WEIGHT.bad; weak = true; }
+  else if (judge==='ok' || (avg && rt > avg*WEIGHT.slowRatio)){ w += WEIGHT.slow; weak = true; }
+  else w = Math.max(WEIGHT.base, w - WEIGHT.recover);
+  P.weight[k] = Math.min(WEIGHT.max, w);
+  if (rt!=null && judge!=='bad'){ P.rtSum += rt; P.rtN++; }
+  return weak;
+}
+/* 第一關出題：第 1 次每個字母至少出現一次；第 2、3 次完全依權重抽（不熟的字母出現得多） */
+function l1Queue(){
+  const keys = KEYS(); let q = [];
+  if (P.l1.plays === 0){ q = shuffle(keys.slice()).slice(0, L1.n); while (q.length < L1.n) q.push(pickWeighted(keys, q[q.length-1])); q = shuffle(q); }
+  else { for (let i=0;i<L1.n;i++) q.push(pickWeighted(keys, q[i-1])); }
+  for (let i=1;i<q.length;i++) if (q[i]===q[i-1]){ const j = q.findIndex((x,t) => t>i && x!==q[i] && q[t-1]!==q[i] && q[t+1]!==q[i]); if (j>0) [q[i],q[j]]=[q[j],q[i]]; }
+  return q;
+}
+function makeWord(len){ const keys = KEYS(); let w = ''; for (let i=0;i<len;i++) w += keys.length > 1 ? pickWeighted(keys, w[w.length-1]) : keys[0]; return w; }
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+
+/* ---------- 鍵盤（字母三排） ---------- */
+const kbEl = $('#kb');
+[['qwertyuiop',0],['asdfghjkl',.3],['zxcvbnm',.8]].forEach(([row,off],y) => row.split('').forEach((c,x) => {
+  const d = document.createElement('div'); d.className = 'k' + ((c==='f'||c==='j') ? ' home' : ''); d.dataset.k = c;
+  d.style.left = ((off + x)/10.6*100) + '%'; d.style.top = (y*33.33) + '%';
+  d.innerHTML = `<div class="cap"><span class="lbl">${c}</span></div>`; kbEl.appendChild(d); }));
+const kb = {
+  el: k => kbEl.querySelector(`[data-k="${k}"]`),
+  setIn(keys){ kbEl.querySelectorAll('.k').forEach(x => x.classList.toggle('in', keys.includes(x.dataset.k))); },
+  clear(){ kbEl.querySelectorAll('.k').forEach(x => x.classList.remove('glow','ok','no','show')); },
+  glow(k){ kbEl.querySelectorAll('.glow').forEach(x => x.classList.remove('glow')); if (k && this.el(k)) this.el(k).classList.add('glow'); },
+  flash(k, cls, ms){ const e = this.el(k); if (!e) return; e.classList.add(cls); setTimeout(() => e.classList.remove(cls), ms||400); },
+  show(k){ const e = this.el(k); if (e) e.classList.add('show'); },
+  blank(on){ kbEl.classList.toggle('blank', !!on); }
+};
+
+/* ---------- 畫面切換 ---------- */
+let screen = 'sets', loop = 0, cdTimer = 0, D = null, N = null, paused = null;
+function show(name){
+  screen = name; cancelAnimationFrame(loop); clearInterval(cdTimer);
+  document.querySelectorAll('.go-cover').forEach(c => c.hidden = true);
+  document.querySelectorAll('[data-screen]').forEach(s => s.hidden = s.dataset.screen !== name);
+  $('#hud').hidden = !(name==='drill' || name==='ninja');
+  $('#homeBtn').hidden = !(name==='drill' || name==='ninja' || name==='result');
+  $('#setsBtn').hidden = name !== 'home';
+  $('#kbZone').hidden = !(name==='drill' || name==='ninja');
+  $('#typeZone').hidden = !(name==='drill' || name==='ninja');
+  tinReset(); kb.clear(); kb.blank(false); if (SET) kb.setIn(KEYS());
+  const bar = DEMO ? '<div class="demo-bar">老師示範模式：全部打開，紀錄不會保存。學生請用一般網址（不要加 #demo）。</div>' : '';
+  $('#demoBar1').innerHTML = bar; $('#demoBar2').innerHTML = bar;
+  if (name==='sets') renderSets();
+  if (name==='home') renderHome();
+}
+$('#homeBtn').onclick = () => { stopAll(); show('home'); };
+$('#setsBtn').onclick = () => show('sets');
+function stopAll(){ if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } $('#enemyLayer').innerHTML = ''; tin.blur(); }
+
+function renderSets(){
+  $('#sets').innerHTML = Object.keys(SETS).map(id => {
+    const p = DEMO ? null : store.get(keyOf(id), null), S = SETS[id];
+    const ti = p ? (p.ninja && p.ninja.master && p.ninja.master.cleared ? 3 : p.ninja && p.ninja.brave && p.ninja.brave.cleared ? 2 : p.ninja && p.ninja.novice && p.ninja.novice.cleared ? 1 : p.l1 && p.l1.plays >= L1.plays ? 0 : -1) : -1;
+    return `<button class="setcard" type="button" data-set="${id}"><span class="band" style="background:${S.color}"></span>
+      <h2>${H(S.name)}</h2><span class="keys">${S.keys.toUpperCase().split('').join(' ')}</span>
+      <span class="st">${ti >= 0 ? `目前稱號：${TITLES[ti]}` : p && p.l1 && p.l1.plays ? `第一關完成 ${Math.min(p.l1.plays, L1.plays)}/${L1.plays} 次` : '還沒開始'}</span></button>`;
+  }).join('');
+}
+$('#sets').addEventListener('click', e => { const b = e.target.closest('[data-set]'); if (!b) return; Sound.init(); loadSet(b.dataset.set); show('home'); });
+
+function card(num, color, deco, title, inner, lock){
+  return `<div class="entry ${lock?'locked':''}"><div class="entry-band" style="background:${color}"><span class="num">${num}</span><span class="deco">${deco.map(d=>`<span>${H(d)}</span>`).join('')}</span></div>
+    <div class="entry-body"><h2>${H(title)}</h2>${lock?`<p class="lockmsg">🔒 ${H(lock)}</p>`:''}<div class="diffs">${inner}</div></div></div>`;
+}
+function renderHome(){
+  const S = SETS[SET], k0 = S.keys[0].toUpperCase();
+  const dots = Array.from({length:L1.plays},(_,i)=>`<span class="${i<P.l1.plays?'':'off'}">●</span>`).join('');
+  const c1 = card(1, S.color, [k0], L1.name, `<button class="diff" type="button" data-l="1"><span>單一字母<small>${L1.n} 題・鍵盤會提示・要完成 ${L1.plays} 次</small></span>
+    <span class="lv-r"><span class="dots" title="完成次數">${dots}</span><span class="stars">${starStr(P.l1.stars)}</span><span class="lv-best">${P.l1.best!=null?`最佳 ${P.l1.best} 分`:'還沒挑戰'}</span></span></button>`, '');
+  const o2 = l2Open();
+  const c2 = card(2, S.color, [S.keys.slice(0,2).toUpperCase(), S.keys.slice(2,5).toUpperCase()], L2.name, `<button class="diff" type="button" data-l="2" ${o2?'':'disabled'}><span>2～4 個字母<small>${L2.n} 題・${L2_CROWN_STARS} 顆星得到皇冠</small></span>
+    <span class="lv-r">${o2 ? `<span class="stars">${starStr(P.l2.stars)}</span><span class="lv-best">${P.l2.crown?'👑 ':''}${P.l2.best!=null?`最佳 ${P.l2.best} 分`:'還沒挑戰'}</span>` : '🔒'}</span></button>`,
+    o2 ? '' : `第一關要完成 ${L1.plays} 次（現在 ${P.l1.plays} 次）`);
+  const nBtns = NINJA_ORDER.map((id,i) => { const C = NINJA[id], R = P.ninja[id], o = ninjaOpen(id);
+    const lock = `第二關拿到 ${C.open} 顆星${i ? `，或「${NINJA[NINJA_ORDER[i-1]].name}」通關` : ''}就打開`;
+    return `<button class="diff" type="button" data-n="${id}" ${o?'':'disabled'}><span>${C.name}<small>${o ? `擊退 ${C.goal} 個敵人・${C.lives} 條命${C.strict ? '' : '・打錯不扣命'}${C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
+      <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
+  const anyN = NINJA_ORDER.some(ninjaOpen);
+  const c3 = card(3, 'var(--c-ninja)', ['忍'], '第三關・打字忍者', nBtns, anyN ? '' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`);
+  const ti = titleIndex();
+  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${ti<0 ? '還沒有' : TITLES[ti]}</b>
+    <span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>
+    <span class="tnote" style="width:100%">${ti < 3 ? `下一個：${TITLE_RULE[ti+1]} → 「${TITLES[ti+1]}」` : '已經是最高稱號！'}・${H(CFG.end)} 會自動頒發獎狀</span></div>`;
+  $('#entries').innerHTML = tb + c1 + c2 + c3;
+}
+$('#entries').addEventListener('click', e => {
+  Sound.init();
+  const l = e.target.closest('[data-l]'); if (l && !l.disabled) return startDrill(+l.dataset.l);
+  const n = e.target.closest('[data-n]'); if (n && !n.disabled) return startNinja(n.dataset.n);
+});
+
+function countdown(el, title, sub, done){
+  el.hidden = false; let n = 3;
+  const draw = () => { el.innerHTML = `<h2>${H(title)}</h2><p>${H(sub)}</p><div class="count">${n}</div>`; };
+  draw(); Sound.tick(); clearInterval(cdTimer);
+  const t = cdTimer = setInterval(() => { n--; if (n<=0){ clearInterval(t); el.hidden = true; done(); return; } draw(); Sound.tick(); }, 800);
+}
+function fx(el, kind, text){ el.className = 'fixfx' + (kind==='no'?' no':kind==='mid'?' mid':''); el.innerHTML = `<span>${H(text)}</span>`; clearTimeout(el._t); el._t = setTimeout(()=>el.innerHTML='', 800); }
+function hud(items){ $('#hud').innerHTML = items.map(([l,v,cls]) => `<div class="hud-item"><span class="hud-l">${l}</span>${cls==='h' ? v : `<b class="${cls||''}">${v}</b>`}</div>`).join(''); }
+
+/* ---------- 第一關、第二關（道場） ---------- */
+function startDrill(lv){
+  stopAll();
+  const isL1 = lv === 1;
+  const q = isL1 ? l1Queue() : Array.from({length:L2.n}, () => makeWord(ri(L2.minLen, L2.maxLen)));
+  D = {lv, q, i:0, good:0, ok:0, bad:0, combo:0, maxCombo:0, rts:[], weak:new Set(), locked:true, over:false};
+  show('drill');
+  $('#dLbl').textContent = isL1 ? '在打字欄位打出這個字母' : '在打字欄位依序打出這些字母';
+  $('#target').innerHTML = '';
+  $('#zones').innerHTML = isL1 ? `<span>「良」${L1.good} 秒內</span><span>「可」${L1.limit} 秒內</span><span>按錯或超過 ${L1.limit} 秒＝「不可」</span>`
+    : `<span>「良」沒打錯、夠快</span><span>「可」打錯後按 Backspace 改正，或比較慢</span><span>超過時間＝「不可」</span>`;
+  drillHud();
+  const playNo = Math.min(P.l1.plays + 1, L1.plays);
+  const d = D;
+  countdown($('#dCover'), isL1 ? `${L1.name}（第 ${P.l1.plays >= L1.plays ? P.l1.plays + 1 : playNo} 次）` : L2.name,
+    isL1 ? (P.l1.plays ? '這一次會多出現你比較不熟的字母。記得先換成英文輸入法！' : '在下面的打字欄位打出字母（先換成英文輸入法）') : '在打字欄位依序打出字母，打錯了按 Backspace 改正', () => { if (D===d) drillNext(); });
+}
+function drillHud(){
+  const sc = D.q.length ? Math.round((D.good + D.ok*.5)/D.q.length*100) : 0;
+  hud([['關卡', D.lv===1 ? '第一關' : '第二關', 't'], ['分數', sc], ['連段', D.combo], ['進度', `${Math.min(D.i+1, D.q.length)}/${D.q.length}`]]);
+}
+function drillNext(){
+  if (!D || D.over) return;
+  if (D.i >= D.q.length) return drillEnd();
+  const w = D.q[D.i]; D.word = w; D.pos = 0; D.typo = false; D.badShown = false; D.badLen = 0;
+  if (D.lv===1){ D.good_t = L1.good; D.limit_t = L1.limit; }
+  else { D.good_t = L2.goodBase + L2.goodPer*w.length; D.limit_t = L2.limitBase + L2.limitPer*w.length; }
+  drawTarget(); kb.clear(); if (D.lv===1) kb.glow(w[0]); tinReset(); focusTin();
+  D.start = performance.now(); D.deadline = D.start + D.limit_t*1000; D.locked = false;
+  drillHud(); cancelAnimationFrame(loop); loop = requestAnimationFrame(drillTick);
+}
+function drawTarget(badAt){
+  $('#target').innerHTML = D.word.split('').map((c,i) => `<span class="${i<D.pos?'ok':i===badAt?'bad':(i===D.pos && D.lv===2)?'next':''}">${c}</span>`).join('');
+}
+function drillTick(now){
+  if (!D || D.over || screen!=='drill') return;
+  if (!D.locked && paused==null){
+    const total = D.limit_t*1000, rem = Math.max(0, D.deadline - now), bar = $('#timerBar');
+    bar.style.transform = `scaleX(${rem/total})`; bar.className = (total-rem)/1000 <= D.good_t ? '' : 'warn';
+    if (rem <= 0) drillResolve('bad', true);
+  }
+  loop = requestAnimationFrame(drillTick);
+}
+/* 道場：比對打字欄位的內容（打對自動送出，不用按 Enter） */
+function drillInput(v){
+  if (!D || D.locked) return;
+  const w = D.word;
+  if (!v){ D.pos = 0; drawTarget(); tinState(''); return; }
+  if (w.startsWith(v)){
+    if (v.length > D.pos) Sound.key();
+    D.pos = v.length; tinState('');
+    if (v === w) return drillResolve(D.typo ? 'ok' : null);
+    drawTarget(); if (D.lv===1) kb.glow(w[D.pos]); return;
+  }
+  /* 打錯：第一關直接「不可」；第二關要按 Backspace 改正（完成後最多「可」） */
+  let p = 0; while (p < v.length && v[p] === w[p]) p++;
+  D.pos = p;
+  if (D.lv===1) return drillResolve('bad');
+  if (!D.badShown || v.length > D.badLen){ const want = w[p]; D.typo = true; D.weak.add(want); learn(want,'bad',null); Sound.bad(); }
+  D.badShown = true; D.badLen = v.length;
+  drawTarget(p); tinState('bad', '打錯了，按 Backspace 刪掉再打');
+}
+function drillResolve(forced, timeout){
+  D.locked = true;
+  const rt = (performance.now() - D.start)/1000;
+  const judge = forced || (rt <= D.good_t ? 'good' : 'ok');
+  D[judge]++;
+  if (judge==='bad'){ D.combo = 0; } else { D.combo++; D.maxCombo = Math.max(D.maxCombo, D.combo); D.rts.push(rt); }
+  if (D.lv===1){ if (learn(D.word, judge, judge==='bad' ? null : rt)) D.weak.add(D.word); }
+  else if (judge!=='bad'){ D.word.split('').forEach(c => { if (!D.typo) learn(c, judge, rt/D.word.length); }); }
+  else D.word.split('').slice(D.pos).forEach(c => { learn(c,'bad',null); D.weak.add(c); });
+  save();
+  if (judge==='good'){ Sound.good(); fx($('#dFx'),'good','良！'); }
+  else if (judge==='ok'){ Sound.mid(); fx($('#dFx'),'mid','可'); }
+  else { Sound.bad(); fx($('#dFx'),'no', timeout ? '時間到・不可' : '不可'); kb.clear(); kb.show(D.word[D.pos]); }
+  $('#timerBar').style.transform = 'scaleX(0)'; drillHud();
+  const d = D; setTimeout(() => { if (D===d){ kb.clear(); D.i++; drillNext(); } }, judge==='bad' ? 1300 : 600);
+}
+function drillEnd(){
+  const d = D; D = null;
+  const R = d.lv===1 ? P.l1 : P.l2;
+  const score = Math.round((d.good + d.ok*.5)/d.q.length*100), stars = starsOf(score);
+  const prev = R.hist.length ? R.hist[R.hist.length-1].score : null, bestBefore = R.best;
+  R.hist.push({score, stars, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
+  const tiBefore = titleIndex(), l2Was = l2Open(), nWas = NINJA_ORDER.map(ninjaOpen), crownWas = P.l2.crown;
+  R.plays++; R.stars = Math.max(R.stars, stars); if (R.best==null || score > R.best) R.best = score;
+  if (d.lv===2 && stars >= L2_CROWN_STARS) P.l2.crown = true;
+  save(); stars ? Sound.win() : Sound.soft();
+  const trend = trendOf(score, prev, bestBefore, 5);
+  const notes = [];
+  if (d.lv===1 && !l2Was && l2Open()) notes.push(note(`「${L2.name}」打開了！`));
+  else if (d.lv===1 && P.l1.plays < L1.plays) notes.push(note(`第一關完成 ${P.l1.plays}/${L1.plays} 次。再 ${L1.plays - P.l1.plays} 次就能打開第二關，下一次會多出現比較不熟的字母`, true));
+  if (d.lv===2 && !crownWas && P.l2.crown) notes.push(note('👑 得到第二關的皇冠！'));
+  NINJA_ORDER.forEach((id,i) => { if (!nWas[i] && ninjaOpen(id)) notes.push(note(`忍者「${NINJA[id].name}」打開了！`)); });
+  if (d.lv===2){ const nx = NINJA_ORDER.find(id => !ninjaOpen(id)); if (nx) notes.push(note(`第二關拿到 ${NINJA[nx].open} 顆星（${STAR_AT[NINJA[nx].open-1]} 分以上），就能挑戰忍者「${NINJA[nx].name}」`, true)); }
+  if (titleIndex() > tiBefore) notes.push(note(`🎖 得到稱號「${TITLES[titleIndex()]}」！`));
+  const avg = d.rts.length ? d.rts.reduce((a,b)=>a+b,0)/d.rts.length : 0;
+  const heavy = KEYS().filter(k => wOf(k) > WEIGHT.base).sort((a,b) => wOf(b)-wOf(a)).slice(0,3);
+  const nextBtn = d.lv===1 && l2Open() ? `<button class="btn" type="button" id="rNext">去「${L2.name}」</button>`
+    : d.lv===2 && NINJA_ORDER.some(ninjaOpen) ? `<button class="btn" type="button" id="rNext">去打字忍者</button>` : '';
+  showResult(`${d.lv===1 ? L1.name : L2.name}`, trend, `<div class="r-stars">${starStr(stars)}</div><div class="r-score">${score}<small>分</small></div>${d.lv===2 && P.l2.crown ? '<div class="r-crown"><i>👑</i>皇冠</div>' : ''}`,
+    [['良',d.good],['可',d.ok],['不可',d.bad],['最多連段',d.maxCombo],['平均',avg?avg.toFixed(1)+' 秒':'—']], d.bad===0,
+    notes, d.weak, heavy, R.hist, h => `${'★'.repeat(h.stars)||'—'}`, 100, () => startDrill(d.lv), nextBtn, () => { d.lv===1 ? startDrill(2) : show('home'); });
+}
+function note(t, tip){ return `<div class="unlock-note ${tip?'tip':''}">${H(t)}</div>`; }
+function trendOf(v, prev, bestBefore, flat){
+  if (prev==null) return {cls:'first', text:'🚀 第一次挑戰！'};
+  if (bestBefore!=null && v > bestBefore) return {cls:'best', text:'👍 新紀錄！'};
+  if (v > prev) return {cls:'up', text:'⬆ 比上一次進步了！'};
+  if (prev - v <= flat) return {cls:'flat', text:'💪 穩住了！'};
+  return {cls:'again', text:'🔁 再挑戰一次？'};
+}
+function showResult(title, trend, mid, stats, fc, notes, weak, heavy, hist, histR, max, again, nextBtn, nextFn){
+  show('result');
+  const best = Math.max(...hist.map(h => h.score)), last = hist.length-1, mx = Math.max(max||1, best, 1);
+  $('#resultBox').innerHTML = `
+    <div class="r-top"><h2>${H(title)}</h2><span class="trend ${trend.cls}">${trend.text}</span></div>
+    <div class="r-mid">${mid}</div>
+    <div class="r-stats">${stats.map(s => `<div>${s[0]}<b>${s[1]}</b></div>`).join('')}${fc ? '<div class="fc">全連段！</div>' : ''}</div>
+    ${notes.join('')}
+    <div class="missed">${weak.size ? `<b>這一輪可以多練：</b>${[...weak].slice(0,8).map(chip).join('')}` : '<b>每一個都又快又對，太厲害了！</b>'}</div>
+    ${heavy.length ? `<div class="missed"><b>下一輪會多出現：</b>${heavy.map(chip).join('')}</div>` : ''}
+    <div class="hist"><b>這節課的紀錄</b>${hist.map((h,i) => `<div class="hist-row ${i===last?'now':''} ${h.score===best?'best':''}"><span>${i===last?'這次':h.at}</span><span class="bar"><i style="width:${Math.round(h.score/mx*100)}%"></i></span><span>${h.score===best?'🏅 ':''}${h.score}</span><span class="hs">${histR(h)}</span></div>`).join('')}</div>
+    <div class="r-btns"><button class="btn primary" type="button" id="rAgain">再玩一次</button>${nextBtn}<button class="btn" type="button" id="rHome">回關卡選單</button></div>`;
+  $('#rAgain').onclick = again; $('#rHome').onclick = () => show('home');
+  if ($('#rNext')) $('#rNext').onclick = nextFn;
+}
+
+/* ---------- 第三關：打字忍者 ---------- */
+const PLAYER_SVG = `<svg viewBox="0 0 100 110" aria-hidden="true"><ellipse cx="50" cy="104" rx="30" ry="5" fill="rgba(0,0,0,.25)"/>
+  <path d="M28 60 Q50 48 72 60 L76 98 Q50 104 24 98 Z" fill="#2B3A55" stroke="#1B2836" stroke-width="4"/>
+  <circle cx="50" cy="38" r="24" fill="#2B3A55" stroke="#1B2836" stroke-width="4"/>
+  <rect x="28" y="30" width="44" height="14" rx="7" fill="#FFE0BD" stroke="#1B2836" stroke-width="3"/>
+  <circle cx="42" cy="37" r="3.5" fill="#1B2836"/><circle cx="58" cy="37" r="3.5" fill="#1B2836"/>
+  <path d="M26 24 Q50 14 74 24 L74 30 Q50 21 26 30 Z" fill="#E5484D" stroke="#1B2836" stroke-width="3"/>
+  <path d="M74 26 L92 18 L88 30 Z" fill="#E5484D" stroke="#1B2836" stroke-width="3"/>
+  <rect x="62" y="66" width="30" height="7" rx="3" fill="#C9D3DD" stroke="#1B2836" stroke-width="3" transform="rotate(-25 62 70)"/></svg>`;
+function enemySVG(th){
+  const C = [['#8BC34A','#5E8F2E'],['#F28C38','#B85E1A'],['#6B7BD1','#3E4A99'],['#C2410C','#7C2D12'],['#4B5563','#111827']][th-1];
+  const horns = th >= 3 ? `<path d="M30 22 L24 4 L40 16 Z M70 22 L76 4 L60 16 Z" fill="${C[1]}" stroke="#1B2836" stroke-width="3"/>` : '';
+  const mask = th >= 4 ? `<path d="M30 40 Q50 30 70 40 L66 52 Q50 46 34 52 Z" fill="#fff" stroke="#1B2836" stroke-width="3"/>` : '';
+  const cape = th === 5 ? `<path d="M18 52 Q50 40 82 52 L90 100 Q50 92 10 100 Z" fill="#7F1D1D" stroke="#1B2836" stroke-width="3"/>` : '';
+  return `<svg viewBox="0 0 100 110" aria-hidden="true"><ellipse cx="50" cy="104" rx="28" ry="5" fill="rgba(0,0,0,.25)"/>${cape}
+    <path d="M22 96 Q16 50 50 28 Q84 50 78 96 Z" fill="${C[0]}" stroke="#1B2836" stroke-width="4"/>${horns}${mask}
+    <circle cx="40" cy="48" r="7" fill="#fff" stroke="#1B2836" stroke-width="3"/><circle cx="60" cy="48" r="7" fill="#fff" stroke="#1B2836" stroke-width="3"/>
+    <circle cx="38" cy="49" r="3" fill="#1B2836"/><circle cx="58" cy="49" r="3" fill="#1B2836"/>
+    <path d="M36 66 Q50 74 64 66" fill="none" stroke="#1B2836" stroke-width="4" stroke-linecap="round"/></svg>`;
+}
+$('#player').innerHTML = PLAYER_SVG;
+function setTheme(n, announce){
+  const T = THEMES[n-1], sc = $('#scene'); sc.dataset.th = n; sc.style.background = T.sky;
+  sc.querySelector('.far').style.background = T.far; sc.querySelector('.near').style.background = T.near; sc.querySelector('.ground').style.background = T.ground;
+  if (announce){ const b = $('#stageBig'); b.textContent = `第 ${n} 關・${T.name}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+    [523,659,784].forEach((f,i) => Sound.tone(f + n*40, .18, 'square', i*.09, .06)); }
+}
+const stageCount = C => C.len.length;
+const stageEvery = C => Math.ceil(C.goal / stageCount(C));
+const stageOfKills = (C, k) => Math.min(Math.floor(k / stageEvery(C)) + 1, stageCount(C));
+const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-1) * (THEMES.length-1) / (C.len.length-1)) + 1;
+function ninjaHud(){
+  hud([['忍者', NINJA[N.id].name, 't'], ['生命', `<span class="hearts">${Array.from({length:N.C.lives},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
+    ['擊退', `${N.kills}/${N.C.goal}`], ['分數', N.score], ['關卡', `第 ${N.stage} 關`, 't']]);
+}
+function startNinja(id){
+  stopAll();
+  const C = NINJA[id];
+  N = {id, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
+  show('ninja'); kb.blank(C.blank);
+  setTheme(themeOf(C,1), false); ninjaHud();
+  const d = N;
+  countdown($('#nCover'), `打字忍者・${C.name}`, `敵人頭上有字母，在下面的打字欄位打出來就能擊退它（不用按 Enter）！擊退 ${C.goal} 個就通關。${C.strict ? '被碰到或打錯都會扣命。' : '被碰到才扣命，打錯不扣命。'}`, () => {
+    if (N!==d) return; N.locked = false; N.nextAt = 0; focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
+}
+/* 新的字串不能和畫面上的敵人一樣，也不能是彼此的開頭（才能自動判斷要打哪一個） */
+function freshWord(len){
+  for (let t=0;t<30;t++){ const w = makeWord(len); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) return w; }
+  return null;
+}
+function spawn(){
+  const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
+  if (!word) return false;
+  const dur = C.time[N.stage-1] + C.per*(len-1);
+  const el = document.createElement('div'); el.className = 'enemy';
+  el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}`; el.style.left = X0 + '%';
+  $('#enemyLayer').appendChild(el);
+  const e = {word, el, dur, start:performance.now(), w:el.querySelector('.word')};
+  N.es.push(e); drawWords(); return true;
+}
+const maxNow = () => N.C.multi[N.stage-1] || 1;
+function drawWords(){
+  const v = $('#tin').value.toLowerCase(), any = v && N.es.some(e => e.word.startsWith(v));
+  N.es.forEach(e => { const m = any && e.word.startsWith(v), pos = m ? v.length : 0;
+    e.w.classList.toggle('dim', !!any && !m);
+    e.w.innerHTML = e.word.split('').map((c,i) => `<span class="${i<pos?'ok':i===pos?'cur':''}">${c}</span>`).join(''); });
+  if (N.C.glow){ const t = target(v); kb.glow(t ? t.word[any ? v.length : 0] : null); }
+}
+/* 要提示的敵人：符合目前打字內容、離忍者最近的那一個 */
+function target(v){
+  const c = N.es.filter(e => !v || e.word.startsWith(v));
+  return (c.length ? c : N.es).slice().sort((x,y) => progress(y) - progress(x))[0];
+}
+const progress = e => (performance.now() - e.start) / (e.dur*1000);
+const X0 = 96, X1 = 22;   /* 敵人從右邊（96%）走到忍者前面（22%） */
+function ninjaTick(now){
+  if (!N || N.over || screen!=='ninja') return;
+  if (!N.locked && paused==null){
+    /* 出現新敵人：畫面上的少於這一關的上限，而且還沒到目標數 */
+    if (N.es.length < maxNow() && N.kills + N.es.length < N.C.goal && (N.es.length === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+      if (spawn()) N.nextAt = now + SPAWN_GAP*1000;
+    }
+    for (const e of N.es.slice()){
+      const p = Math.min(1, (now - e.start) / (e.dur*1000));
+      e.el.style.left = (X0 + (X1 - X0)*p) + '%';
+      if (p >= 1){ enemyHits(e); if (!N || N.locked) break; }
+    }
+  }
+  loop = requestAnimationFrame(ninjaTick);
+}
+/* 忍者：比對打字欄位，自動找出要擊退的敵人（不用按 Enter） */
+function ninjaInput(v){
+  if (!N || N.locked) return;
+  if (!v){ N.badLen = 0; tinState(''); drawWords(); return; }
+  const ms = N.es.filter(e => e.word.startsWith(v));
+  if (ms.length){
+    if (v.length > N.lastLen) { Sound.key(); throwStar(target(v)); }
+    N.lastLen = v.length; N.badLen = 0; tinState('');
+    const hit = ms.find(e => e.word === v);
+    if (hit) return defeat(hit);
+    drawWords(); return;
+  }
+  drawWords(); N.lastLen = v.length;
+  if (v.length <= N.badLen) return;           /* 刪字時不再算錯 */
+  N.badLen = v.length;
+  const t = target(v.slice(0,-1)), want = t ? t.word[v.length-1] : null;
+  N.combo = 0; if (want){ learn(want,'bad',null); N.weak.add(want); save(); }
+  tinState('bad', N.es.length ? '沒有敵人是這樣拼的，按 Backspace 刪掉再打' : '');
+  N.es.forEach(e => { e.w.classList.remove('err'); void e.w.offsetWidth; e.w.classList.add('err'); });
+  if (N.C.strict && performance.now() > N.hurtUntil){ N.hurtUntil = performance.now() + 700; loseLife(want ? `打錯了！是 ${want.toUpperCase()}` : '打錯了！'); }
+  else Sound.bad();
+}
+function throwStar(e){
+  if (!e) return;
+  const st = document.createElement('div'); st.className = 'star'; st.textContent = '✦';
+  const stage = $('#nStage'), pl = $('#player').getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  st.style.left = (pl.right - sr.left - 10) + 'px'; st.style.bottom = (sr.bottom - pl.top - 40) + 'px'; stage.appendChild(st);
+  const er = e.el.getBoundingClientRect();
+  requestAnimationFrame(() => { st.style.left = (er.left - sr.left + er.width/2) + 'px'; st.style.bottom = (sr.bottom - er.top - er.height*.55) + 'px'; });
+  setTimeout(() => st.remove(), 220);
+}
+function removeEnemy(e){ N.es = N.es.filter(x => x !== e); e.el.classList.add('poof'); setTimeout(() => e.el.remove(), 400); }
+function defeat(e){
+  const rt = (performance.now() - e.start)/1000, remFrac = Math.max(0, 1 - rt/e.dur);
+  const pts = SCORE.base + Math.round(SCORE.speed * remFrac);
+  N.score += pts; N.kills++; N.combo++; N.maxCombo = Math.max(N.maxCombo, N.combo); N.rts.push(rt);
+  e.word.split('').forEach(c => { if (learn(c, remFrac > .5 ? 'good' : 'ok', rt/e.word.length)) N.weak.add(c); }); save();
+  e.w.innerHTML = e.word.split('').map(c => `<span class="ok">${c}</span>`).join('');
+  removeEnemy(e); Sound.slash();
+  const pl = $('#player'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
+  const p = document.createElement('div'); p.className = 'pts'; p.textContent = `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
+  tinReset(); kb.clear(); drawWords(); ninjaHud();
+  if (N.kills >= N.C.goal) return ninjaWin();
+  const st = stageOfKills(N.C, N.kills), n = N;
+  if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), true); ninjaHud(); } }, 300); }
+  else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
+}
+function enemyHits(e){
+  N.combo = 0; e.word.split('').forEach(c => { learn(c,'bad',null); N.weak.add(c); }); save();
+  const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
+  removeEnemy(e); if (wasTarget) tinReset();
+  N.holdUntil0 = performance.now() + 700;
+  drawWords(); loseLife('被敵人碰到了！');
+}
+function loseLife(msg){
+  N.lives--; Sound.bad();
+  const pl = $('#player'); pl.classList.remove('hurt'); void pl.offsetWidth; pl.classList.add('hurt');
+  const f = document.createElement('div'); f.className = 'flash'; $('#nStage').appendChild(f); setTimeout(() => f.remove(), 450);
+  fx($('#nFx'), 'no', N.lives > 0 ? msg : '沒有命了！'); ninjaHud();
+  const n = N;
+  if (N.lives <= 0){ N.locked = true; return setTimeout(() => { if (N===n) ninjaEnd(false); }, 1200); }
+}
+function ninjaWin(){
+  N.over = true; N.es.forEach(e => e.el.remove()); N.es = []; const n = N, b = $('#stageBig');
+  b.textContent = `🏆 ${n.C.goal} 個敵人全部擊退！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+  [523,659,784,1047,1319].forEach((f,i) => Sound.tone(f,.25,'triangle',i*.12,.12));
+  setTimeout(() => { if (screen==='ninja') ninjaEnd(true, n); }, 1800);
+}
+function ninjaEnd(win, fin){
+  const n = fin || N; N = null; $('#enemyLayer').innerHTML = '';
+  const R = P.ninja[n.id], prev = R.hist.length ? R.hist[R.hist.length-1].score : null, bestBefore = R.best || null;
+  R.hist.push({score:n.score, kills:n.kills, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
+  const tiBefore = titleIndex(), nWas = NINJA_ORDER.map(ninjaOpen);
+  if (n.score > R.best) R.best = n.score;
+  if (win) R.cleared = true;
+  save(); Sound[win ? 'win' : 'soft']();
+  const trend = win ? {cls:'best', text:'🏆 通關！'} : trendOf(n.score, prev, bestBefore, 100);
+  const notes = [];
+  if (!win){ const st = stageOfKills(n.C, n.kills); notes.push(note(st < stageCount(n.C) ? `再擊退 ${st*stageEvery(n.C) - n.kills} 個，就能看到第 ${st+1} 關（${THEMES[themeOf(n.C, st+1)-1].name}）・離通關還有 ${n.C.goal - n.kills} 個` : `最後一關！再擊退 ${n.C.goal - n.kills} 個就通關`, true)); }
+  NINJA_ORDER.forEach((id,i) => { if (!nWas[i] && ninjaOpen(id)) notes.push(note(`忍者「${NINJA[id].name}」打開了！`)); });
+  if (titleIndex() > tiBefore) notes.push(note(`🎖 得到稱號「${TITLES[titleIndex()]}」！`));
+  const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
+  const nx = NINJA_ORDER[NINJA_ORDER.indexOf(n.id)+1];
+  const nextBtn = win && nx && ninjaOpen(nx) ? `<button class="btn" type="button" id="rNext">挑戰忍者「${NINJA[nx].name}」</button>` : '';
+  showResult(`打字忍者・${n.C.name}${win ? '：通關！' : ''}`, trend, `<div class="r-stars">${win ? '🏆' : '🥋'}</div><div class="r-score">${n.score}<small>分</small></div>`,
+    [['擊退', `${n.kills}/${n.C.goal}`], ['打到', `第 ${stageOfKills(n.C, n.kills)} 關`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最高分', R.best]], false,
+    notes, n.weak, [], R.hist, h => `${h.kills} 個`, 1, () => startNinja(n.id), nextBtn, () => startNinja(nx));
+}
+
+/* ---------- 打字欄位與鍵盤事件 ----------
+   學生要自己切換成英文輸入法：欄位裡出現注音或中文字，就提醒按 Shift；英文打對了自動送出，不用按 Enter。
+   虛擬鍵盤只顯示學生按了哪些鍵（依實體按鍵位置），不影響判斷。 */
+const tin = $('#tin');
+let composing = false, remindT = 0;
+function remind(text){ const el = screen==='ninja' ? $('#nRemind') : $('#dRemind'); el.hidden = false; el.textContent = text; clearTimeout(remindT); remindT = setTimeout(() => el.hidden = true, 2200); }
+function tinState(kind, msg){ tin.classList.toggle('bad', kind==='bad'); tin.classList.toggle('ime', kind==='ime'); const h = $('#thint'); h.className = 'thint' + (kind==='bad' ? ' bad' : kind==='ime' ? ' warn' : ''); h.textContent = msg || ''; }
+function tinReset(){ tin.value = ''; composing = false; tinState(''); if (N) { N.lastLen = 0; N.badLen = 0; } }
+function focusTin(){ if (!$('#typeZone').hidden && $('#signWrap').hidden && $('#certWrap').hidden) tin.focus({preventScroll:true}); }
+const IME_MSG = '輸入法是中文喔！按一下 Shift 換成英文（看到ㄅㄆㄇ或中文字，就是還沒切換）';
+tin.addEventListener('compositionstart', () => { composing = true; tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); });
+tin.addEventListener('compositionend', () => { composing = false; setTimeout(onTin, 0); });
+tin.addEventListener('input', e => { if (e.isComposing || composing) return; onTin(); });
+function onTin(){
+  const raw = tin.value;
+  if (/[^\x00-\x7F]/.test(raw)){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); return; }   /* 注音、中文字：不算答錯，請學生刪掉、切換 */
+  if (/[A-Z]/.test(raw)){ tinState('ime', '打出來是大寫字母：先按 Caps Lock 關掉大寫燈，刪掉再打'); remind('大寫燈亮了！按 Caps Lock 關掉'); return; }   /* 大寫不算（訓練學生確認輸入狀態） */
+  const v = raw.toLowerCase().replace(/\s+/g,'');
+  if (/[^a-z]/.test(v)){ tinState('bad', '只要打英文字母喔，按 Backspace 刪掉'); return; }
+  if (screen==='drill') drillInput(v); else if (screen==='ninja') ninjaInput(v);
+}
+tin.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); if (!composing && tin.value) remind('英文打對了就會自動送出，不用按 Enter'); } });
+document.addEventListener('keydown', e => {
+  if (!$('#signWrap').hidden || !$('#certWrap').hidden) return;
+  if (!(screen==='drill' || screen==='ninja')) return;
+  if (e.target !== tin && e.target && e.target.tagName === 'INPUT') return;
+  Sound.init();
+  if (e.target !== tin && !e.ctrlKey && !e.metaKey && !e.altKey) focusTin();   /* 點到別處也能直接打 */
+  const m = /^Key([A-Z])$/.exec(e.code); if (!m) return;
+  const el = kb.el(m[1].toLowerCase()); if (el) el.classList.add('down');
+});
+document.addEventListener('keyup', e => { const m = /^Key([A-Z])$/.exec(e.code); if (m){ const el = kb.el(m[1].toLowerCase()); if (el) el.classList.remove('down'); } });
+['nStage'].forEach(id => document.getElementById(id).addEventListener('click', focusTin));
+document.querySelector('[data-screen=drill] .stage').addEventListener('click', focusTin);
+
+/* ---------- 視窗失去焦點時暫停 ---------- */
+(function(){
+  const pill = $('#focusPill');
+  const off = () => { if (!$('#signWrap').hidden || !$('#certWrap').hidden) return; pill.hidden = false; pill.textContent = (D||N) ? '遊戲暫停中：點一下這裡繼續' : '點一下這裡，讓鍵盤連上遊戲'; if (paused==null) paused = performance.now(); kbEl.querySelectorAll('.down').forEach(x => x.classList.remove('down')); };
+  const on = () => { pill.hidden = true; if (paused!=null){ const d = performance.now() - paused; paused = null; if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; } } focusTin(); };
+  window.addEventListener('blur', off); window.addEventListener('focus', on);
+  pill.onclick = () => { window.focus(); on(); focusTin(); };
+})();
+
+/* ---------- 下課前自動頒獎（規格書 5.5） ---------- */
+function showAward(preview){
+  const el = $('#certIn');
+  if (!SET){ el.innerHTML = '<p class="cert-empty">還沒有選練習範圍。</p>'; $('#certWrap').hidden = false; return; }
+  const ti = titleIndex();
+  if (ti < 0 && !preview){
+    el.innerHTML = `<p class="cert-kicker">資訊課・打字忍者</p><p class="cert-empty">今天還差一點點！<br>把第一關完成 ${L1.plays} 次，就能成為「${TITLES[0]}」。</p>`;
+  } else {
+    const t = TITLES[Math.max(0, ti)], S = SETS[SET];
+    const nin = NINJA_ORDER.filter(id => P.ninja[id].best || P.ninja[id].cleared).map(id => `<div>${P.ninja[id].cleared ? '🏆 ' : ''}忍者${NINJA[id].name}・最高 ${P.ninja[id].best} 分</div>`).join('');
+    el.innerHTML = `<p class="cert-kicker">資訊課・打字忍者</p><p class="cert-sub">獎　狀</p>
+      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} 同學<br>在「打字忍者・${H(S.name)}（${S.keys.toUpperCase()}）」中${H(AWARD_LINE[Math.max(0,ti)])}，<br>特頒此狀，恭喜成為</p>
+      <h2 class="cert-title">${t}</h2>
+      <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div><div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>${nin}</div>
+      <p class="cert-date">${todayStr()}${preview && ti < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
+  }
+  $('#certWrap').hidden = false; Sound.win();
+}
+$('#certClose').onclick = () => { $('#certWrap').hidden = true; };
+$('#certPrint').onclick = () => window.print();
+let lastCheck = Date.now(), awarded = false;
+function endTimeToday(){ const [h,m] = CFG.end.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d.getTime(); }
+setInterval(() => {
+  const now = Date.now(), end = endTimeToday();
+  if (!awarded && lastCheck < end && now >= end){ awarded = true; if (paused==null) paused = performance.now(); showAward(false); }
+  lastCheck = now;
+}, 3000);
+
+/* ---------- 老師隱藏設定：連點標題 5 下 ---------- */
+(function(){
+  let clicks = 0, t = 0;
+  $('#title').addEventListener('click', () => {
+    clicks++; clearTimeout(t); t = setTimeout(() => clicks = 0, 2000);
+    if (clicks >= 5 && screen==='home'){ clicks = 0; renderPanel(); $('#tpanel').hidden = false; $('#tpanel').scrollIntoView({behavior:'smooth'}); }
+  });
+  function renderPanel(){
+    $('#tpanel').innerHTML = `<div class="row"><b>老師設定</b>
+      <button class="btn sm" type="button" id="tAward">預覽獎狀</button>
+      <button class="btn sm" type="button" id="tUnlock">解鎖全部</button>
+      <button class="btn sm" type="button" id="tReset">清除這台電腦的紀錄</button>
+      <button class="btn sm" type="button" id="tClose">關閉</button></div>
+      <p class="tnote">下課頒獎時間：${H(CFG.end)}。老師示範：網址後面加 #demo。要指定字母、改頒獎時間，請用老師設定頁 typing-setup.html 產生連結給學生。</p>`;
+    $('#tAward').onclick = () => showAward(true);
+    $('#tUnlock').onclick = () => { P.unlock = true; save(); renderHome(); };
+    let arm = false;
+    $('#tReset').onclick = () => {
+      if (!arm){ arm = true; $('#tReset').textContent = '再按一次確認（清除所有範圍）'; setTimeout(() => { arm = false; const b = $('#tReset'); if (b) b.textContent = '清除這台電腦的紀錄'; }, 3000); return; }
+      try{ Object.keys(localStorage).filter(k => k.indexOf('ninjatype1_')===0).forEach(k => localStorage.removeItem(k)); }catch(e){}
+      loadSet(SET); $('#tReset').textContent = '已清除'; renderHome();
+    };
+    $('#tClose').onclick = () => $('#tpanel').hidden = true;
+  }
+})();
+
+/* ---------- 啟動 ---------- */
+if (DEMO){ $('#verBadge').classList.add('demo'); document.title += '・示範'; WHO = {code:'', text:'老師示範'}; renderWho(); }
+if (SETS.cus){ loadSet('cus'); show('home'); } else show('sets');
+if (!DEMO) openSignin();
+</script>
+</body>
+</html>
