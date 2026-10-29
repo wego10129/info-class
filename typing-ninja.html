@@ -134,9 +134,7 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .timer div.slow{background:#F28C38}
 .how{font:900 18px var(--f-body);color:var(--ink-soft);min-height:0}
 .how:empty,.clock:empty{display:none}
-.clock{font:600 26px/1.1 var(--f-key);font-variant-numeric:tabular-nums;color:var(--good)}
-.clock.warn{color:var(--mid)}
-.clock.slow{color:#C2410C}
+.clock{position:absolute;left:12px;top:10px;z-index:5;margin:0;font:700 14px/1.2 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-soft);background:rgba(255,255,255,.7);border-radius:8px;padding:1px 8px}
 .dojo{transition:background .5s}
 .dojo[data-tier="2"]{background:linear-gradient(#CFE3FF 0 62%,#5B7FC7 62% 100%)}
 .dojo[data-tier="2"] .scroll{background:#EEF5FF;border-color:#1D4ED8;box-shadow:0 8px 0 #1D4ED8}
@@ -204,6 +202,7 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .tin{font:600 30px/1.2 var(--f-key);letter-spacing:.2em;text-transform:uppercase;text-align:center;border:4px solid var(--ink);border-radius:14px;padding:4px 12px;background:#FBFDFF;outline:none;box-shadow:0 4px 0 var(--ink);min-width:0}
 .tin:focus{border-color:var(--c-mid);box-shadow:0 4px 0 var(--c-mid)}
 .tin.bad{border-color:var(--bad);box-shadow:0 4px 0 var(--bad);background:#FFF1F1;color:var(--bad)}
+.tin.comp{border-color:var(--gold);box-shadow:0 4px 0 var(--gold);background:#FFF6C2;text-decoration:underline dashed var(--gold)}
 .tin.ime{border-color:#F59E0B;box-shadow:0 4px 0 #F59E0B;background:#FFF7E0}
 .thint{grid-column:1/-1;min-height:1.4em;font-size:14px;font-weight:900;text-align:center;color:var(--ink-soft)}
 .thint.warn{color:#B45309}
@@ -276,6 +275,9 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
 .signin .hint{font-size:15px;color:var(--ink-soft);font-weight:700}
 .signin .preview{font:900 24px var(--f-display);min-height:1.5em;text-align:center}
 .signin .preview.err{color:var(--bad);font:900 16px var(--f-body)}
+.nmfield{display:grid;gap:4px;font-weight:900}
+.nmfield small{display:block;font-size:13px;color:var(--ink-soft);font-weight:700}
+.signin .nmfield input{font:700 30px var(--f-body);letter-spacing:.1em}
 .cert-wrap{position:fixed;inset:0;z-index:50;background:rgba(27,40,54,.65);display:grid;place-items:center;padding:16px;overflow:auto}
 .cert{width:min(720px,100%);background:#FFFDF4;border:4px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:14px;animation:popcert .4s ease-out}
 @keyframes popcert{from{transform:scale(.7);opacity:0}}
@@ -316,7 +318,7 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
     <section data-screen="check" hidden>
       <div class="card check">
         <h2>🔍 開始前：檢查輸入法</h2>
-        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號下面出現底線時，按 <b>Enter</b> 送出</li></ol>
+        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號出現在格子裡（格子變黃）時，按 <b>Enter</b> 送出</li></ol>
         <div class="chk-list" id="chkList"></div>
         <input id="chkIn" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="試打格子">
         <p class="thint" id="chkMsg"></p>
@@ -331,7 +333,8 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
       <nav class="footnav"><button class="btn sm" type="button" id="backSets">⬅ 換練習範圍</button><button class="btn sm" type="button" id="reCheck" hidden>🔍 再檢查一次輸入法</button><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="drill" hidden>
-      <div class="stage"><div class="dojo" id="dojo" data-tier="1"><div class="scroll"><div class="tierbar" id="tier" hidden></div><p class="lbl" id="dLbl"></p><div class="target" id="target"></div><p class="how" id="dHow"></p><p class="clock" id="dClock"></p></div></div>
+      <div class="stage"><div class="dojo" id="dojo" data-tier="1"><div class="scroll"><div class="tierbar" id="tier" hidden></div><p class="lbl" id="dLbl"></p><div class="target" id="target"></div><p class="how" id="dHow"></p></div></div>
+        <p class="clock" id="dClock"></p>
         <div id="dBig" class="stagebig"></div><div id="dRemind" class="remind" hidden></div><div id="dFx" class="fixfx"></div><div id="dCover" class="go-cover" hidden></div></div>
       <div class="timer" id="timerWrap"><div id="timerBar"></div></div>
       <div id="zones" class="timer-zones"></div>
@@ -360,6 +363,8 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
   <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
   <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼" placeholder="30101">
   <p class="preview" id="sPrev"></p>
+  <label class="nmfield" id="sNameBox" hidden><span>你的名字<small>（要換成中文輸入法；不會打可以空白，獎狀會印座號）</small></span>
+    <input id="sName" maxlength="10" aria-label="姓名" placeholder="王小明"></label>
   <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
 </form></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
@@ -399,7 +404,7 @@ const PACKS = {
     all:'，。、；：？！',
     sets:{ basic:{name:'基本', keys:'，。？！', color:'var(--c-mid)'}, adv:{name:'進階', keys:'、；：', color:'var(--c-top)'}, all:{name:'全部', keys:'，。、；：？！', color:'var(--c-bot)'} },
     intro:['選擇要練習的標點符號','先選一組，三個關卡都會用這一組的符號出題。每一組的紀錄分開算。'],
-    tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵；符號下面有底線時按 Enter 送出）</small>',
+    tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵，再按 Enter 送出）</small>',
     l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1～4 個符號・連對升階',
     ninjaName:'標點忍者', enemyHint:'敵人頭上有標點符號，在下面的打字欄位打出來就能擊退它',
     titles:['標點見習生','標點下忍','標點中忍','標點上忍'],
@@ -417,8 +422,12 @@ const L1_PTS = {great:1, good:.8, ok:.5};   /* 第一關每題得分（優／良
          答對＝沒打錯、沒超時；答錯＝打錯過或超時（超時＝太慢） */
 const L2 = KIND === 'en'
   ? {name:PK.l2, mode:'fixed', n:10, minLen:2, maxLen:4, goodBase:1, goodPer:1, limitBase:2, limitPer:2.5}
-  : {name:PK.l2, mode:'branch', n:20, goodBase:1.5, goodPer:1.5, limitBase:3, limitPer:3,
-     tiers:[{name:'普通', len:[1,1], up:5, down:null}, {name:'玄人', len:[2,2], up:5, down:2}, {name:'達人', len:[3,4], up:null, down:2}]};
+  : {name:PK.l2, mode:'branch', n:20,
+     /* 每一階各自的秒數：良＝goodBase＋goodPer×符號數；時限＝limitBase＋limitPer×符號數（含按 Enter）
+        階數越高，每個符號給的時間越多（老師 2026-10-29：玄人原本對大人也偏吃力） */
+     tiers:[{name:'普通', len:[1,1], up:5, down:null, goodBase:1, goodPer:3,   limitBase:2, limitPer:8},
+            {name:'玄人', len:[2,2], up:5, down:2,    goodBase:1, goodPer:3.5, limitBase:2, limitPer:9},
+            {name:'達人', len:[3,4], up:null, down:2, goodBase:1, goodPer:4,   limitBase:2, limitPer:10}]};
 const STAR_AT = [60,70,80,90,95];
 const L2_CROWN_STARS = 5;              /* 第二關 5 顆星＝皇冠（老師 2026-10-28 決定） */
 /* 忍者三級：第二關拿到 open 顆星就打開；前一級通關也會打開下一級
@@ -432,9 +441,11 @@ const NINJA = KIND === 'en' ? {
   brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8},
   master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[2,3],[3,3],[3,4],[3,4],[4,4]],     time:[4.6,4.3,4,3.8,3.6], per:1,   multi:[1,1,2,2,2],   gap:1.5},
 } : {
-  novice:{name:'新手', open:3, goal:15, lives:3, glow:true,  blank:false, len:[[1,1],[1,1],[1,2]],                 time:[7,6.5,6],           per:2,   multi:[1,1,1],       gap:2.4},
-  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,1],[1,2],[2,2],[2,2],[2,3]],     time:[6.5,6,5.6,5.3,5],   per:1.8, multi:[1,1,1,2,2],   gap:2.2},
-  master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[6,5.6,5.2,4.9,4.6], per:1.6, multi:[1,1,2,2,2],   gap:1.8},
+  /* 標點（老師 2026-10-29）：10／20／30 隻；勇者、大師下修（字數少一點、走慢一點），三級仍有差異：
+     新手＝一次 1 個、最慢、鍵盤提示；勇者＝1 個 → 偶爾 2 個、不提示；大師＝1～2 個 → 2 個、最後有 2 隻同時出現、鍵帽沒有字 */
+  novice:{name:'新手', open:3, goal:10, lives:3, glow:true,  blank:false, len:[[1,1],[1,1],[1,1]],                 time:[9,8.5,8],           per:3,   multi:[1,1,1],       gap:3},
+  brave: {name:'勇者', open:4, goal:20, lives:3, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]],     time:[8.5,8,7.6,7.3,7],   per:3,   multi:[1,1,1,1,1],   gap:3},
+  master:{name:'大師', open:5, goal:30, lives:3, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[2,2],[2,2]],     time:[8,7.6,7.2,6.9,6.6], per:3,   multi:[1,1,1,1,2],   gap:3},
 };
 const NINJA_ORDER = ['novice','brave','master'];
 const SCORE = {base:100, speed:100};   /* 每擊退一隻：100 分＋越快越多（最多再加 100） */
@@ -447,13 +458,14 @@ const THEMES = [
 ];
 const TITLES = PK.titles;
 const TITLE_RULE = ['第一關完成 3 次',`${PK.ninjaName}「新手」通關`,`${PK.ninjaName}「勇者」通關`,`${PK.ninjaName}「大師」通關`];
-const AWARD_LINE = ['認真完成第一關 3 次',`擊退${PK.ninjaName}「新手」的 15 個敵人`,`擊退${PK.ninjaName}「勇者」的 30 個敵人`,`擊退${PK.ninjaName}「大師」的 50 個敵人`];
+const AWARD_LINE = ['認真完成第一關 3 次'].concat(['novice','brave','master'].map(id => `擊退${PK.ninjaName}「${NINJA[id].name}」的 ${NINJA[id].goal} 個敵人`));
 const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
 const HISTORY_MAX = 10;
 /* 網址參數（老師設定頁產生）：keys 字母／符號、goal 練習目標、end 下課頒獎時間、classes/seats 範圍、demo 示範 */
 const Q = new URLSearchParams(location.hash.replace(/^#/,''));
 const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:59',
-  classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40)};
+  classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40),
+  nameOn: Q.get('nm') === '1'};   /* nm=1：老師勾選「學生可以輸入自己的名字」（姓名只留在畫面上，不儲存） */
 let DEMO = Q.has('demo');
 const ALL = PK.all;
 const qKeys = [...new Set([...(Q.get('keys')||'').toLowerCase()].filter(c => ALL.includes(c)))].join('');
@@ -513,9 +525,12 @@ $('#sCode').addEventListener('input', e => {
 $('#signForm').addEventListener('submit', e => {
   e.preventDefault(); const r = parseCode($('#sCode').value);
   if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
+  const nm = CFG.nameOn ? $('#sName').value.replace(/\s+/g,'').slice(0,10) : '';
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }   /* 有名字：「三年一班 王小明」（老師 2026-10-29） */
   WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); afterSign();
 });
-function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sPrev').textContent = WHO ? WHO.text : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
+$('#sNameBox').hidden = !CFG.nameOn;
+function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name ? WHO.name : ''; $('#sPrev').textContent = WHO ? parseCode(WHO.code).text || '' : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
 function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
 $('#who').onclick = () => { if (screen==='home' || screen==='sets') openSignin(); };
 
@@ -688,7 +703,7 @@ function startDrill(lv){
   show('drill');
   $('#dLbl').textContent = isL1 ? `在打字欄位打出這個${PK.unit}` : `在打字欄位依序打出這些${PK.unit}`;
   $('#target').innerHTML = ''; $('#dHow').textContent = ''; $('#dClock').textContent = '';
-  $('#tier').hidden = !br; $('#dojo').dataset.tier = '1';
+  $('#tier').hidden = !br; $('#dojo').dataset.tier = '1'; $('#timerWrap').hidden = isL1;   /* 第一關不顯示計時長條，避免壓力（老師 2026-10-29） */
   $('#zones').innerHTML = isL1 ? `<span>「優」${L1.great} 秒內</span><span>「良」${L1.great}～${L1.good} 秒</span><span>「可」${L1.good} 秒以上</span><span>不限時：打錯按 Backspace 刪掉再打，打對為止</span>`
     : br ? `<span>連續答對 ${L2.tiers[0].up} 題 → 升一階</span><span>連續答錯 ${L2.tiers[1].down} 題（打錯或太慢）→ 降一階</span><span>「良」沒打錯又夠快・「可」打錯改正或比較慢・超過時間＝「不可」</span>`
     : `<span>「良」沒打錯、夠快</span><span>「可」打錯後按 Backspace 改正，或比較慢</span><span>超過時間＝「不可」</span>`;
@@ -720,10 +735,10 @@ function drillNext(){
   else w = D.q[D.i];
   D.word = w; D.pos = 0; D.typo = false; D.badShown = false; D.badLen = 0;
   if (D.lv===1){ D.good_t = L1.great; D.limit_t = 0; }
-  else { D.good_t = L2.goodBase + L2.goodPer*w.length; D.limit_t = L2.limitBase + L2.limitPer*w.length; }
+  else { const T = D.br ? L2.tiers[D.tier] : L2; D.good_t = T.goodBase + T.goodPer*w.length; D.limit_t = T.limitBase + T.limitPer*w.length; }
   drawTarget(); kb.clear(); if (D.lv===1) kb.glow(w[0]); tinReset(); focusTin();
   $('#dHow').textContent = D.lv===1 && KIND==='punc' ? `${PUNC[w].name}：${PUNC[w].how}` : '';
-  $('#dClock').textContent = D.lv===1 ? '0.0 秒' : ''; $('#dClock').className = 'clock';
+  $('#dClock').textContent = D.lv===1 ? '⏱ 0.0 秒' : '';
   if (D.br) drawTier();
   D.start = performance.now(); D.deadline = D.limit_t ? D.start + D.limit_t*1000 : Infinity; D.locked = false;
   drillHud(); cancelAnimationFrame(loop); loop = requestAnimationFrame(drillTick);
@@ -738,7 +753,7 @@ function drillTick(now){
     if (D.lv===1){   /* 正數計時：綠＝優、黃＝良、橘＝可；長條 10 秒滿 */
       const t = (now - D.start)/1000, cls = t < L1.great ? '' : t < L1.good ? 'warn' : 'slow';
       bar.style.transform = `scaleX(${Math.min(1, t/10)})`; bar.className = cls;
-      const c = $('#dClock'); c.textContent = t.toFixed(1) + ' 秒'; c.className = 'clock ' + cls;
+      $('#dClock').textContent = '⏱ ' + t.toFixed(1) + ' 秒';
     } else {
       const total = D.limit_t*1000, rem = Math.max(0, D.deadline - now);
       bar.style.transform = `scaleX(${rem/total})`; bar.className = (total-rem)/1000 <= D.good_t ? '' : 'warn';
@@ -1047,14 +1062,14 @@ const tin = $('#tin');
 let composing = false, remindT = 0;
 function remind(text){ const el = screen==='ninja' ? $('#nRemind') : $('#dRemind'); el.hidden = false; el.textContent = text; clearTimeout(remindT); remindT = setTimeout(() => el.hidden = true, 2200); }
 function tinState(kind, msg){ tin.classList.toggle('bad', kind==='bad'); tin.classList.toggle('ime', kind==='ime'); const h = $('#thint'); h.className = 'thint' + (kind==='bad' ? ' bad' : kind==='ime' ? ' warn' : ''); h.textContent = msg || ''; }
-function tinReset(){ tin.value = ''; composing = false; tinState(''); if (N) { N.lastLen = 0; N.badLen = 0; } }
+function tinReset(){ tin.value = ''; composing = false; tin.classList.remove('comp'); tinState(''); if (N) { N.lastLen = 0; N.badLen = 0; } }
 function focusTin(){ if (!$('#typeZone').hidden && $('#signWrap').hidden && $('#certWrap').hidden) tin.focus({preventScroll:true}); }
 const IME_MSG = '輸入法是中文喔！按一下 Shift 換成英文（看到ㄅㄆㄇ或中文字，就是還沒切換）';
 const HALF_MSG = '打出來是半形（英文）的符號，算打錯：輸入法換成「中」，按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打';
 tin.addEventListener('compositionstart', () => { composing = true;
   if (KIND === 'en'){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); }
-  else tinState('', '符號下面有底線時，按 Enter 送出'); });
-tin.addEventListener('compositionend', () => { composing = false; setTimeout(onTin, 0); });
+  else { tin.classList.add('comp'); tinState('', '按 Enter 送出'); } });
+tin.addEventListener('compositionend', () => { composing = false; tin.classList.remove('comp'); setTimeout(onTin, 0); });
 tin.addEventListener('input', e => { if (e.isComposing || composing) return; onTin(); });
 function onTin(){
   const raw = tin.value;
@@ -1111,7 +1126,7 @@ function showAward(preview){
     const t = TITLES[Math.max(0, ti)], S = SETS[SET];
     const nin = NINJA_ORDER.filter(id => P.ninja[id].best || P.ninja[id].cleared).map(id => `<div>${P.ninja[id].cleared ? '🏆 ' : ''}${PK.ninjaName}${NINJA[id].name}・最高 ${P.ninja[id].best} 分</div>`).join('');
     el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-sub">獎　狀</p>
-      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} 同學<br>在「${PK.app}・${H(S.name)}（${S.keys.toUpperCase()}）」中${H(AWARD_LINE[Math.max(0,ti)])}，<br>特頒此狀，恭喜成為</p>
+      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${S.keys.toUpperCase()}）」中${H(AWARD_LINE[Math.max(0,ti)])}，<br>特頒此狀，恭喜成為</p>
       <h2 class="cert-title">${t}</h2>
       <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div><div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>${nin}</div>
       <p class="cert-date">${todayStr()}${preview && ti < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
@@ -1167,7 +1182,7 @@ function chkStart(){
   $('#chkMsg').className = 'thint'; $('#chkMsg').textContent = '先點一下格子，再打第一個符號';
   $('#chkSkip').hidden = !DEMO; chkDraw(); setTimeout(() => { if (screen==='check' && $('#signWrap').hidden) i.focus(); }, 60);
 }
-function chkSay(kind, t){ const m = $('#chkMsg'), i = $('#chkIn'); m.className = 'thint' + (kind==='bad' ? ' bad' : kind==='warn' ? ' warn' : ''); m.textContent = t; i.className = 'tin' + (kind==='bad' ? ' bad' : kind==='warn' ? ' ime' : ''); }
+function chkSay(kind, t){ const m = $('#chkMsg'), i = $('#chkIn'); m.className = 'thint' + (kind==='bad' ? ' bad' : kind==='warn' ? ' warn' : ''); m.textContent = t; i.className = 'tin' + (chkComp ? ' comp' : '') + (kind==='bad' ? ' bad' : kind==='warn' ? ' ime' : ''); }
 function chkTest(){
   const i = $('#chkIn'), v = i.value.replace(/\s+/g,''); if (!v || chkI >= CHK.length) return;
   const want = CHK[chkI].ch;
@@ -1186,8 +1201,8 @@ function chkTest(){
 }
 (function(){
   const i = $('#chkIn');
-  i.addEventListener('compositionstart', () => { chkComp = true; chkSay('', '看到底線了！按 Enter 送出'); });
-  i.addEventListener('compositionend', () => { chkComp = false; setTimeout(chkTest, 0); });
+  i.addEventListener('compositionstart', () => { chkComp = true; i.classList.add('comp'); chkSay('', '符號出來了！按 Enter 送出'); });
+  i.addEventListener('compositionend', () => { chkComp = false; i.classList.remove('comp'); setTimeout(chkTest, 0); });
   i.addEventListener('input', e => { if (e.isComposing || chkComp) return; if (!i.value){ chkSay('', chkI < CHK.length ? `打「${CHK[chkI].ch}」（${CHK[chkI].how}）` : ''); return; } chkTest(); });
   i.addEventListener('keydown', e => { if (e.key === 'Enter' && !chkComp && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); chkTest(); } });
   $('#chkGo').onclick = () => { Sound.init(); show(SET ? 'home' : 'sets'); };

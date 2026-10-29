@@ -38,6 +38,9 @@
 .typein.wide{width:min(100%,460px)}
 .typein.num{width:9em}
 .typein.time{width:11em}
+.check-opt{display:flex;gap:10px;align-items:flex-start;margin-top:12px;border:3px solid var(--ink);border-radius:12px;padding:8px 12px;background:#fff;cursor:pointer}
+.check-opt input{width:24px;height:24px;margin-top:3px;accent-color:#1FA963;flex:none}
+.check-opt small{display:block;font-weight:700;color:var(--ink-soft)}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:700}
 .sum dt{color:var(--soft)}
@@ -68,7 +71,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
   <nav class="flow" aria-label="設定流程">
     <a href="#s1" id="f1"><b>1</b>選字母<small>至少 2 個</small></a><span class="arr">→</span>
     <a href="#s2" id="f2"><b>2</b>練習目標<small>當作網頁名稱</small></a><span class="arr">→</span>
-    <a href="#s3" id="f3"><b>3</b>其他設定<small>頒獎時間、班級座號</small></a><span class="arr">→</span>
+    <a href="#s3" id="f3"><b>3</b>其他設定<small>頒獎時間、班級座號、姓名</small></a><span class="arr">→</span>
     <a href="#s4" id="f4"><b>4</b>預覽<small>看學生畫面</small></a><span class="arr">→</span>
     <a href="#s5" id="f5"><b>5</b>發給學生<small>連結或捷徑檔</small></a>
   </nav>
@@ -111,6 +114,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
+    <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」（可以空白）；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
     <p class="msg err" id="msg3"></p>
   </section>
 
@@ -121,6 +125,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
       <dt>字母</dt><dd id="sumKeys">—</dd>
       <dt>下課頒獎</dt><dd id="sumEnd">—</dd>
       <dt>班級座號</dt><dd id="sumCls">—</dd>
+      <dt>學生姓名</dt><dd id="sumName">—</dd>
     </dl>
     <div class="sublinks">
       <button class="btn" type="button" id="open">👀 預覽學生畫面</button>
@@ -170,7 +175,7 @@ function normTime(v){
 const numIn = (id, lo, hi, d) => { const n = parseInt($('#'+id).value, 10); return n >= lo && n <= hi ? n : null; };
 function state(){
   const end = normTime($('#end').value), c = numIn('classes',1,30), s = numIn('seats',1,60);
-  return {keys:keysNow(), goal:$('#goal').value.trim(), end, c, s, ok: keysNow().length >= 2 && end && c && s};
+  return {keys:keysNow(), goal:$('#goal').value.trim(), end, c, s, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && end && c && s};
 }
 function params(st, demo){
   const p = new URLSearchParams();
@@ -179,6 +184,7 @@ function params(st, demo){
   if (st.end !== '11:59') p.set('end', st.end);
   if (st.c !== 20) p.set('classes', st.c);
   if (st.s !== 40) p.set('seats', st.s);
+  if (st.nm) p.set('nm', '1');
   if (demo) p.set('demo', '1');
   return p.toString();
 }
@@ -197,6 +203,7 @@ function render(){
   $('#sumGoal').textContent = st.goal || '老師指定（沒有填目標）';
   $('#sumKeys').textContent = k.length ? k.join(' ').toUpperCase() : '還沒選';
   $('#sumEnd').textContent = st.end || '時間格式不對';
+  $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
   ['open','demo','copy','shortcut'].forEach(id => $('#'+id).disabled = !st.ok);
   $('#link').textContent = st.ok ? linkOf(st) : '設定完成後才會出現連結';
@@ -206,6 +213,7 @@ function render(){
 $('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; picked.has(b.dataset.k) ? picked.delete(b.dataset.k) : picked.add(b.dataset.k); render(); });
 document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { picked.clear(); b.dataset.p.split('').forEach(c => picked.add(c)); render(); });
 ['goal','end','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
+$('#nameOn').addEventListener('change', render);
 $('#end').addEventListener('blur', () => { const t = normTime($('#end').value); if (t) $('#end').value = t; render(); });
 ['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
 document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));
