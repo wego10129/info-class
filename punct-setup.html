@@ -43,6 +43,8 @@
 .typein.time{width:11em}
 .check-opt{display:flex;gap:10px;align-items:flex-start;margin-top:12px;border:3px solid var(--ink);border-radius:12px;padding:8px 12px;background:#fff;cursor:pointer}
 .check-opt input{width:24px;height:24px;margin-top:3px;accent-color:#1FA963;flex:none}
+.tip-block{margin-top:8px;border:3px dashed #F28C38;border-radius:12px;padding:8px 14px;background:#FFF4E5;font-size:15px}
+.tip-block ul{margin:4px 0 0;padding-left:1.2em;font-weight:700}
 .check-opt small{display:block;font-weight:700;color:var(--ink-soft)}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:700}
@@ -116,7 +118,8 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
-    <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」（可以空白）；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
+    <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
+    <aside class="tip-block" id="nameTip" hidden><b>📣 給老師（學生畫面不會出現這段）</b><ul><li>中文或英文名字都可以，不限定輸入法。</li><li>名字可以空白：不會打的學生，口頭提醒他直接按 Enter 就能進入，獎狀會改印座號。</li></ul></aside>
     <p class="msg err" id="msg3"></p>
   </section>
 
@@ -218,6 +221,7 @@ $('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]')
 document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { picked.clear(); [...b.dataset.p].forEach(c => picked.add(c)); render(); });
 ['goal','end','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
 $('#nameOn').addEventListener('change', render);
+$('#nameOn').addEventListener('change', () => { $('#nameTip').hidden = !$('#nameOn').checked; });
 $('#end').addEventListener('blur', () => { const t = normTime($('#end').value); if (t) $('#end').value = t; render(); });
 ['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
 document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));

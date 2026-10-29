@@ -202,7 +202,7 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .tin{font:600 30px/1.2 var(--f-key);letter-spacing:.2em;text-transform:uppercase;text-align:center;border:4px solid var(--ink);border-radius:14px;padding:4px 12px;background:#FBFDFF;outline:none;box-shadow:0 4px 0 var(--ink);min-width:0}
 .tin:focus{border-color:var(--c-mid);box-shadow:0 4px 0 var(--c-mid)}
 .tin.bad{border-color:var(--bad);box-shadow:0 4px 0 var(--bad);background:#FFF1F1;color:var(--bad)}
-.tin.comp{border-color:var(--gold);box-shadow:0 4px 0 var(--gold);background:#FFF6C2;text-decoration:underline dashed var(--gold)}
+.tin.comp{text-decoration:underline solid #F28C38;text-decoration-thickness:3px;text-underline-offset:6px}   /* 選字中：只加橘色底線，外框不變色（老師 2026-10-29） */
 .tin.ime{border-color:#F59E0B;box-shadow:0 4px 0 #F59E0B;background:#FFF7E0}
 .thint{grid-column:1/-1;min-height:1.4em;font-size:14px;font-weight:900;text-align:center;color:var(--ink-soft)}
 .thint.warn{color:#B45309}
@@ -318,7 +318,7 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
     <section data-screen="check" hidden>
       <div class="card check">
         <h2>🔍 開始前：檢查輸入法</h2>
-        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號出現在格子裡（格子變黃）時，按 <b>Enter</b> 送出</li></ol>
+        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號下面出現橘色底線時，按 <b>Enter</b> 送出</li></ol>
         <div class="chk-list" id="chkList"></div>
         <input id="chkIn" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="試打格子">
         <p class="thint" id="chkMsg"></p>
@@ -363,8 +363,8 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
   <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
   <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼" placeholder="30101">
   <p class="preview" id="sPrev"></p>
-  <label class="nmfield" id="sNameBox" hidden><span>你的名字<small>（要換成中文輸入法；不會打可以空白，獎狀會印座號）</small></span>
-    <input id="sName" maxlength="10" aria-label="姓名" placeholder="王小明"></label>
+  <label class="nmfield" id="sNameBox" hidden><span>你的名字</span>
+    <input id="sName" maxlength="20" aria-label="姓名" placeholder="王小明"></label>
   <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
 </form></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
@@ -525,7 +525,7 @@ $('#sCode').addEventListener('input', e => {
 $('#signForm').addEventListener('submit', e => {
   e.preventDefault(); const r = parseCode($('#sCode').value);
   if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
-  const nm = CFG.nameOn ? $('#sName').value.replace(/\s+/g,'').slice(0,10) : '';
+  const nm = CFG.nameOn ? $('#sName').value.trim().replace(/\s+/g,' ').slice(0,20) : '';   /* 中文或英文名字都可以 */
   if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }   /* 有名字：「三年一班 王小明」（老師 2026-10-29） */
   WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); afterSign();
 });
@@ -1201,7 +1201,7 @@ function chkTest(){
 }
 (function(){
   const i = $('#chkIn');
-  i.addEventListener('compositionstart', () => { chkComp = true; i.classList.add('comp'); chkSay('', '符號出來了！按 Enter 送出'); });
+  i.addEventListener('compositionstart', () => { chkComp = true; i.classList.add('comp'); chkSay('', '看到橘色底線了！按 Enter 送出'); });
   i.addEventListener('compositionend', () => { chkComp = false; i.classList.remove('comp'); setTimeout(chkTest, 0); });
   i.addEventListener('input', e => { if (e.isComposing || chkComp) return; if (!i.value){ chkSay('', chkI < CHK.length ? `打「${CHK[chkI].ch}」（${CHK[chkI].how}）` : ''); return; } chkTest(); });
   i.addEventListener('keydown', e => { if (e.key === 'Enter' && !chkComp && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); chkTest(); } });
