@@ -460,7 +460,7 @@ const qKeys = [...new Set([...(Q.get('keys')||'').toLowerCase()].filter(c => ALL
 /* goal＝老師在設定頁填的「本次練習的目標」，當作網頁名稱（舊連結的 name 也接受） */
 const GOAL = (Q.get('goal') || Q.get('name') || '').trim().slice(0, 20);
 document.title = PK.app;
-if (qKeys.length >= 2){ SETS.cus = {name: GOAL || '老師指定', keys:qKeys, color:'var(--c-cus)'}; if (GOAL) document.title = GOAL + '・' + PK.app; }
+if (qKeys.length >= 2){ SETS.cus = {name: GOAL || '老師指定', keys:qKeys, color:'var(--c-cus)'}; if (GOAL) document.title = GOAL === PK.app ? GOAL : GOAL + '・' + PK.app; }
 const dispKeys = k => [...k.toUpperCase()].join(' ');
 
 /* ---------- 小工具 ---------- */

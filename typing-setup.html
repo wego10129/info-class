@@ -138,7 +138,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
       </div>
       <div class="out">
         <h3>🖱️ 下載捷徑檔</h3>
-        <p>下載一個 .url 檔，用派送軟體放到學生桌面，學生點兩下就打開。</p>
+        <p>下載一個小網頁檔（.html），用派送軟體放到學生桌面，學生點兩下就會用瀏覽器打開練習。</p>
         <button class="btn primary" type="button" id="shortcut">下載捷徑檔</button>
       </div>
     </div>
@@ -215,15 +215,20 @@ $('#copy').onclick = async () => {
   try{ await navigator.clipboard.writeText(t); say('✓ 已複製連結！貼到派送軟體、班級網頁或投影給學生。', true); }
   catch(e){ $('details').open = true; const r = document.createRange(); r.selectNodeContents($('#link')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say('已幫你選取連結，請按 Ctrl＋C 複製。'); }
 };
-/* 捷徑檔：Windows 的 .url 格式（[InternetShortcut]），點兩下用瀏覽器打開連結 */
+/* 捷徑檔：小網頁檔（.html），點兩下用瀏覽器打開後自動跳到練習網址。
+   不用 Windows 的 .url：瀏覽器會把 .url 當成有風險的檔案，改名成 .download（老師 2026-10-29 回報） */
+const DEFNAME = st => '英文打字・' + st.keys.join('').toUpperCase();
+const HE = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 $('#shortcut').onclick = () => {
-  const st = state(), name = (st.goal || '英文打字・' + st.keys.join('').toUpperCase()).replace(/[\\/:*?"<>|]/g, '').slice(0, 40);
-  const body = '[InternetShortcut]\r\nURL=' + linkOf(st) + '\r\n';
+  const st = state(), name = (st.goal || DEFNAME(st)).replace(/[\\/:*?"<>|]/g, '').slice(0, 40), url = linkOf(st);
+  const body = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${HE(name)}</title>
+<meta http-equiv="refresh" content="0;url=${HE(url)}"><script>location.replace(${JSON.stringify(url)});<\/script></head>
+<body style="font:20px sans-serif;padding:24px">正在打開「${HE(name)}」……<br>沒有自動打開時，請點 <a href="${HE(url)}">這裡</a>。</body></html>`;
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([body], {type:'application/octet-stream'}));
-  a.download = name + '.url'; document.body.appendChild(a); a.click();
+  a.href = URL.createObjectURL(new Blob([body], {type:'text/html'}));
+  a.download = name + '.html'; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  say(`✓ 已下載「${name}.url」。用派送軟體放到學生桌面，學生點兩下就會打開練習。`, true);
+  say(`✓ 已下載「${name}.html」。用派送軟體放到學生桌面，學生點兩下就會打開練習。`, true);
 };
 $('#open').onclick = () => window.open(linkOf(state()), '_blank');
 $('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
