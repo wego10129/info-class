@@ -101,6 +101,18 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .ladder span.on{opacity:1;background:var(--hl)}
 .tnote{font-size:13px;color:var(--ink-soft);font-weight:700}
 .tpanel{display:grid;gap:10px}
+.check{display:grid;gap:12px;width:min(760px,100%);margin:0 auto;justify-items:center;text-align:center}
+.check h2{font-size:30px}
+.chk-steps{margin:0;padding-left:1.4em;text-align:left;font-size:18px;font-weight:700;line-height:1.8}
+.chk-list{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.chk-item{display:grid;justify-items:center;gap:2px;border:3px solid var(--ink);border-radius:14px;padding:6px 18px;background:var(--wash);min-width:170px}
+.chk-item b{font:700 52px/1.1 'Microsoft JhengHei','Noto Sans TC',sans-serif}
+.chk-item span{font-weight:900;font-size:15px}
+.chk-item.now{background:#FFF9DB;border-color:var(--gold);box-shadow:0 4px 0 var(--gold)}
+.chk-item.ok{background:#DDF5E7;border-color:var(--good)}
+.chk-item.ok span::after{content:" ✓";color:var(--good)}
+#chkIn{width:min(360px,100%)}
+.check .thint{font-size:16px}
 .tpanel label{font-weight:700;font-size:14px}
 .tpanel input{font:700 15px var(--f-body);border:2px solid var(--ink);border-radius:8px;padding:2px 6px}
 
@@ -301,11 +313,22 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
       <div class="sets" id="sets"></div>
       <nav class="footnav"><a class="btn sm" href="typing.html">⬅ 回上頁</a><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
     </section>
+    <section data-screen="check" hidden>
+      <div class="card check">
+        <h2>🔍 開始前：檢查輸入法</h2>
+        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號下面出現底線時，按 <b>Enter</b> 送出</li></ol>
+        <div class="chk-list" id="chkList"></div>
+        <input id="chkIn" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="試打格子">
+        <p class="thint" id="chkMsg"></p>
+        <div class="r-btns"><button class="btn primary" type="button" id="chkGo" disabled>開始練習！</button><button class="btn" type="button" id="chkSkip" hidden>跳過（老師示範）</button></div>
+      </div>
+      <nav class="footnav"><a class="btn sm" href="typing.html">⬅ 回上頁</a><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
+    </section>
     <section data-screen="home" hidden>
       <div id="demoBar2"></div>
       <div id="entries" class="entries"></div>
       <div id="tpanel" class="card tpanel" hidden></div>
-      <nav class="footnav"><button class="btn sm" type="button" id="backSets">⬅ 換練習範圍</button><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
+      <nav class="footnav"><button class="btn sm" type="button" id="backSets">⬅ 換練習範圍</button><button class="btn sm" type="button" id="reCheck" hidden>🔍 再檢查一次輸入法</button><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="drill" hidden>
       <div class="stage"><div class="dojo" id="dojo" data-tier="1"><div class="scroll"><div class="tierbar" id="tier" hidden></div><p class="lbl" id="dLbl"></p><div class="target" id="target"></div><p class="how" id="dHow"></p><p class="clock" id="dClock"></p></div></div>
@@ -490,7 +513,7 @@ $('#sCode').addEventListener('input', e => {
 $('#signForm').addEventListener('submit', e => {
   e.preventDefault(); const r = parseCode($('#sCode').value);
   if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
-  WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); show(SET ? 'home' : 'sets');
+  WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); afterSign();
 });
 function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sPrev').textContent = WHO ? WHO.text : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
 function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
@@ -588,6 +611,8 @@ function show(name){
   $('#demoBar1').innerHTML = bar; $('#demoBar2').innerHTML = bar;
   if (name==='sets') renderSets();
   if (name==='home') renderHome();
+  if (name==='check') chkStart();
+  $('#reCheck').hidden = KIND !== 'punc';
 }
 $('#homeBtn').onclick = () => { stopAll(); show('home'); };
 $('#setsBtn').onclick = () => show('sets');
@@ -1025,7 +1050,7 @@ function tinState(kind, msg){ tin.classList.toggle('bad', kind==='bad'); tin.cla
 function tinReset(){ tin.value = ''; composing = false; tinState(''); if (N) { N.lastLen = 0; N.badLen = 0; } }
 function focusTin(){ if (!$('#typeZone').hidden && $('#signWrap').hidden && $('#certWrap').hidden) tin.focus({preventScroll:true}); }
 const IME_MSG = '輸入法是中文喔！按一下 Shift 換成英文（看到ㄅㄆㄇ或中文字，就是還沒切換）';
-const HALF_MSG = '打出來是半形（英文）的符號：要按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打';
+const HALF_MSG = '打出來是半形（英文）的符號，算打錯：輸入法換成「中」，按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打';
 tin.addEventListener('compositionstart', () => { composing = true;
   if (KIND === 'en'){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); }
   else tinState('', '符號下面有底線時，按 Enter 送出'); });
@@ -1036,9 +1061,9 @@ function onTin(){
   if (KIND === 'punc'){
     /* 標點：只接受全形標點。半形（英文）符號＝沒按 Ctrl 或沒切成全形：提醒、不算答錯；注音、字母、中文字＝打錯 */
     const v = raw.replace(/\s+/g,'');
-    if (/[,.;:?!'"]/.test(v)){ tinState('ime', HALF_MSG); remind('要按住 Ctrl 再按符號鍵！'); return; }
     if (screen==='drill') drillInput(v); else if (screen==='ninja') ninjaInput(v);
-    if (/[^，。、；：？！]/.test(v)) tinState('bad', '這不是標點符號：按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打');
+    if (/[,.;:?!'"]/.test(v)){ tinState('bad', HALF_MSG); remind('半形符號算打錯！輸入法要是「中」'); }   /* 遊戲中打出半形算錯（老師 2026-10-29） */
+    else if (/[^，。、；：？！]/.test(v)) tinState('bad', '這不是標點符號：按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打');
     return;
   }
   if (/[^\x00-\x7F]/.test(raw)){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); return; }   /* 注音、中文字：不算答錯，請學生刪掉、切換 */
@@ -1129,12 +1154,54 @@ setInterval(() => {
   }
 })();
 
+/* ---------- 環境檢測（標點，老師 2026-10-29）：開始前確認輸入法是中文、會用 Ctrl＋符號鍵、知道要按 Enter ---------- */
+const CHK = [{ch:'，', how:'Ctrl ＋ ,'}, {ch:'？', how:'Ctrl ＋ Shift ＋ /'}];
+let CHECKED = false, chkI = 0, chkComp = false;
+function afterSign(){ show(KIND === 'punc' && !CHECKED ? 'check' : SET ? 'home' : 'sets'); }
+function chkDraw(){
+  $('#chkList').innerHTML = CHK.map((c,i) => `<div class="chk-item ${i<chkI?'ok':i===chkI?'now':''}"><b>${c.ch}</b><span>${PUNC[c.ch].name}：${c.how}</span></div>`).join('');
+  $('#chkGo').disabled = chkI < CHK.length;
+}
+function chkStart(){
+  chkI = 0; chkComp = false; const i = $('#chkIn'); i.value = ''; i.className = 'tin'; i.disabled = false;
+  $('#chkMsg').className = 'thint'; $('#chkMsg').textContent = '先點一下格子，再打第一個符號';
+  $('#chkSkip').hidden = !DEMO; chkDraw(); setTimeout(() => { if (screen==='check' && $('#signWrap').hidden) i.focus(); }, 60);
+}
+function chkSay(kind, t){ const m = $('#chkMsg'), i = $('#chkIn'); m.className = 'thint' + (kind==='bad' ? ' bad' : kind==='warn' ? ' warn' : ''); m.textContent = t; i.className = 'tin' + (kind==='bad' ? ' bad' : kind==='warn' ? ' ime' : ''); }
+function chkTest(){
+  const i = $('#chkIn'), v = i.value.replace(/\s+/g,''); if (!v || chkI >= CHK.length) return;
+  const want = CHK[chkI].ch;
+  if (v === want){
+    Sound.good(); chkI++; i.value = ''; chkDraw();
+    if (chkI >= CHK.length){ CHECKED = true; i.disabled = true; chkSay('', '✓ 輸入法設定好了！按「開始練習！」'); Sound.win(); $('#chkGo').focus(); }
+    else chkSay('', `✓ 很好！再打「${CHK[chkI].ch}」（${CHK[chkI].how}）`);
+    return;
+  }
+  Sound.bad();
+  if (/[,.;:?!'"]/.test(v)) chkSay('bad', '打出來是半形（英文）符號：右下角要是「中」，按一下 Shift 切換；按 Backspace 刪掉再打');
+  else if (/[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/.test(v)) chkSay('bad', '出現注音了：要先按住 Ctrl，再按符號鍵；按 Backspace 刪掉再打');
+  else if (/[A-Za-z]/.test(v)) chkSay('bad', '打出英文字母了：右下角要是「中」，再按住 Ctrl 按符號鍵；按 Backspace 刪掉再打');
+  else if (/[，。、；：？！]/.test(v)) chkSay('bad', `打出來的不是「${want}」：看清楚要按哪個鍵（${CHK[chkI].how}）；按 Backspace 刪掉再打`);
+  else chkSay('bad', `要打的是「${want}」（${CHK[chkI].how}）；按 Backspace 刪掉再打`);
+}
+(function(){
+  const i = $('#chkIn');
+  i.addEventListener('compositionstart', () => { chkComp = true; chkSay('', '看到底線了！按 Enter 送出'); });
+  i.addEventListener('compositionend', () => { chkComp = false; setTimeout(chkTest, 0); });
+  i.addEventListener('input', e => { if (e.isComposing || chkComp) return; if (!i.value){ chkSay('', chkI < CHK.length ? `打「${CHK[chkI].ch}」（${CHK[chkI].how}）` : ''); return; } chkTest(); });
+  i.addEventListener('keydown', e => { if (e.key === 'Enter' && !chkComp && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); chkTest(); } });
+  $('#chkGo').onclick = () => { Sound.init(); show(SET ? 'home' : 'sets'); };
+  $('#chkSkip').onclick = () => { CHECKED = true; show(SET ? 'home' : 'sets'); };
+  $('#reCheck').onclick = () => { CHECKED = false; show('check'); };
+})();
+
 /* ---------- 啟動 ---------- */
 document.querySelector('.tagk').textContent = PK.tag; $('#title').textContent = PK.app; $('#verBadge').textContent = PK.badge;
 document.querySelector('.intro h2').textContent = PK.intro[0]; document.querySelector('.intro p').textContent = PK.intro[1];
 document.querySelector('.tlabel').innerHTML = PK.tlabel;
 if (DEMO){ $('#verBadge').classList.add('demo'); document.title += '・示範'; WHO = {code:'', text:'老師示範'}; renderWho(); }
-if (SETS.cus){ loadSet('cus'); show('home'); } else show('sets');
+if (SETS.cus) loadSet('cus');
+afterSign();
 if (!DEMO) openSignin();
 </script>
 </body>
