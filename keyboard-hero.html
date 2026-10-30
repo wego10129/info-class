@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="zh-Hant" data-kind="key">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鍵盤小勇士</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<style>
+:root{
+  --paper:#E3EDF2; --grid:#D0DEE6; --ink:#1B2836; --ink-soft:#4C5D6E; --card:#fff; --wash:#F3F7FA;
+  --case:#26323F; --cap:#F5F7F9; --cap-edge:#AEBBC7; --cap-dim:#D9E1E8; --dim-txt:#8593A1;
+  --good:#1FA963; --bad:#E5484D; --hl:#FFE066; --gold:#F2B400; --mid:#B07D00;
+  --c-mid:#3A9FEF; --c-top:#EE4F8B; --c-bot:#9466EE; --c-cus:#1FA963; --c-ninja:#3B2F5C;
+  --f-display:'LXGW WenKai TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-body:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --f-key:'Fredoka','Noto Sans TC',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:16px/1.6 var(--f-body);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.wrap{height:100%;display:flex;flex-direction:column;gap:10px;max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;line-height:1.25;text-wrap:balance}
+p{margin:0}
+button,input{font-family:inherit}
+.top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:28px;letter-spacing:.04em;user-select:none}
+.tagk{display:inline-block;background:var(--hl);border:3px solid var(--ink);border-radius:10px;padding:0 8px;box-shadow:3px 3px 0 var(--ink);font:600 18px var(--f-key);transform:rotate(-4deg)}
+.badge{display:inline-block;font-size:13px;font-weight:700;border:2px solid var(--ink);border-radius:999px;padding:0 10px;background:var(--wash)}
+.ver{background:var(--hl);font-size:14px}
+.ver.demo{background:#FF6B4A;color:#fff}
+.top:has(#hud:not([hidden])) .ver,.top:has(#hud:not([hidden])) .tagk{display:none}
+.top:has(#hud:not([hidden])) .brand h1{font-size:22px}
+.top:has(#hud:not([hidden])) .hud-item{padding:0 10px}
+.who{font-weight:900;font-size:15px;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 12px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.footnav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:10px;border-top:3px dashed var(--cap-edge)}
+.btn{font:700 16px var(--f-body);padding:8px 16px;border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.btn:hover{background:var(--wash)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.primary{background:var(--hl)}
+.btn.sm{font-size:14px;padding:4px 12px}
+.btn:focus-visible,.diff:focus-visible,.setcard:focus-visible{outline:3px solid var(--c-mid);outline-offset:3px}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:18px}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.hud-item{background:var(--card);border:3px solid var(--ink);border-radius:12px;padding:1px 12px;display:flex;align-items:center;gap:8px;box-shadow:3px 3px 0 var(--ink)}
+.hud-l{font-size:12px;color:var(--ink-soft)}
+.hud-item b{font:600 20px var(--f-key);font-variant-numeric:tabular-nums}
+.hud-item b.t{font:900 17px var(--f-body)}
+.hearts{font-size:20px;letter-spacing:2px;color:var(--bad)}
+.hearts .off{color:var(--cap-dim)}
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+main>[data-screen]{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overflow:auto;padding:0 6px 6px 0}
+.demo-bar{background:#FF6B4A;color:#fff;font-weight:900;border:3px solid var(--ink);border-radius:12px;padding:6px 14px}
+
+/* 範圍選擇 */
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.setcard{display:grid;gap:6px;text-align:left;cursor:pointer;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:0 0 14px;overflow:hidden;font:inherit;color:inherit}
+.setcard:hover{background:#FFFBE6}
+.setcard .band{height:14px;border-bottom:3px solid var(--ink)}
+.setcard h2{font-size:26px;padding:0 16px}
+.setcard .keys{padding:0 16px;font:600 22px var(--f-key);letter-spacing:.12em}
+.setcard .st{padding:0 16px;font-size:13px;font-weight:900;color:var(--ink-soft)}
+.intro{display:grid;gap:4px}
+.intro h2{font-size:28px}
+.intro p{color:var(--ink-soft);font-weight:700}
+
+/* 首頁卡片 */
+.entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;align-items:start}
+.entry{display:flex;flex-direction:column;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden}
+.entry-band{height:58px;border-bottom:3px solid var(--ink);position:relative;display:flex;align-items:flex-end;padding:10px 14px}
+.entry-band .num{font:600 15px var(--f-key);background:#fff;border:2px solid var(--ink);border-radius:8px;padding:0 9px}
+.entry-band .deco{position:absolute;right:14px;top:12px;display:flex;gap:6px}
+.entry-band .deco span{font:600 15px var(--f-key);background:#fff;border:2px solid var(--ink);border-radius:7px;padding:1px 8px;box-shadow:0 3px 0 var(--ink)}
+.entry-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.entry-body h2{font-size:25px}
+.entry.locked .entry-band,.entry.locked .entry-body h2{opacity:.45}
+.lockmsg{font-size:14px;font-weight:900;background:var(--wash);border:2px dashed var(--ink-soft);border-radius:10px;padding:4px 10px}
+.diffs{display:grid;gap:8px}
+.diff{display:flex;justify-content:space-between;align-items:center;gap:10px;font:900 18px var(--f-body);border:3px solid var(--ink);border-radius:12px;background:var(--wash);padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);color:var(--ink);width:100%;text-align:left}
+.diff:hover:not(:disabled){background:var(--hl)}
+.diff:disabled{cursor:not-allowed;opacity:.6}
+.diff small{display:block;font-size:13px;font-weight:700;color:var(--ink-soft);line-height:1.3}
+.lv-r{display:grid;justify-items:end;line-height:1.25;flex:none}
+.stars{color:var(--gold);letter-spacing:1px;font-size:16px;white-space:nowrap}
+.stars .off{color:var(--cap-dim)}
+.lv-best{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.dots{font-size:15px;letter-spacing:3px;color:var(--good)}
+.dots .off{color:var(--cap-dim)}
+.titlebar{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;border:2px dashed var(--gold);border-radius:12px;padding:6px 12px;background:#FFF9DB;font-size:14px;font-weight:900}
+.titlebar b{color:var(--mid);font-size:17px}
+.ladder{display:flex;gap:4px;flex-wrap:wrap}
+.ladder span{border:2px solid var(--ink);border-radius:999px;padding:0 8px;font-size:12px;background:#fff;opacity:.4}
+.ladder span.on{opacity:1;background:var(--hl)}
+.tnote{font-size:13px;color:var(--ink-soft);font-weight:700}
+.tpanel{display:grid;gap:10px}
+.check{display:grid;gap:12px;width:min(760px,100%);margin:0 auto;justify-items:center;text-align:center}
+.check h2{font-size:30px}
+.chk-steps{margin:0;padding-left:1.4em;text-align:left;font-size:18px;font-weight:700;line-height:1.8}
+.chk-list{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.chk-item{display:grid;justify-items:center;gap:2px;border:3px solid var(--ink);border-radius:14px;padding:6px 18px;background:var(--wash);min-width:170px}
+.chk-item b{font:700 52px/1.1 'Microsoft JhengHei','Noto Sans TC',sans-serif}
+.chk-item span{font-weight:900;font-size:15px}
+.chk-item.now{background:#FFF9DB;border-color:var(--gold);box-shadow:0 4px 0 var(--gold)}
+.chk-item.ok{background:#DDF5E7;border-color:var(--good)}
+.chk-item.ok span::after{content:" ✓";color:var(--good)}
+#chkIn{width:min(360px,100%)}
+.check .thint{font-size:16px}
+.tpanel label{font-weight:700;font-size:14px}
+.tpanel input{font:700 15px var(--f-body);border:2px solid var(--ink);border-radius:8px;padding:2px 6px}
+
+/* 道場（第一關、第二關） */
+.stage{position:relative;flex:1;min-height:0;border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden}
+.dojo{position:absolute;inset:0;background:linear-gradient(#F6E7C8 0 62%,#C99A62 62% 100%);display:grid;place-items:center}
+.dojo::before{content:"";position:absolute;left:0;right:0;top:62%;height:10px;background:#8A5A2B}
+.dojo::after{content:"";position:absolute;inset:0 0 38%;background:repeating-linear-gradient(90deg,transparent 0 118px,rgba(138,90,43,.45) 118px 124px)}
+.scroll{position:relative;z-index:2;background:#FFFDF4;border:4px solid var(--ink);border-radius:14px;box-shadow:0 8px 0 rgba(0,0,0,.2);padding:10px 40px 14px;text-align:center;min-width:min(520px,80%)}
+.scroll .lbl{font-size:14px;font-weight:900;color:var(--ink-soft)}
+.target{font:600 clamp(56px,13vh,120px)/1.1 var(--f-key);letter-spacing:.12em;text-transform:uppercase}
+.target span{display:inline-block;border-radius:10px;padding:0 4px;transition:color .1s}
+.target .ok{color:var(--good)}
+.target .next{background:var(--hl);box-shadow:0 5px 0 var(--gold)}
+.target .bad{background:#FFD6D8;color:var(--bad)}
+.timer{position:relative;height:14px;flex:none;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--wash)}
+.timer div{height:100%;width:100%;background:var(--good);transform-origin:left}
+.timer div.warn{background:#FFC233}
+.timer div.slow{background:#F28C38}
+.how{font:900 18px var(--f-body);color:var(--ink-soft);min-height:0}
+.how:empty,.clock:empty{display:none}
+.clock{position:absolute;left:12px;top:10px;z-index:5;margin:0;font:700 14px/1.2 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-soft);background:rgba(255,255,255,.7);border-radius:8px;padding:1px 8px}
+.dojo{transition:background .5s}
+.dojo[data-tier="2"]{background:linear-gradient(#CFE3FF 0 62%,#5B7FC7 62% 100%)}
+.dojo[data-tier="2"] .scroll{background:#EEF5FF;border-color:#1D4ED8;box-shadow:0 8px 0 #1D4ED8}
+.dojo[data-tier="3"]{background:linear-gradient(#FFD3EC 0 62%,#B0306F 62% 100%)}
+.dojo[data-tier="3"] .scroll{background:#FFF0F8;border-color:#BE185D;box-shadow:0 8px 0 var(--gold)}
+.tierbar{display:flex;justify-content:center;align-items:center;gap:6px 10px;flex-wrap:wrap;font-weight:900;font-size:15px}
+.ts{font-size:22px;letter-spacing:2px;white-space:nowrap}
+.ts .off{opacity:.22}
+.ts.t1{color:#6B7B8C}.ts.t2{color:#1D4ED8}.ts.t3{color:#DB2777}
+.hud-item .ts{font-size:17px}
+.r-tier{display:flex;align-items:center;gap:8px;font-weight:900;border:3px solid var(--ink);border-radius:14px;padding:2px 14px;background:#FFF0F8}
+.timer-zones{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-soft);font-weight:700;padding:0 4px;margin-top:-6px;flex-wrap:wrap}
+.fixfx{position:absolute;inset:0;pointer-events:none;z-index:7;display:grid;place-items:center}
+.fixfx span{font:700 44px var(--f-display);color:var(--good);background:#fff;border:4px solid var(--good);border-radius:20px;padding:0 22px;animation:fix .8s ease-out forwards;text-align:center}
+.fixfx.mid span{color:var(--mid);border-color:var(--gold)}
+.fixfx.no span{color:var(--bad);border-color:var(--bad);font-size:32px}
+@keyframes fix{0%{transform:scale(.4);opacity:0}25%{transform:scale(1.1);opacity:1}100%{transform:scale(1) translateY(-20px);opacity:0}}
+.go-cover{position:absolute;inset:0;background:rgba(27,40,54,.86);z-index:9;display:grid;place-items:center;align-content:center;gap:12px;color:#fff;text-align:center;padding:16px}
+.go-cover h2{font-size:34px}
+.go-cover p{font-size:18px;font-weight:700}
+.count{font:600 72px/1 var(--f-key)}
+.remind{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:8;background:#FFC233;border:3px solid var(--ink);border-radius:12px;padding:2px 14px;font-weight:900;white-space:nowrap}
+
+/* 忍者場景 */
+.scene{position:absolute;inset:0;transition:background .8s}
+.scene .far{position:absolute;left:0;right:0;bottom:24%;height:46%;transition:background .8s;clip-path:polygon(0 100%,0 55%,10% 30%,22% 60%,34% 18%,48% 58%,60% 26%,74% 62%,86% 34%,100% 52%,100% 100%)}
+.scene .near{position:absolute;left:0;right:0;bottom:24%;height:22%;transition:background .8s}
+.scene .ground{position:absolute;left:0;right:0;bottom:0;height:24%;border-top:4px solid var(--ink);transition:background .8s}
+.scene .ground::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 60px,rgba(0,0,0,.08) 60px 64px);animation:run 1.2s linear infinite}
+@keyframes run{to{background-position:-64px 0}}
+.scene .moon{position:absolute;right:12%;top:10%;width:70px;height:70px;border-radius:50%;background:#FFF6CC;box-shadow:0 0 30px #FFF6CC;opacity:0;transition:opacity .8s}
+.scene[data-th="3"] .moon,.scene[data-th="4"] .moon{opacity:1}
+.scene[data-th="5"]{animation:storm 4s infinite}
+@keyframes storm{0%,92%,100%{filter:none}94%{filter:brightness(2.2)}96%{filter:none}97%{filter:brightness(1.8)}}
+.scene .rain{position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(105deg,transparent 0 14px,rgba(255,255,255,.25) 14px 16px);animation:rain .5s linear infinite;pointer-events:none}
+.scene[data-th="5"] .rain{opacity:1}
+@keyframes rain{to{background-position:30px 60px}}
+.player{position:absolute;left:6%;bottom:22%;width:clamp(80px,16vh,130px);z-index:3;transition:transform .12s}
+.player.dash{transform:translateX(30px) scale(1.05)}
+.player.hurt{animation:hurt .5s}
+@keyframes hurt{25%,75%{transform:translateX(-10px);filter:brightness(1.8) saturate(0)}50%{transform:translateX(8px)}}
+.enemy{position:absolute;bottom:22%;width:clamp(76px,15vh,124px);transform:translateX(-50%);z-index:4;display:grid;justify-items:center}
+.enemy svg{width:100%;display:block;animation:bob .5s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-6px)}}
+.enemy.poof svg{animation:poof .35s forwards}
+@keyframes poof{to{transform:scale(1.6) rotate(25deg);opacity:0}}
+.word{font:600 clamp(26px,5.6vh,46px)/1.1 var(--f-key);background:#fff;border:3px solid var(--ink);border-radius:12px;padding:2px 12px;margin-bottom:6px;box-shadow:0 4px 0 rgba(0,0,0,.25);white-space:nowrap;letter-spacing:.06em;text-transform:uppercase}
+.word span.ok{color:var(--good)}
+.word span.cur{text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:6px;text-decoration-color:var(--gold)}
+.word.err{animation:err .3s;border-color:var(--bad)}
+@keyframes err{25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.star{position:absolute;z-index:5;font-size:28px;pointer-events:none;transition:left .18s linear,bottom .18s linear;color:#2D3748;text-shadow:0 0 2px #fff}
+.pts{position:absolute;z-index:6;font:600 26px var(--f-key);color:var(--mid);background:#fff;border:2px solid var(--ink);border-radius:10px;padding:0 8px;animation:pts .9s forwards;pointer-events:none}
+@keyframes pts{to{transform:translateY(-50px);opacity:0}}
+.stagebig{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);z-index:8;font:700 clamp(28px,6vh,46px) var(--f-display);color:#fff;background:var(--ink);border:4px solid var(--hl);border-radius:20px;padding:4px 26px;white-space:nowrap;opacity:0;pointer-events:none}
+.stagebig.go{animation:stagein 1.6s ease-out forwards}
+@keyframes stagein{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}
+.flash{position:absolute;inset:0;z-index:6;pointer-events:none;animation:fl .45s}
+@keyframes fl{from{background:rgba(229,72,77,.5)}to{background:transparent}}
+
+/* 打字欄位（訓練學生自己切換英文輸入法） */
+.typebox{flex:none;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px;width:min(100%,760px);margin-inline:auto}
+.tlabel{font-weight:900;font-size:15px;line-height:1.3}
+.tlabel small{display:block;font-size:12px;color:var(--ink-soft);font-weight:700}
+.tin{font:600 30px/1.2 var(--f-key);letter-spacing:.2em;text-transform:uppercase;text-align:center;border:4px solid var(--ink);border-radius:14px;padding:4px 12px;background:#FBFDFF;outline:none;box-shadow:0 4px 0 var(--ink);min-width:0}
+.tin:focus{border-color:var(--c-mid);box-shadow:0 4px 0 var(--c-mid)}
+.tin.bad{border-color:var(--bad);box-shadow:0 4px 0 var(--bad);background:#FFF1F1;color:var(--bad)}
+/* 選字中：網頁自己在字下面畫橘色虛線（瀏覽器在輸入框裡不一定畫得出底線；老師 2026-10-30），外框不變色 */
+.compline{position:fixed;height:0;border-bottom:3px dashed #F28C38;pointer-events:none;z-index:60}
+.tin.ime{border-color:#F59E0B;box-shadow:0 4px 0 #F59E0B;background:#FFF7E0}
+.thint{grid-column:1/-1;min-height:1.4em;font-size:14px;font-weight:900;text-align:center;color:var(--ink-soft)}
+.thint.warn{color:#B45309}
+.thint.bad{color:var(--bad)}
+.word.dim{opacity:.55}
+@media (max-height:700px){ .kb-case{display:none!important} }
+
+/* 鍵盤（字母三排） */
+.kb-case{flex:none;background:var(--case);border:3px solid var(--ink);border-radius:18px;padding:1.2%;box-shadow:5px 5px 0 var(--ink);width:min(100%,calc(clamp(110px,22vh,200px)*3.6));margin-inline:auto}
+.kb{position:relative;width:100%;aspect-ratio:10.6/3;container-type:inline-size}
+.k{--u:calc(100cqw / 10.6);position:absolute;width:calc(var(--u));height:33.33%;padding:calc(var(--u)*.05)}
+.cap{width:100%;height:100%;border-radius:calc(var(--u)*.14);background:var(--cap-dim);color:var(--dim-txt);display:grid;place-items:center;font:600 calc(var(--u)*.4) var(--f-key);box-shadow:inset 0 calc(var(--u)*-.11) 0 var(--cap-edge);text-transform:uppercase;position:relative}
+.k.in .cap{background:var(--cap);color:var(--ink)}
+.k.home .cap::after{content:"";position:absolute;bottom:22%;left:38%;right:38%;height:calc(var(--u)*.05);background:var(--ink-soft);border-radius:2px}
+.kb.blank .k .lbl{opacity:0}
+.k.down .cap{background:var(--hl)!important;transform:translateY(calc(var(--u)*.06))}
+.k.glow .cap{outline:calc(var(--u)*.1) solid var(--hl);animation:pulse 1s infinite;z-index:2}
+@keyframes pulse{50%{outline-color:#fff}}
+.k.ok .cap{background:var(--good)!important;color:#fff}
+.k.no .cap{background:var(--bad)!important;color:#fff}
+.k.show .cap{outline:calc(var(--u)*.12) solid #5BF08F;z-index:2}
+.kb.blank .k.show .lbl{opacity:1}
+.kb.punc{aspect-ratio:10.6/1.25}
+.kb.punc .k{height:100%}
+.kb.punc .cap{display:flex;flex-direction:column;justify-content:center;gap:2%;line-height:1;text-transform:none}
+.kb.punc .cap .lbl{font-size:calc(var(--u)*.36)}
+.kb.punc .cap .sub{font:700 calc(var(--u)*.3) var(--f-body);opacity:.85}
+.kb.blank .k .sub{opacity:0}
+html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .tin,html[data-kind=punc] .chipk,html[data-kind=punc] .setcard .keys,html[data-kind=punc] .entry-band .deco span{font-family:'Microsoft JhengHei','Noto Sans TC','PingFang TC',sans-serif;font-weight:700}
+.kb.blank .k.show .sub{opacity:1}
+/* 鍵盤小勇士（data-kind=key）：整個鍵盤，特殊鍵是練習的鍵 */
+.kb.keys{aspect-ratio:16.6/6}
+.kb.keys .k{--u:calc(100cqw / 16.6);height:16.66%}
+.kb.keys .cap{font:700 calc(var(--u)*.3) var(--f-body);text-transform:none;line-height:1}
+.kb.keys .k.ltr .cap{font:600 calc(var(--u)*.36) var(--f-key);text-transform:uppercase}
+.kb.keys .k.in .cap{font-weight:900}
+html[data-kind=key] .target{font:900 clamp(34px,8vh,76px)/1.25 var(--f-body);letter-spacing:0;text-transform:none}
+html[data-kind=key] .target span{margin:.06em .12em;border:3px solid var(--ink);padding:0 .3em;background:#fff;box-shadow:0 5px 0 var(--ink)}
+html[data-kind=key] .target span.next{background:var(--hl)}
+html[data-kind=key] .word{font:900 clamp(16px,3.4vh,28px)/1.25 var(--f-body);letter-spacing:0;text-transform:none}
+html[data-kind=key] .word span{display:inline-block;margin:0 .18em}
+html[data-kind=key] .chipk,html[data-kind=key] .setcard .keys{text-transform:none;font-family:var(--f-body);font-weight:900}
+html[data-kind=key] .setcard .keys{font-size:18px}
+.enemy img{width:100%;display:block;animation:bob .5s ease-in-out infinite alternate}
+.enemy.poof img{animation:poof .35s forwards}
+
+/* 結算 */
+.result{display:grid;gap:14px;justify-items:start}
+.result h2{font-size:30px}
+.r-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.trend{font-weight:900;font-size:18px;border:3px solid var(--ink);border-radius:999px;padding:2px 16px;background:var(--wash)}
+.trend.best{background:var(--hl)}
+.trend.up{background:#DDF5E7;color:#127A45}
+.r-mid{display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap}
+.r-stars{font-size:44px;letter-spacing:4px;color:var(--gold);line-height:1}
+.r-stars .off{color:var(--cap-dim)}
+.r-score{font:600 46px/1 var(--f-key);font-variant-numeric:tabular-nums}
+.r-score small{font:900 18px var(--f-body);margin-left:4px}
+.r-crown{display:flex;align-items:center;gap:8px;font-weight:900;border:3px solid var(--ink);border-radius:14px;padding:2px 14px 2px 8px;background:#FFF6CC}
+.r-crown i{font-size:34px;font-style:normal;line-height:1.2}
+.r-stats{display:flex;gap:10px;flex-wrap:wrap}
+.r-stats div{border:2px solid var(--ink);border-radius:10px;padding:4px 14px;background:var(--wash)}
+.r-stats b{font:600 22px var(--f-key);margin-left:6px}
+.r-stats .fc{background:var(--hl);font-weight:900}
+.unlock-note{background:var(--hl);border:3px solid var(--ink);border-radius:12px;padding:6px 14px;font-weight:900}
+.unlock-note.tip{background:var(--wash)}
+.missed{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chipk{font:600 18px var(--f-key);border:2px solid var(--ink);border-radius:8px;padding:0 10px;background:#fff;text-transform:uppercase}
+.r-btns{display:flex;gap:10px;flex-wrap:wrap}
+.hist{width:100%;max-width:600px;display:grid;gap:6px}
+.hist-row{display:grid;grid-template-columns:4.5em 1fr 6em 5.5em;gap:8px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.hist-row .bar{height:16px;border-radius:6px;background:var(--cap-dim);overflow:hidden}
+.hist-row .bar i{display:block;height:100%;background:var(--c-mid);border-radius:6px}
+.hist-row.best .bar i{background:var(--gold)}
+.hist-row.now{font-weight:900}
+.hist-row.now .bar i{background:var(--c-top)}
+.hist-row span:nth-child(3),.hist-row span:nth-child(4){text-align:right}
+.hs{color:var(--gold)}
+
+/* 簽到、獎狀 */
+.modal-wrap{position:fixed;inset:0;z-index:40;background:rgba(27,40,54,.6);display:grid;place-items:center;padding:16px;overflow:auto}
+.signin{width:min(480px,100%);display:grid;gap:12px}
+.signin h2{font-size:30px}
+.signin input{font:600 40px var(--f-key);letter-spacing:.3em;text-align:center;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;width:100%}
+.signin .hint{font-size:15px;color:var(--ink-soft);font-weight:700}
+.signin .preview{font:900 24px var(--f-display);min-height:1.5em;text-align:center}
+.signin .preview.err{color:var(--bad);font:900 16px var(--f-body)}
+.nmfield{display:grid;gap:4px;font-weight:900}
+.nmfield small{display:block;font-size:13px;color:var(--ink-soft);font-weight:700}
+.signin .nmfield input{font:700 30px var(--f-body);letter-spacing:.1em}
+.cert-wrap{position:fixed;inset:0;z-index:50;background:rgba(27,40,54,.65);display:grid;place-items:center;padding:16px;overflow:auto}
+.cert{width:min(720px,100%);background:#FFFDF4;border:4px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:14px;animation:popcert .4s ease-out}
+@keyframes popcert{from{transform:scale(.7);opacity:0}}
+.cert-in{position:relative;border:6px double var(--gold);border-radius:10px;padding:18px 22px 24px;text-align:center;background:radial-gradient(circle at 0 0,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 100% 0,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 0 100%,#FFE9A8 0 40px,transparent 41px),radial-gradient(circle at 100% 100%,#FFE9A8 0 40px,transparent 41px)}
+.cert-kicker{font-weight:900;color:var(--ink-soft);letter-spacing:.3em}
+.cert-sub{font:700 24px var(--f-display);letter-spacing:.6em;margin:2px 0 8px}
+.cert-title{font-size:clamp(38px,7vh,58px);letter-spacing:.12em;color:var(--mid);margin:4px 0}
+.cert-body{font-size:19px;line-height:2;font-weight:700}
+.cert-scores{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.cert-scores div{border:2px solid var(--ink);border-radius:12px;padding:2px 12px;background:#fff;font-weight:900;font-size:14px}
+.cert-date{color:var(--ink-soft);font-weight:700;margin-top:6px}
+.cert-seal{position:absolute;right:18px;bottom:16px;width:78px;height:78px;border-radius:50%;border:4px solid var(--bad);color:var(--bad);display:grid;place-items:center;font-weight:900;font-size:15px;line-height:1.2;transform:rotate(-12deg);background:rgba(255,255,255,.6)}
+.cert-empty{font-size:20px;font-weight:900;padding:30px 10px;line-height:1.8}
+@media print{ body>*:not(.cert-wrap){display:none!important} .cert-wrap{position:static;background:none;padding:0} .cert{box-shadow:none} .cert .r-btns{display:none} }
+.focus-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:#fff;border:3px solid var(--hl);border-radius:999px;padding:10px 22px;font:700 16px var(--f-body);cursor:pointer;max-width:calc(100% - 32px)}
+@media (max-width:720px){ html,body{height:auto} .wrap{height:auto} .stage{min-height:360px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="tagk">ASDF</span><h1 id="title">打字忍者</h1><span class="badge ver" id="verBadge">字母打字</span><span class="who" id="who" hidden title="點一下可以重新輸入班級座號"></span></div>
+    <div id="hud" class="hud" hidden></div>
+    <div class="row">
+      <button class="btn sm" id="soundBtn" type="button">聲音：開</button>
+      <button class="btn sm navout" id="setsBtn" type="button" hidden>換練習範圍</button>
+      <button class="btn sm" id="homeBtn" type="button" hidden>回關卡選單</button>
+    </div>
+  </header>
+  <main>
+    <section data-screen="sets" hidden>
+      <div class="intro"><h2>選擇要練習的字母</h2><p>先選一排，三個關卡都會用這一排的字母出題。每一排的紀錄分開算。</p></div>
+      <div id="demoBar1"></div>
+      <div class="sets" id="sets"></div>
+      <nav class="footnav"><a class="btn sm navout" href="typing.html">⬅ 回上頁</a><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
+    </section>
+    <section data-screen="check" hidden>
+      <div class="card check">
+        <h2>🔍 開始前：檢查輸入法</h2>
+        <ol class="chk-steps"><li>看螢幕右下角：要是「<b>中</b>」（是「英」就按一下 <b>Shift</b>）</li><li>點下面的格子，<b>按住 Ctrl</b> 再按題目的鍵</li><li>符號下面出現橘色虛線時，按 <b>Enter</b> 送出</li></ol>
+        <div class="chk-list" id="chkList"></div>
+        <input id="chkIn" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="試打格子">
+        <p class="thint" id="chkMsg"></p>
+        <div class="r-btns"><button class="btn primary" type="button" id="chkGo" disabled>開始練習！</button><button class="btn" type="button" id="chkSkip" hidden>跳過（老師示範）</button></div>
+      </div>
+      <nav class="footnav"><a class="btn sm navout" href="typing.html">⬅ 回上頁</a><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
+    </section>
+    <section data-screen="home" hidden>
+      <div id="demoBar2"></div>
+      <div id="entries" class="entries"></div>
+      <div id="tpanel" class="card tpanel" hidden></div>
+      <nav class="footnav"><button class="btn sm navout" type="button" id="backSets">⬅ 換練習範圍</button><button class="btn sm" type="button" id="reCheck" hidden>🔍 再檢查一次輸入法</button><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
+    </section>
+    <section data-screen="drill" hidden>
+      <div class="stage"><div class="dojo" id="dojo" data-tier="1"><div class="scroll"><div class="tierbar" id="tier" hidden></div><p class="lbl" id="dLbl"></p><div class="target" id="target"></div><p class="how" id="dHow"></p></div></div>
+        <p class="clock" id="dClock"></p>
+        <div id="dBig" class="stagebig"></div><div id="dRemind" class="remind" hidden></div><div id="dFx" class="fixfx"></div><div id="dCover" class="go-cover" hidden></div></div>
+      <div class="timer" id="timerWrap"><div id="timerBar"></div></div>
+      <div id="zones" class="timer-zones"></div>
+    </section>
+    <section data-screen="ninja" hidden>
+      <div class="stage" id="nStage">
+        <div class="scene" id="scene" data-th="1"><div class="moon"></div><div class="far"></div><div class="near"></div><div class="ground"></div><div class="rain"></div></div>
+        <div class="player" id="player"></div>
+        <div id="enemyLayer"></div>
+        <div id="stageBig" class="stagebig"></div>
+        <div id="nRemind" class="remind" hidden></div><div id="nFx" class="fixfx"></div><div id="nCover" class="go-cover" hidden></div>
+      </div>
+    </section>
+    <section data-screen="result" hidden><div class="card result" id="resultBox"></div></section>
+  </main>
+  <div class="typebox" id="typeZone" hidden>
+    <label for="tin" class="tlabel">在這裡打字<small>（要用英文輸入法；打對了會自動送出，不用按 Enter）</small></label>
+    <input id="tin" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="打字欄位">
+    <p class="thint" id="thint"></p>
+  </div>
+  <div class="kb-case" id="kbZone" hidden><div class="kb" id="kb"></div></div>
+</div>
+
+<div id="signWrap" class="modal-wrap" hidden><form class="card signin" id="signForm" autocomplete="off">
+  <h2>👋 輸入班級座號</h2>
+  <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
+  <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼">
+  <p class="preview" id="sPrev"></p>
+  <label class="nmfield" id="sNameBox" hidden><span>你的名字<small>例：王小明</small></span>
+    <input id="sName" maxlength="20" aria-label="姓名"></label>
+  <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
+</form></div>
+<div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
+  <div class="r-btns" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certClose">關閉</button></div></div></div>
+<button id="focusPill" class="focus-pill" type="button" hidden>點一下這裡，讓鍵盤連上遊戲</button>
+
+<script>
+/* =====================================================================
+   打字忍者／標點符號大挑戰（同一份程式，<html data-kind> 決定主題）
+   主題設定表：01_主題設定-打字忍者.md、01_主題設定-標點符號大挑戰.md；規格書 v3.12
+   參數集中在這裡，改數字不用動下面的程式
+   ===================================================================== */
+const KIND = ['punc','key'].includes(document.documentElement.dataset.kind) ? document.documentElement.dataset.kind : 'en';
+/* 全形標點的按法：依 Microsoft 注音輸入法官方說明「Ctrl＋符號鍵＝全形符號」（要 Shift 的符號先按住 Shift） */
+const PUNC = {
+  '，':{name:'逗號',   keys:['ctrl','comma'],        how:'Ctrl ＋ ,'},
+  '。':{name:'句號',   keys:['ctrl','period'],       how:'Ctrl ＋ .'},
+  '、':{name:'頓號',   keys:['ctrl','quote'],        how:"Ctrl ＋ '"},
+  '；':{name:'分號',   keys:['ctrl','semi'],         how:'Ctrl ＋ ;'},
+  '：':{name:'冒號',   keys:['ctrl','shift','semi'], how:'Ctrl ＋ Shift ＋ ;'},
+  '？':{name:'問號',   keys:['ctrl','shift','slash'],how:'Ctrl ＋ Shift ＋ /'},
+  '！':{name:'驚嘆號', keys:['ctrl','shift','one'],  how:'Ctrl ＋ Shift ＋ 1'},
+};
+/* 鍵盤小勇士：每一個特殊鍵用一個符號代表（題目、紀錄、網址都用這個符號），畫面上顯示鍵名
+   code＝鍵盤事件的按鍵代碼（依實體按鍵位置）；use＝用途（第一關題目下方顯示） */
+const KEYDEF = {
+  '⎋':{name:'Esc',       code:/^Escape$/,          use:'關閉視窗、取消'},
+  '⇥':{name:'Tab',       code:/^Tab$/,             use:'跳到下一格'},
+  '⇪':{name:'Caps Lock', code:/^CapsLock$/,        use:'大寫鎖定（看大寫燈）'},
+  '⇧':{name:'Shift',     code:/^Shift(Left|Right)$/, use:'切換中／英（按住打大寫或上排符號）'},
+  '␣':{name:'空白鍵',    code:/^Space$/,           use:'空一格'},
+  '⌫':{name:'Backspace', code:/^Backspace$/,       use:'刪除游標左邊的字'},
+  '⌦':{name:'Delete',    code:/^Delete$/,          use:'刪除游標右邊的字'},
+  '⏎':{name:'Enter',     code:/^(Numpad)?Enter$/,  use:'確定、換行'},
+  '↑':{name:'↑',         code:/^ArrowUp$/,         use:'游標往上'},
+  '↓':{name:'↓',         code:/^ArrowDown$/,       use:'游標往下'},
+  '←':{name:'←',         code:/^ArrowLeft$/,       use:'游標往左'},
+  '→':{name:'→',         code:/^ArrowRight$/,      use:'游標往右'},
+};
+const keyTok = code => Object.keys(KEYDEF).find(t => KEYDEF[t].code.test(code)) || null;
+const PACKS = {
+  en:{
+    app:'打字忍者', tag:'ASDF', badge:'字母打字', unit:'字母', store:'ninjatype1_', setup:'typing-setup.html', setupName:'英文打字・教師設定',
+    all:'qwertyuiopasdfghjklzxcvbnm',
+    sets:{ mid:{name:'中排', keys:'asdfghjkl', color:'var(--c-mid)'}, top:{name:'上排', keys:'qwertyuiop', color:'var(--c-top)'}, bot:{name:'下排', keys:'zxcvbnm', color:'var(--c-bot)'} },
+    intro:['選擇要練習的字母','先選一排，三個關卡都會用這一排的字母出題。每一排的紀錄分開算。'],
+    tlabel:'在這裡打字<small>（要用英文輸入法；打對了會自動送出，不用按 Enter）</small>',
+    l1:'第一關・單一字母', l1sub:'單一字母', l2:'第二關・字母組合', l2sub:'2～4 個字母',
+    ninjaName:'打字忍者', enemyHint:'敵人頭上有字母，在下面的打字欄位打出來就能擊退它（不用按 Enter）',
+    titles:['見習忍者','下忍','中忍','上忍'],
+  },
+  punc:{
+    app:'標點符號大挑戰', tag:'，。', badge:'全形標點', unit:'符號', store:'punctype1_', setup:'punct-setup.html', setupName:'標點符號・教師設定',
+    all:'，。、；：？！',
+    sets:{ basic:{name:'基本', keys:'，。？！', color:'var(--c-mid)'}, adv:{name:'進階', keys:'、；：', color:'var(--c-top)'}, all:{name:'全部', keys:'，。、；：？！', color:'var(--c-bot)'} },
+    intro:['選擇要練習的標點符號','先選一組，三個關卡都會用這一組的符號出題。每一組的紀錄分開算。'],
+    tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵，再按 Enter 送出）</small>',
+    l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1～4 個符號・連對升階',
+    ninjaName:'標點忍者', enemyHint:'敵人頭上有標點符號，在下面的打字欄位打出來就能擊退它',
+    titles:['標點見習生','標點下忍','標點中忍','標點上忍'],
+  },
+  key:{
+    app:'鍵盤小勇士', tag:'Esc', badge:'特殊鍵', unit:'鍵', store:'kbkey1_', setup:'keyboard.html', setupName:'鍵盤小勇士・教師設定',
+    all:'⎋⇥⇪⇧␣⌫⌦⏎↑↓←→',
+    sets:{ left:{name:'左側鍵', keys:'⎋⇥⇪⇧␣', color:'var(--c-mid)'}, right:{name:'右側鍵', keys:'⌫⌦⏎↑↓←→', color:'var(--c-top)'}, all:{name:'全部', keys:'⎋⇥⇪⇧␣⌫⌦⏎↑↓←→', color:'var(--c-bot)'} },
+    intro:['選擇要練習的按鍵','先選一組，三個關卡都會用這一組的按鍵出題。每一組的紀錄分開算。'],
+    tlabel:'',
+    l1:'第一關・單一按鍵', l1sub:'單一按鍵', l2:'第二關・譜面分歧', l2sub:'1～4 個按鍵・連對升階',
+    ninjaName:'病毒來襲', foe:'病毒', enemyHint:'病毒頭上有按鍵的名稱，按下那個鍵就能擊退它',
+    titles:['鍵盤見習生','鍵盤小兵','鍵盤勇士','鍵盤小勇士'],
+  },
+};
+const PK = PACKS[KIND];
+const FOE = PK.foe || '敵人';
+/* 畫面上顯示的文字：鍵盤小勇士顯示鍵名，其他照原字 */
+const SHOW = c => KIND === 'key' && KEYDEF[c] ? KEYDEF[c].name : c;
+const SETS = PK.sets;
+/* 第一關（兩個主題相同，老師 2026-10-28 決定）：單一字母／符號 n 題；不限時、打錯可以一直改到對；
+   正數計時：great 秒內＝優、good 秒內＝良、good 秒以上＝可；要完成 plays 次才打開第二關 */
+const L1 = {name:PK.l1, n:10, plays:3, great:3, good:7};
+const L1_PTS = {great:1, good:.8, ok:.5};   /* 第一關每題得分（優／良／可），細部分數＝平均×100 */
+/* 第二關
+   英文：2～4 個字母的組合 n 題；秒數＝base＋每個字母 per
+   標點：太鼓達人「譜面分歧」，三階（tiers）；連續答對 up 題升一階、連續答錯 down 題降一階（null＝不升／不降）
+         答對＝沒打錯、沒超時；答錯＝打錯過或超時（超時＝太慢） */
+const L2 = KIND === 'en'   /* 標點、鍵盤小勇士：譜面分歧 */
+  ? {name:PK.l2, mode:'fixed', n:10, minLen:2, maxLen:4, goodBase:1, goodPer:1, limitBase:2, limitPer:2.5}
+  : {name:PK.l2, mode:'branch', n:20,
+     /* 每一階各自的秒數：良＝goodBase＋goodPer×符號數；時限＝limitBase＋limitPer×符號數（含按 Enter）
+        階數越高，每個符號給的時間越多（老師 2026-10-29：玄人原本對大人也偏吃力） */
+     tiers:[{name:'普通', len:[1,1], up:5, down:null, goodBase:1, goodPer:3,   limitBase:2, limitPer:8},
+            {name:'玄人', len:[2,2], up:5, down:2,    goodBase:1, goodPer:3.5, limitBase:2, limitPer:9},
+            {name:'達人', len:[3,4], up:null, down:2, goodBase:1, goodPer:4,   limitBase:2, limitPer:10}]};
+const STAR_AT = [60,70,80,90,95];
+const L2_CROWN_STARS = 5;              /* 第二關 5 顆星＝皇冠（老師 2026-10-28 決定） */
+/* 忍者三級：第二關拿到 open 顆星就打開；前一級通關也會打開下一級
+   goal＝要擊退的敵人數；len[關卡]＝字串長度範圍；time[關卡]＝一個字時敵人走到忍者的秒數，每多一個字加 per 秒
+   multi[關卡]＝畫面上同時最多幾個敵人；gap＝同時有多個敵人時，下一個出現的間隔秒數
+   打錯一律不扣命（老師 2026-10-28 決定：學生打錯會整串重打，打不倒敵人自己就會發現），只有被敵人碰到才扣命
+   glow＝鍵盤提示下一個鍵；blank＝鍵帽沒有字
+   難度差異（老師 2026-10-28）：靠字數、同時出現的敵人數、速度；勇者的速度＝「適中」的基準 */
+const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組（老師 2026-10-30：病毒來襲難度比照標點忍者） */
+  novice:{name:'新手', open:3, goal:15, lives:3, glow:true,  blank:false, len:[[1,1],[1,2],[2,2]],                 time:[6,5.5,5],           per:1.4, multi:[1,1,1],       gap:2},
+  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8},
+  master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[2,3],[3,3],[3,4],[3,4],[4,4]],     time:[4.6,4.3,4,3.8,3.6], per:1,   multi:[1,1,2,2,2],   gap:1.5},
+} : {
+  /* 標點（老師 2026-10-29）：10／20／30 隻；勇者、大師下修（字數少一點、走慢一點），三級仍有差異：
+     新手＝一次 1 個、最慢、鍵盤提示；勇者＝1 個 → 偶爾 2 個、不提示；大師＝1～2 個 → 2 個、最後有 2 隻同時出現、鍵帽沒有字 */
+  novice:{name:'新手', open:3, goal:10, lives:3, glow:true,  blank:false, len:[[1,1],[1,1],[1,1]],                 time:[9,8.5,8],           per:3,   multi:[1,1,1],       gap:3},
+  brave: {name:'勇者', open:4, goal:20, lives:3, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]],     time:[8.5,8,7.6,7.3,7],   per:3,   multi:[1,1,1,1,1],   gap:3},
+  master:{name:'大師', open:5, goal:30, lives:3, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[2,2],[2,2]],     time:[8,7.6,7.2,6.9,6.6], per:3,   multi:[1,1,1,1,2],   gap:3},
+};
+const NINJA_ORDER = ['novice','brave','master'];
+const SCORE = {base:100, speed:100};   /* 每擊退一隻：100 分＋越快越多（最多再加 100） */
+const THEMES = [
+  {name:'竹林早晨', sky:'linear-gradient(#9ED8FF,#E6F6FF)', far:'#7FB77E', near:'#4E8F4A', ground:'#C9A46A'},
+  {name:'黃昏山路', sky:'linear-gradient(#F59E42,#FCE3B0)', far:'#B5654A', near:'#7A3E2E', ground:'#B57A44'},
+  {name:'月夜屋頂', sky:'linear-gradient(#1E2A55,#4A5A8F)', far:'#2E3A66', near:'#1B2340', ground:'#4A4F6A'},
+  {name:'城堡決戰', sky:'linear-gradient(#5B2A86,#B57BD6)', far:'#3E1F5E', near:'#2A1440', ground:'#6B4A3A'},
+  {name:'雷雨大將', sky:'linear-gradient(#1F2933,#4B5563)', far:'#111827', near:'#0B1220', ground:'#374151'},
+];
+const TITLES = PK.titles;
+const TITLE_RULE = ['第一關完成 3 次',`${PK.ninjaName}「新手」通關`,`${PK.ninjaName}「勇者」通關`,`${PK.ninjaName}「大師」通關`];
+const AWARD_LINE = ['認真完成第一關 3 次'].concat(['novice','brave','master'].map(id => `擊退${PK.ninjaName}「${NINJA[id].name}」的 ${NINJA[id].goal} 個${FOE}`));
+const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
+const HISTORY_MAX = 10;
+/* 網址參數（老師設定頁產生）：keys 字母／符號、goal 練習目標、end 下課頒獎時間、classes/seats 範圍、demo 示範 */
+const Q = new URLSearchParams(location.hash.replace(/^#/,''));
+const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:59',
+  classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40),
+  nameOn: Q.get('nm') === '1'};   /* nm=1：老師勾選「學生可以輸入自己的名字」（姓名只留在畫面上，不儲存） */
+let DEMO = Q.has('demo');
+const ALL = PK.all;
+const qKeys = [...new Set([...(Q.get('keys')||'').toLowerCase()].filter(c => ALL.includes(c)))].join('');
+/* goal＝老師在設定頁填的「本次練習的目標」，當作網頁名稱（舊連結的 name 也接受） */
+const GOAL = (Q.get('goal') || Q.get('name') || '').trim().slice(0, 20);
+document.title = PK.app;
+if (qKeys.length >= 2){ SETS.cus = {name: GOAL || '老師指定', keys:qKeys, color:'var(--c-cus)'}; if (GOAL) document.title = GOAL === PK.app ? GOAL : GOAL + '・' + PK.app; }
+/* 單頁練習（老師 2026-10-30）：從教師設定頁的連結／捷徑檔打開（網址有指定字母或符號）＝發給學生的網頁，
+   只有這一組練習，不顯示「回上頁／回目錄／換練習範圍」 */
+const ONE = !!SETS.cus;
+const dispKeys = k => KIND === 'key' ? [...k].map(SHOW).join('・') : [...k.toUpperCase()].join(' ');
+
+/* ---------- 小工具 ---------- */
+const $ = s => document.querySelector(s);
+const H = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const starsOf = s => STAR_AT.filter(t => s >= t).length;
+const starStr = n => Array.from({length:5},(_,i)=>`<span class="${i<n?'':'off'}">★</span>`).join('');
+const nowHM = () => { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`; };
+const chip = k => `<span class="chipk">${H(SHOW(k))}</span>`;
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const Sound = {
+  ac:null, muted:false,
+  init(){ if (!this.ac){ try{ this.ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if (this.ac && this.ac.state==='suspended') this.ac.resume(); },
+  tone(f,d,type,when,vol){ const ac = this.ac; if (!ac || this.muted) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime+(when||0);
+    o.type = type||'sine'; o.frequency.value = f; g.gain.setValueAtTime(vol||.12,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.03); },
+  key(){ this.tone(880,.05,'triangle',0,.06); },
+  good(){ this.tone(660,.1,'triangle'); this.tone(990,.18,'triangle',.07); },
+  mid(){ this.tone(560,.14,'triangle'); },
+  bad(){ this.tone(170,.25,'square',0,.07); },
+  tick(){ this.tone(520,.06,'sine',0,.08); },
+  slash(){ this.tone(1200,.08,'sawtooth',0,.05); this.tone(600,.12,'triangle',.05,.08); },
+  win(){ [523,659,784,1047].forEach((f,i)=>this.tone(f,.22,'triangle',i*.11)); },
+  soft(){ [392,440,523].forEach((f,i)=>this.tone(f,.22,'triangle',i*.12,.08)); }
+};
+$('#soundBtn').onclick = () => { Sound.init(); Sound.muted = !Sound.muted; $('#soundBtn').textContent = Sound.muted ? '聲音：關' : '聲音：開'; };
+
+/* ---------- 班級座號碼（規格書 10 節）：5 位數＝年級 1 碼＋班級 2 碼＋座號 2 碼 ---------- */
+const CN = ['','一','二','三','四','五','六','七','八','九','十'];
+const cnNum = n => n <= 10 ? CN[n] : n < 20 ? '十' + CN[n-10] : CN[Math.floor(n/10)] + '十' + CN[n%10];
+function parseCode(s){
+  if (!/^\d{5}$/.test(s)) return {err: s.length ? `要打 5 個數字（現在 ${s.length} 個）` : ''};
+  const g = +s[0], c = +s.slice(1,3), n = +s.slice(3,5);
+  if (g < 1 || g > 6) return {err:'第 1 個數字是年級，要是 1～6'};
+  if (c < 1 || c > CFG.classes) return {err:`第 2、3 個數字是班級，要是 01～${String(CFG.classes).padStart(2,'0')}`};
+  if (n < 1 || n > CFG.seats) return {err:`最後 2 個數字是座號，要是 01～${String(CFG.seats).padStart(2,'0')}`};
+  return {code:s, cls:`${CN[g]}年${cnNum(c)}班`, seat:n, text:`${CN[g]}年${cnNum(c)}班 ${n} 號`};
+}
+let WHO = null;
+$('#sCode').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,5);
+  const r = parseCode(e.target.value), p = $('#sPrev');
+  p.className = 'preview' + (r.err ? ' err' : ''); p.textContent = r.err || r.text;
+});
+$('#signForm').addEventListener('submit', e => {
+  e.preventDefault(); const r = parseCode($('#sCode').value);
+  if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
+  const nm = CFG.nameOn ? $('#sName').value.trim().replace(/\s+/g,' ').slice(0,20) : '';   /* 中文或英文名字都可以 */
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }   /* 有名字：「三年一班 王小明」（老師 2026-10-29） */
+  WHO = r; $('#signWrap').hidden = true; renderWho(); saveSess(); Sound.init(); afterSign();
+});
+$('#sNameBox').hidden = !CFG.nameOn;
+function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name ? WHO.name : ''; $('#sPrev').textContent = WHO ? parseCode(WHO.code).text || '' : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
+function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
+$('#who').onclick = () => { if (screen==='home' || screen==='sets') openSignin(); };
+
+/* ---------- 簽到、輸入法檢測、正在練的範圍（老師 2026-10-30）：關掉再打開時接著練，不用重新簽到、重新檢查
+   存在這台電腦的瀏覽器（和練習紀錄一起），老師按「清除這台電腦的紀錄」一起清掉；示範模式不存 ---------- */
+const SESS_KEY = PK.store + 'sess';
+function saveSess(){ if (!DEMO) store.set(SESS_KEY, {code: WHO ? WHO.code : '', name: WHO && WHO.name ? WHO.name : '', checked: CHECKED, set: SET}); }
+function loadSess(){
+  if (DEMO) return false; const s = store.get(SESS_KEY, null); if (!s) return false;
+  if (s.set && SETS[s.set] && !ONE) loadSet(s.set);
+  CHECKED = !!s.checked;
+  const r = parseCode(s.code || ''); if (r.err !== undefined) return false;
+  const nm = CFG.nameOn ? String(s.name || '').slice(0,20) : '';
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }
+  WHO = r; renderWho(); return true;
+}
+
+/* ---------- 紀錄（每一排分開；課堂內紀錄存 localStorage，規格書 2.2） ---------- */
+const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, best:null, stars:0, crown:false, hist:[]},
+  ninja:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}},
+  weight:{}, rtSum:0, rtN:0, unlock:false});
+let SET = null, P = null;
+const keyOf = id => PK.store + (id==='cus' ? 'cus_' + SETS.cus.keys : id);
+function loadSet(id){
+  SET = id;
+  P = DEMO ? Object.assign(fresh(), {unlock:true}) : Object.assign(fresh(), store.get(keyOf(id), {}));
+  $('#verBadge').textContent = `${SETS[id].name}・${dispKeys(SETS[id].keys)}`;
+}
+const save = () => { if (!DEMO && SET) store.set(keyOf(SET), P); };
+const KEYS = () => SETS[SET].keys.split('');
+const l2Open = () => P.unlock || P.l1.plays >= L1.plays;
+const ninjaOpen = id => { if (P.unlock) return true; const i = NINJA_ORDER.indexOf(id);
+  return l2Open() && (P.l2.stars >= NINJA[id].open || (i > 0 && P.ninja[NINJA_ORDER[i-1]].cleared)); };
+function titleIndex(){ if (P.ninja.master.cleared) return 3; if (P.ninja.brave.cleared) return 2; if (P.ninja.novice.cleared) return 1; if (P.l1.plays >= L1.plays) return 0; return -1; }
+
+/* ---------- 錯題權重（規格書第 7 節，以字母為單位） ---------- */
+const wOf = k => Math.min(WEIGHT.max, P.weight[k] || WEIGHT.base);
+function pickWeighted(pool, avoid){
+  const c = pool.filter(k => k !== avoid); const tot = c.reduce((s,k) => s + wOf(k), 0);
+  let r = Math.random()*tot; for (const k of c){ r -= wOf(k); if (r < 0) return k; } return c[c.length-1];
+}
+function learn(k, judge, rt){
+  const avg = P.rtN >= WEIGHT.minSamples ? P.rtSum/P.rtN : null;
+  let w = P.weight[k] || WEIGHT.base, weak = false;
+  if (judge==='bad'){ w += WEIGHT.bad; weak = true; }
+  else if (judge==='ok' || (avg && rt > avg*WEIGHT.slowRatio)){ w += WEIGHT.slow; weak = true; }
+  else w = Math.max(WEIGHT.base, w - WEIGHT.recover);
+  P.weight[k] = Math.min(WEIGHT.max, w);
+  if (rt!=null && judge!=='bad'){ P.rtSum += rt; P.rtN++; }
+  return weak;
+}
+/* 第一關出題：第 1 次每個字母至少出現一次；第 2、3 次完全依權重抽（不熟的字母出現得多） */
+function l1Queue(){
+  const keys = KEYS(); let q = [];
+  if (P.l1.plays === 0){ q = shuffle(keys.slice()).slice(0, L1.n); while (q.length < L1.n) q.push(pickWeighted(keys, q[q.length-1])); q = shuffle(q); }
+  else { for (let i=0;i<L1.n;i++) q.push(pickWeighted(keys, q[i-1])); }
+  for (let i=1;i<q.length;i++) if (q[i]===q[i-1]){ const j = q.findIndex((x,t) => t>i && x!==q[i] && q[t-1]!==q[i] && q[t+1]!==q[i]); if (j>0) [q[i],q[j]]=[q[j],q[i]]; }
+  return q;
+}
+function makeWord(len){ const keys = KEYS(); let w = ''; for (let i=0;i<len;i++) w += keys.length > 1 ? pickWeighted(keys, w[w.length-1]) : keys[0]; return w; }
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+
+/* ---------- 鍵盤：英文＝字母三排；標點＝Ctrl、Shift 和 6 個符號鍵 ---------- */
+const kbEl = $('#kb');
+const PKEYS = [
+  {id:'ctrl',  top:'Ctrl',  w:1.5, code:/^Control/},  {id:'shift', top:'Shift', w:1.7, code:/^Shift/},
+  {id:'one',   top:'1', sub:'！', code:/^Digit1$/},  {id:'semi',  top:';', sub:'；：', code:/^Semicolon$/},
+  {id:'quote', top:"'", sub:'、', code:/^Quote$/},   {id:'comma', top:',', sub:'，', code:/^Comma$/},
+  {id:'period',top:'.', sub:'。', code:/^Period$/},  {id:'slash', top:'/', sub:'？', code:/^Slash$/},
+];
+if (KIND === 'en'){
+  [['qwertyuiop',0],['asdfghjkl',.3],['zxcvbnm',.8]].forEach(([row,off],y) => row.split('').forEach((c,x) => {
+    const d = document.createElement('div'); d.className = 'k' + ((c==='f'||c==='j') ? ' home' : ''); d.dataset.k = c;
+    d.style.left = ((off + x)/10.6*100) + '%'; d.style.top = (y*33.33) + '%';
+    d.innerHTML = `<div class="cap"><span class="lbl">${c}</span></div>`; kbEl.appendChild(d); }));
+} else if (KIND === 'key'){
+  /* 整個鍵盤（16.6 格寬、6 列）：特殊鍵 data-k＝代表符號；其他鍵 data-k＝按鍵代碼，按下去會亮，但不是題目 */
+  kbEl.classList.add('keys');
+  const put = (k, lbl, x, y, w, ltr) => { const d = document.createElement('div'); d.className = 'k' + (ltr ? ' ltr' : ''); d.dataset.k = k;
+    d.style.left = (x/16.6*100) + '%'; d.style.top = (y*16.66) + '%'; d.style.width = ((w||1)/16.6*100) + '%';
+    d.innerHTML = `<div class="cap"><span class="lbl">${lbl}</span></div>`; kbEl.appendChild(d); };
+  const row = (str, codes, x, y) => [...str].forEach((c,i) => put(codes[i], c, x + i, y, 1, true));
+  put('⎋','Esc',0,0,1.3); put('⌦','Delete',13.3,0,1.7);
+  row('`1234567890-=', ['Backquote','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','Minus','Equal'], 0, 1); put('⌫','Backspace',13,1,2);
+  put('⇥','Tab',0,2,1.5); row('qwertyuiop[]', [...'qwertyuiop'].map(c => 'Key'+c.toUpperCase()).concat(['BracketLeft','BracketRight']), 1.5, 2);
+  put('⇪','Caps Lock',0,3,1.8); row("asdfghjkl;'", [...'asdfghjkl'].map(c => 'Key'+c.toUpperCase()).concat(['Semicolon','Quote']), 1.8, 3); put('⏎','Enter',12.8,3,2.2);
+  put('⇧','Shift',0,4,2.3); row('zxcvbnm,./', [...'zxcvbnm'].map(c => 'Key'+c.toUpperCase()).concat(['Comma','Period','Slash']), 2.3, 4); put('⇧','Shift',12.3,4,1.9);
+  put('ControlLeft','Ctrl',0,5,1.5); put('AltLeft','Alt',1.6,5,1.3); put('␣','空白鍵',3,5,6.6); put('AltRight','Alt',9.7,5,1.3); put('ControlRight','Ctrl',11.1,5,1.3);
+  put('↑','↑',14.6,4,1); put('←','←',13.6,5,1); put('↓','↓',14.6,5,1); put('→','→',15.6,5,1);
+} else {
+  kbEl.classList.add('punc'); let x = 0;
+  PKEYS.forEach(k => { const w = k.w || 1, d = document.createElement('div'); d.className = 'k'; d.dataset.k = k.id;
+    d.style.left = (x/10.6*100) + '%'; d.style.width = (w/10.6*100) + '%'; x += w + .12;
+    d.innerHTML = `<div class="cap"><span class="lbl">${k.top}</span>${k.sub ? `<small class="sub">${k.sub}</small>` : ''}</div>`; kbEl.appendChild(d); });
+}
+/* 一個字母／符號要按哪些鍵 */
+const keysFor = ch => !ch ? [] : KIND === 'punc' ? (PUNC[ch] ? PUNC[ch].keys : []) : [ch];
+const codeKey = code => { if (KIND === 'key') return keyTok(code) || code; if (KIND === 'en'){ const m = /^Key([A-Z])$/.exec(code); return m ? m[1].toLowerCase() : null; } const k = PKEYS.find(k => k.code.test(code)); return k ? k.id : null; };
+const kb = {
+  el: k => kbEl.querySelector(`[data-k="${k}"]`),
+  els: k => [...kbEl.querySelectorAll(`[data-k="${k}"]`)],   /* Shift 有左右兩顆 */
+  setIn(chars){ const ids = new Set(chars.flatMap(keysFor)); kbEl.querySelectorAll('.k').forEach(x => x.classList.toggle('in', ids.has(x.dataset.k))); },
+  clear(){ kbEl.querySelectorAll('.k').forEach(x => x.classList.remove('glow','ok','no','show')); },
+  glow(ch){ kbEl.querySelectorAll('.glow').forEach(x => x.classList.remove('glow')); keysFor(ch).forEach(k => this.els(k).forEach(e => e.classList.add('glow'))); },
+  show(ch){ keysFor(ch).forEach(k => this.els(k).forEach(e => e.classList.add('show'))); },
+  blank(on){ kbEl.classList.toggle('blank', !!on); }
+};
+
+/* ---------- 畫面切換 ---------- */
+let screen = 'sets', loop = 0, cdTimer = 0, D = null, N = null, paused = null;
+function show(name){
+  screen = name; cancelAnimationFrame(loop); clearInterval(cdTimer);
+  document.querySelectorAll('.go-cover').forEach(c => c.hidden = true); clearBig();
+  document.querySelectorAll('[data-screen]').forEach(s => s.hidden = s.dataset.screen !== name);
+  $('#hud').hidden = !(name==='drill' || name==='ninja');
+  $('#homeBtn').hidden = !(name==='drill' || name==='ninja' || name==='result');
+  $('#setsBtn').hidden = ONE || name !== 'home';
+  $('#kbZone').hidden = !(name==='drill' || name==='ninja');
+  $('#typeZone').hidden = KIND === 'key' || !(name==='drill' || name==='ninja');   /* 鍵盤小勇士直接按鍵，不用打字欄位 */
+  if (KIND === 'key' && (name==='drill' || name==='ninja') && document.activeElement) document.activeElement.blur();   /* 避免空白鍵、Enter 按到畫面上的按鈕 */
+  tinReset(); kb.clear(); kb.blank(false); if (SET) kb.setIn(KEYS());
+  const bar = DEMO ? '<div class="demo-bar">老師示範模式：全部打開，紀錄不會保存。學生請用一般網址（不要加 #demo）。</div>' : '';
+  $('#demoBar1').innerHTML = bar; $('#demoBar2').innerHTML = bar;
+  if (name==='sets') renderSets();
+  if (name==='home') renderHome();
+  if (name==='check') chkStart();
+  $('#reCheck').hidden = KIND !== 'punc';
+  document.querySelectorAll('.footnav').forEach(n => n.hidden = ![...n.children].some(c => !c.hidden));
+}
+$('#homeBtn').onclick = () => { stopAll(); show('home'); };
+$('#setsBtn').onclick = () => show('sets');
+$('#backSets').onclick = () => show('sets');
+function stopAll(){ if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } $('#enemyLayer').innerHTML = ''; tin.blur(); }
+
+function renderSets(){
+  $('#sets').innerHTML = Object.keys(SETS).map(id => {
+    const p = DEMO ? null : store.get(keyOf(id), null), S = SETS[id];
+    const ti = p ? (p.ninja && p.ninja.master && p.ninja.master.cleared ? 3 : p.ninja && p.ninja.brave && p.ninja.brave.cleared ? 2 : p.ninja && p.ninja.novice && p.ninja.novice.cleared ? 1 : p.l1 && p.l1.plays >= L1.plays ? 0 : -1) : -1;
+    return `<button class="setcard" type="button" data-set="${id}"><span class="band" style="background:${S.color}"></span>
+      <h2>${H(S.name)}</h2><span class="keys">${dispKeys(S.keys)}</span>
+      <span class="st">${ti >= 0 ? `目前稱號：${TITLES[ti]}` : p && p.l1 && p.l1.plays ? `第一關完成 ${Math.min(p.l1.plays, L1.plays)}/${L1.plays} 次` : '還沒開始'}</span></button>`;
+  }).join('');
+}
+$('#sets').addEventListener('click', e => { const b = e.target.closest('[data-set]'); if (!b) return; Sound.init(); loadSet(b.dataset.set); saveSess(); show('home'); });
+
+function card(num, color, deco, title, inner, lock){
+  return `<div class="entry ${lock?'locked':''}"><div class="entry-band" style="background:${color}"><span class="num">${num}</span><span class="deco">${deco.map(d=>`<span>${H(d)}</span>`).join('')}</span></div>
+    <div class="entry-body"><h2>${H(title)}</h2>${lock?`<p class="lockmsg">🔒 ${H(lock)}</p>`:''}<div class="diffs">${inner}</div></div></div>`;
+}
+function renderHome(){
+  const S = SETS[SET], k0 = S.keys[0].toUpperCase();
+  const dots = Array.from({length:L1.plays},(_,i)=>`<span class="${i<P.l1.plays?'':'off'}">●</span>`).join('');
+  const c1 = card(1, S.color, [k0], L1.name, `<button class="diff" type="button" data-l="1"><span>${PK.l1sub}<small>${L1.n} 題・不限時，打對為止・鍵盤會提示・要完成 ${L1.plays} 次</small></span>
+    <span class="lv-r"><span class="dots" title="完成次數">${dots}</span><span class="stars">${starStr(P.l1.stars)}</span><span class="lv-best">${P.l1.best!=null?`最佳 ${P.l1.best} 分`:'還沒挑戰'}</span></span></button>`, '');
+  const o2 = l2Open();
+  const c2 = card(2, S.color, [S.keys.slice(0,2).toUpperCase(), S.keys.slice(2,5).toUpperCase()], L2.name, `<button class="diff" type="button" data-l="2" ${o2?'':'disabled'}><span>${PK.l2sub}<small>${L2.n} 題・${L2.mode==='branch' ? `連對 ${L2.tiers[0].up} 題升一階，挑戰「${L2.tiers[2].name}」・` : ''}${L2_CROWN_STARS} 顆星得到皇冠</small></span>
+    <span class="lv-r">${o2 ? `<span class="stars">${starStr(P.l2.stars)}</span><span class="lv-best">${P.l2.crown?'👑 ':''}${P.l2.best!=null?`最佳 ${P.l2.best} 分`:'還沒挑戰'}${L2.mode==='branch' && P.l2.tierBest ? `・最高 ${tierStars(P.l2.tierBest)}` : ''}</span>` : '🔒'}</span></button>`,
+    o2 ? '' : `第一關要完成 ${L1.plays} 次（現在 ${P.l1.plays} 次）`);
+  const nBtns = NINJA_ORDER.map((id,i) => { const C = NINJA[id], R = P.ninja[id], o = ninjaOpen(id);
+    const lock = `第二關拿到 ${C.open} 顆星${i ? `，或「${NINJA[NINJA_ORDER[i-1]].name}」通關` : ''}就打開`;
+    return `<button class="diff" type="button" data-n="${id}" ${o?'':'disabled'}><span>${C.name}<small>${o ? `擊退 ${C.goal} 個${FOE}・${C.lives} 條命・打錯不扣命${C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
+      <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
+  const anyN = NINJA_ORDER.some(ninjaOpen);
+  const c3 = card(3, 'var(--c-ninja)', ['忍'], `第三關・${PK.ninjaName}`, nBtns, anyN ? '' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`);
+  const ti = titleIndex();
+  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${ti<0 ? '還沒有' : TITLES[ti]}</b>
+    <span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>
+    <span class="tnote" style="width:100%">${ti < 3 ? `下一個：${TITLE_RULE[ti+1]} → 「${TITLES[ti+1]}」` : '已經是最高稱號！'}</span></div>`;
+  $('#entries').innerHTML = tb + c1 + c2 + c3;
+}
+$('#entries').addEventListener('click', e => {
+  Sound.init();
+  const l = e.target.closest('[data-l]'); if (l && !l.disabled) return startDrill(+l.dataset.l);
+  const n = e.target.closest('[data-n]'); if (n && !n.disabled) return startNinja(n.dataset.n);
+});
+
+function countdown(el, title, sub, done){
+  el.hidden = false; let n = 3;
+  const draw = () => { el.innerHTML = `<h2>${H(title)}</h2><p>${H(sub)}</p><div class="count">${n}</div>`; };
+  draw(); Sound.tick(); clearInterval(cdTimer);
+  const t = cdTimer = setInterval(() => { n--; if (n<=0){ clearInterval(t); el.hidden = true; done(); return; } draw(); Sound.tick(); }, 800);
+}
+function fx(el, kind, text){ el.className = 'fixfx' + (kind==='no'?' no':kind==='mid'?' mid':''); el.innerHTML = `<span>${H(text)}</span>`; clearTimeout(el._t); el._t = setTimeout(()=>el.innerHTML='', 800); }
+function hud(items){ $('#hud').innerHTML = items.map(([l,v,cls]) => `<div class="hud-item"><span class="hud-l">${l}</span>${cls==='h' ? v : `<b class="${cls||''}">${v}</b>`}</div>`).join(''); }
+
+/* ---------- 第一關、第二關（道場） ----------
+   第一關：不限時、打錯改到對為止；正數計時，優／良／可（規格書 10 節「打字類第一關」）
+   第二關：英文＝固定題目；標點＝譜面分歧（連對升階、連錯降階） */
+const tierStars = n => `<span class="ts t${n}">${Array.from({length:3},(_,i)=>`<span class="${i<n?'':'off'}">★</span>`).join('')}</span>`;
+function scoreOf(d){
+  if (!d.n) return 0;
+  if (d.lv===1) return Math.round((d.great*L1_PTS.great + d.good*L1_PTS.good + d.ok*L1_PTS.ok)/d.n*100);
+  return Math.round((d.good + d.ok*.5)/d.n*100);
+}
+function startDrill(lv){
+  stopAll();
+  const isL1 = lv === 1, br = !isL1 && L2.mode === 'branch';
+  const q = isL1 ? l1Queue() : br ? [] : Array.from({length:L2.n}, () => makeWord(ri(L2.minLen, L2.maxLen)));
+  D = {lv, br, n: isL1 ? q.length : L2.n, q, i:0, great:0, good:0, ok:0, bad:0, typos:0, combo:0, maxCombo:0, rts:[], weak:new Set(), locked:true, over:false,
+       tier:0, streak:0, miss:0, tierMax:0, tierAt:null, word:''};
+  show('drill');
+  $('#dLbl').textContent = KIND === 'key' ? (isL1 ? '按下這個鍵' : '依序按下這些鍵') : isL1 ? `在打字欄位打出這個${PK.unit}` : `在打字欄位依序打出這些${PK.unit}`;
+  $('#target').innerHTML = ''; $('#dHow').textContent = ''; $('#dClock').textContent = '';
+  $('#tier').hidden = !br; $('#dojo').dataset.tier = '1'; $('#timerWrap').hidden = isL1;   /* 第一關不顯示計時長條，避免壓力（老師 2026-10-29） */
+  $('#zones').innerHTML = isL1 ? `<span>「優」${L1.great} 秒內</span><span>「良」${L1.great}～${L1.good} 秒</span><span>「可」${L1.good} 秒以上</span><span>${KIND === 'key' ? '不限時：按錯了，再按正確的鍵就好' : '不限時：打錯按 Backspace 刪掉再打，打對為止'}</span>`
+    : br ? `<span>連續答對 ${L2.tiers[0].up} 題 → 升一階</span><span>連續答錯 ${L2.tiers[1].down} 題（打錯或太慢）→ 降一階</span><span>「良」沒打錯又夠快・「可」打錯改正或比較慢・超過時間＝「不可」</span>`
+    : `<span>「良」沒打錯、夠快</span><span>「可」打錯後按 Backspace 改正，或比較慢</span><span>超過時間＝「不可」</span>`;
+  drillHud();
+  const playNo = P.l1.plays >= L1.plays ? P.l1.plays + 1 : Math.min(P.l1.plays + 1, L1.plays);
+  const howIn = KIND === 'en' ? '先換成英文輸入法' : KIND === 'key' ? '看鍵名，在鍵盤上找到它' : '按住 Ctrl 再按符號鍵';
+  const sub = isL1 ? (P.l1.plays ? `這一次會多出現你比較不熟的${PK.unit}。不限時，${KIND === 'key' ? '按對' : '打對'}為止，越快成績越好！` : KIND === 'key' ? `看到鍵名，就在鍵盤上按下那個鍵（${howIn}）。不限時，按對為止，越快成績越好！` : `在下面的打字欄位打出${PK.unit}（${howIn}）。不限時，打對為止，越快成績越好！`)
+    : br ? `從「${L2.tiers[0].name}」開始：連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」，再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」！`
+    : `在打字欄位依序打出${PK.unit}，打錯了按 Backspace 改正`;
+  const d = D;
+  countdown($('#dCover'), isL1 ? `${L1.name}（第 ${playNo} 次）` : L2.name, sub, () => { if (D===d) drillNext(); });
+}
+function drillHud(){
+  const items = [['關卡', D.lv===1 ? '第一關' : '第二關', 't'], ['分數', scoreOf(D)], ['連段', D.combo], ['進度', `${Math.min(D.i+1, D.n)}/${D.n}`]];
+  if (D.br) items.splice(1, 0, ['譜面', `${tierStars(D.tier+1)} ${L2.tiers[D.tier].name}`, 'h']);
+  hud(items);
+}
+function drawTier(){
+  const T = L2.tiers[D.tier], st = D.streak, need = T.up;
+  $('#dojo').dataset.tier = String(D.tier + 1);
+  $('#tier').dataset.t = String(D.tier + 1);
+  $('#tier').innerHTML = `${tierStars(D.tier+1)}<b>「${T.name}」譜面</b><span>${need ? `再連對 ${need - st} 題升階` : '最高的譜面！'}</span>`;
+}
+function drillNext(){
+  if (!D || D.over) return;
+  if (D.i >= D.n) return drillEnd();
+  let w;
+  if (D.br){ const [a,b] = L2.tiers[D.tier].len; for (let t=0;t<10;t++){ w = makeWord(ri(a,b)); if (w !== D.word) break; } }
+  else w = D.q[D.i];
+  D.word = w; D.pos = 0; D.typo = false; D.badShown = false; D.badLen = 0;
+  if (D.lv===1){ D.good_t = L1.great; D.limit_t = 0; }
+  else { const T = D.br ? L2.tiers[D.tier] : L2; D.good_t = T.goodBase + T.goodPer*w.length; D.limit_t = T.limitBase + T.limitPer*w.length; }
+  drawTarget(); kb.clear(); if (D.lv===1) kb.glow(w[0]); tinReset(); focusTin();
+  $('#dHow').textContent = D.lv===1 && KIND==='punc' ? `${PUNC[w].name}：${PUNC[w].how}` : D.lv===1 && KIND==='key' ? `用途：${KEYDEF[w].use}` : '';
+  $('#dClock').textContent = D.lv===1 ? '⏱ 0.0 秒' : '';
+  if (D.br) drawTier();
+  D.start = performance.now(); D.deadline = D.limit_t ? D.start + D.limit_t*1000 : Infinity; D.locked = false;
+  drillHud(); cancelAnimationFrame(loop); loop = requestAnimationFrame(drillTick);
+}
+function drawTarget(badAt){
+  $('#target').innerHTML = [...D.word].map((c,i) => `<span class="${i<D.pos?'ok':i===badAt?'bad':(i===D.pos && D.lv===2)?'next':''}">${H(SHOW(c))}</span>`).join('');
+}
+function drillTick(now){
+  if (!D || D.over || screen!=='drill') return;
+  if (!D.locked && paused==null){
+    const bar = $('#timerBar');
+    if (D.lv===1){   /* 正數計時：綠＝優、黃＝良、橘＝可；長條 10 秒滿 */
+      const t = (now - D.start)/1000, cls = t < L1.great ? '' : t < L1.good ? 'warn' : 'slow';
+      bar.style.transform = `scaleX(${Math.min(1, t/10)})`; bar.className = cls;
+      $('#dClock').textContent = '⏱ ' + t.toFixed(1) + ' 秒';
+    } else {
+      const total = D.limit_t*1000, rem = Math.max(0, D.deadline - now);
+      bar.style.transform = `scaleX(${rem/total})`; bar.className = (total-rem)/1000 <= D.good_t ? '' : 'warn';
+      if (rem <= 0) drillResolve('bad', true);
+    }
+  }
+  loop = requestAnimationFrame(drillTick);
+}
+/* 道場：比對打字欄位的內容（打對自動送出） */
+function drillInput(v){
+  if (!D || D.locked) return;
+  const w = D.word;
+  if (!v){ D.pos = 0; drawTarget(); tinState(''); if (D.lv===1) kb.glow(w[0]); return; }
+  if (w.startsWith(v)){
+    if (v.length > D.pos) Sound.key();
+    D.pos = [...v].length; tinState('');
+    if (v === w) return drillResolve(null);
+    drawTarget(); if (D.lv===1) kb.glow([...w][D.pos]); return;
+  }
+  /* 打錯：留在欄位裡，要按 Backspace 改正（第一關不限時，改到對為止；第二關完成後最多「可」） */
+  const wa = [...w], va = [...v]; let p = 0; while (p < va.length && va[p] === wa[p]) p++;
+  D.pos = p;
+  if (!D.badShown || va.length > D.badLen){ const want = wa[p]; D.typo = true; D.typos++; if (want){ D.weak.add(want); learn(want,'bad',null); } Sound.bad(); }
+  D.badShown = true; D.badLen = va.length;
+  drawTarget(p); tinState('bad', KIND === 'key' ? `按錯了！要按「${SHOW(wa[p])}」` : D.lv===1 ? '打錯了，按 Backspace 刪掉，再打一次' : '打錯了，按 Backspace 刪掉再打');
+  if (D.lv===1){ kb.show(wa[p]); }
+}
+function drillResolve(forced, timeout){
+  D.locked = true;
+  const rt = (performance.now() - D.start)/1000;
+  const judge = D.lv===1 ? (rt < L1.great ? 'great' : rt < L1.good ? 'good' : 'ok')
+    : forced || (!D.typo && rt <= D.good_t ? 'good' : 'ok');
+  D[judge]++;
+  const miss = D.typo || judge==='bad';
+  if (miss) D.combo = 0; else { D.combo++; D.maxCombo = Math.max(D.maxCombo, D.combo); }
+  if (judge !== 'bad') D.rts.push(rt);
+  if (D.lv===1){ if (!D.typo && learn(D.word, judge==='ok' ? 'ok' : 'good', rt)) D.weak.add(D.word); }
+  else if (judge!=='bad'){ if (!D.typo) [...D.word].forEach(c => learn(c, judge, rt/D.word.length)); }
+  else [...D.word].slice(D.pos).forEach(c => { learn(c,'bad',null); D.weak.add(c); });
+  /* 譜面分歧：連對升階、連錯降階 */
+  let change = 0;
+  if (D.br){
+    const T = L2.tiers[D.tier];
+    if (!miss){ D.streak++; D.miss = 0; if (T.up && D.streak >= T.up) change = 1; }
+    else { D.miss++; D.streak = 0; if (T.down && D.miss >= T.down) change = -1; }
+    if (change){ D.tier += change; D.streak = 0; D.miss = 0;
+      if (D.tier > D.tierMax){ D.tierMax = D.tier; if (D.tier === L2.tiers.length-1 && D.tierAt == null) D.tierAt = D.i + 1; } }
+  }
+  save();
+  if (judge==='great'){ Sound.good(); fx($('#dFx'),'good','優！'); }
+  else if (judge==='good'){ Sound.good(); fx($('#dFx'),'good','良！'); }
+  else if (judge==='ok'){ Sound.mid(); fx($('#dFx'),'mid','可'); }
+  else { Sound.bad(); fx($('#dFx'),'no', timeout ? '時間到・不可' : '不可'); kb.clear(); kb.show([...D.word][D.pos]); }
+  $('#timerBar').style.transform = 'scaleX(0)';
+  if (D.br){ drawTier(); if (change){ const b = $('#dBig'), T = L2.tiers[D.tier];
+      b.textContent = change > 0 ? `⬆ 升到「${T.name}」譜面！` : `⬇ 回到「${T.name}」譜面`;
+      b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+      if (change > 0) [523,659,784,1047].forEach((f,i) => Sound.tone(f, .16, 'triangle', .15 + i*.08, .08)); } }
+  drillHud();
+  const d = D; setTimeout(() => { if (D===d){ kb.clear(); D.i++; drillNext(); } }, change ? 1500 : judge==='bad' ? 1300 : 600);
+}
+function drillEnd(){
+  const d = D; D = null;
+  const R = d.lv===1 ? P.l1 : P.l2;
+  const score = scoreOf(d), stars = starsOf(score);
+  const prev = R.hist.length ? R.hist[R.hist.length-1].score : null, bestBefore = R.best;
+  R.hist.push(Object.assign({score, stars, at:nowHM()}, d.br ? {tier:d.tierMax+1} : {})); while (R.hist.length > HISTORY_MAX) R.hist.shift();
+  const tiBefore = titleIndex(), l2Was = l2Open(), nWas = NINJA_ORDER.map(ninjaOpen), crownWas = P.l2.crown;
+  R.plays++; R.stars = Math.max(R.stars, stars); if (R.best==null || score > R.best) R.best = score;
+  if (d.lv===2 && stars >= L2_CROWN_STARS) P.l2.crown = true;
+  const tierWas = P.l2.tierBest || 0;
+  if (d.br) P.l2.tierBest = Math.max(tierWas, d.tierMax + 1);
+  save(); stars ? Sound.win() : Sound.soft();
+  const trend = trendOf(score, prev, bestBefore, 5);
+  const notes = [];
+  if (d.lv===1 && !l2Was && l2Open()) notes.push(note(`「${L2.name}」打開了！`));
+  else if (d.lv===1 && P.l1.plays < L1.plays) notes.push(note(`第一關完成 ${P.l1.plays}/${L1.plays} 次。再 ${L1.plays - P.l1.plays} 次就能打開第二關，下一次會多出現比較不熟的${PK.unit}`, true));
+  if (d.br){
+    const top = L2.tiers.length - 1;
+    if (d.tierMax === top) notes.push(note(`🥁 第 ${d.tierAt} 題就升到「${L2.tiers[top].name}」譜面！`));
+    else notes.push(note(`這一次最高到「${L2.tiers[d.tierMax].name}」。連續答對 ${L2.tiers[d.tierMax].up} 題就能升到「${L2.tiers[d.tierMax+1].name}」！`, true));
+  }
+  if (d.lv===2 && !crownWas && P.l2.crown) notes.push(note('👑 得到第二關的皇冠！'));
+  NINJA_ORDER.forEach((id,i) => { if (!nWas[i] && ninjaOpen(id)) notes.push(note(`${PK.ninjaName}「${NINJA[id].name}」打開了！`)); });
+  if (d.lv===2){ const nx = NINJA_ORDER.find(id => !ninjaOpen(id)); if (nx) notes.push(note(`第二關拿到 ${NINJA[nx].open} 顆星（${STAR_AT[NINJA[nx].open-1]} 分以上），就能挑戰${PK.ninjaName}「${NINJA[nx].name}」`, true)); }
+  if (titleIndex() > tiBefore) notes.push(note(`🎖 得到稱號「${TITLES[titleIndex()]}」！`));
+  const avg = d.rts.length ? d.rts.reduce((a,b)=>a+b,0)/d.rts.length : 0;
+  const heavy = KEYS().filter(k => wOf(k) > WEIGHT.base).sort((a,b) => wOf(b)-wOf(a)).slice(0,3);
+  const nextBtn = d.lv===1 && l2Open() ? `<button class="btn" type="button" id="rNext">去「${L2.name}」</button>`
+    : d.lv===2 && NINJA_ORDER.some(ninjaOpen) ? `<button class="btn" type="button" id="rNext">去${PK.ninjaName}</button>` : '';
+  const stats = d.lv===1 ? [['優',d.great],['良',d.good],['可',d.ok],['打錯',d.typos],['平均',avg?avg.toFixed(1)+' 秒':'—']]
+    : [['良',d.good],['可',d.ok],['不可',d.bad]].concat(d.br ? [['最高譜面', L2.tiers[d.tierMax].name]] : [['最多連段',d.maxCombo]], [['平均',avg?avg.toFixed(1)+' 秒':'—']]);
+  const fc = d.lv===1 ? d.typos===0 : d.bad===0;
+  showResult(`${d.lv===1 ? L1.name : L2.name}`, trend, `<div class="r-stars">${starStr(stars)}</div><div class="r-score">${score}<small>分</small></div>${d.br ? `<div class="r-tier">${tierStars(d.tierMax+1)}<b>${L2.tiers[d.tierMax].name}</b></div>` : ''}${d.lv===2 && P.l2.crown ? '<div class="r-crown"><i>👑</i>皇冠</div>' : ''}`,
+    stats, fc, notes, d.weak, heavy, R.hist, h => `${'★'.repeat(h.stars)||'—'}`, 100, () => startDrill(d.lv), nextBtn, () => { d.lv===1 ? startDrill(2) : show('home'); });
+}
+function note(t, tip){ return `<div class="unlock-note ${tip?'tip':''}">${H(t)}</div>`; }
+function trendOf(v, prev, bestBefore, flat){
+  if (prev==null) return {cls:'first', text:'🚀 第一次挑戰！'};
+  if (bestBefore!=null && v > bestBefore) return {cls:'best', text:'👍 新紀錄！'};
+  if (v > prev) return {cls:'up', text:'⬆ 比上一次進步了！'};
+  if (prev - v <= flat) return {cls:'flat', text:'💪 穩住了！'};
+  return {cls:'again', text:'🔁 再挑戰一次？'};
+}
+function showResult(title, trend, mid, stats, fc, notes, weak, heavy, hist, histR, max, again, nextBtn, nextFn){
+  show('result');
+  const best = Math.max(...hist.map(h => h.score)), last = hist.length-1, mx = Math.max(max||1, best, 1);
+  $('#resultBox').innerHTML = `
+    <div class="r-top"><h2>${H(title)}</h2><span class="trend ${trend.cls}">${trend.text}</span></div>
+    <div class="r-mid">${mid}</div>
+    <div class="r-stats">${stats.map(s => `<div>${s[0]}<b>${s[1]}</b></div>`).join('')}${fc ? '<div class="fc">全連段！</div>' : ''}</div>
+    ${notes.join('')}
+    <div class="missed">${weak.size ? `<b>這一輪可以多練：</b>${[...weak].slice(0,8).map(chip).join('')}` : '<b>每一個都又快又對，太厲害了！</b>'}</div>
+    ${heavy.length ? `<div class="missed"><b>下一輪會多出現：</b>${heavy.map(chip).join('')}</div>` : ''}
+    <div class="hist"><b>這節課的紀錄</b>${hist.map((h,i) => `<div class="hist-row ${i===last?'now':''} ${h.score===best?'best':''}"><span>${i===last?'這次':h.at}</span><span class="bar"><i style="width:${Math.round(h.score/mx*100)}%"></i></span><span>${h.score===best?'🏅 ':''}${h.score}</span><span class="hs">${histR(h)}</span></div>`).join('')}</div>
+    <div class="r-btns"><button class="btn primary" type="button" id="rAgain">再玩一次</button>${nextBtn}<button class="btn" type="button" id="rHome">回關卡選單</button></div>`;
+  $('#rAgain').onclick = again; $('#rHome').onclick = () => show('home');
+  if ($('#rNext')) $('#rNext').onclick = nextFn;
+}
+
+/* ---------- 第三關：打字忍者 ---------- */
+const PLAYER_SVG = `<svg viewBox="0 0 100 110" aria-hidden="true"><ellipse cx="50" cy="104" rx="30" ry="5" fill="rgba(0,0,0,.25)"/>
+  <path d="M28 60 Q50 48 72 60 L76 98 Q50 104 24 98 Z" fill="#2B3A55" stroke="#1B2836" stroke-width="4"/>
+  <circle cx="50" cy="38" r="24" fill="#2B3A55" stroke="#1B2836" stroke-width="4"/>
+  <rect x="28" y="30" width="44" height="14" rx="7" fill="#FFE0BD" stroke="#1B2836" stroke-width="3"/>
+  <circle cx="42" cy="37" r="3.5" fill="#1B2836"/><circle cx="58" cy="37" r="3.5" fill="#1B2836"/>
+  <path d="M26 24 Q50 14 74 24 L74 30 Q50 21 26 30 Z" fill="#E5484D" stroke="#1B2836" stroke-width="3"/>
+  <path d="M74 26 L92 18 L88 30 Z" fill="#E5484D" stroke="#1B2836" stroke-width="3"/>
+  <rect x="62" y="66" width="30" height="7" rx="3" fill="#C9D3DD" stroke="#1B2836" stroke-width="3" transform="rotate(-25 62 70)"/></svg>`;
+const VIRUS_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACfCAYAAAC805bRAABxo0lEQVR42u19d5heR3X+e87M/druflvVpV3tqhkDbqIag2ih92B+CQQCIY2SRoAAoQQIBJMChEACIQECBBIDCd0BgxEYTDPGGAsXtZVWXdq+X7l3Zs7vj5m5e1cYY8uSvbb3Ps8+trZ85X5zZs55z3veF1i6lq6la+laupauU7nU3ez1MgACIEsf3d3uc+Ol23Bmb7Baug33mE2Zlk6Q03MRsE0DoxaAJMPD56Cr93lS77wR09PNu9ONvhdfpIY3PpvqPc+WrlXXYfpYI3xuailA7vipIcCow9DQWdS74k0gfj0x/4YimnFTk9+e/52la3FubgCwNaHu5mcoSZ5N0jqbe7rbMjW1E4C5O7wJvYhfm0P/li7uleeQ0CWUJP3SbgMEsULVhR/C0rV4r6sdZHgC1lgCPQlQT+WhjZ8jcf9q253fxJGfNhbzJseL9VRTI5uerLrkJ0zqQ6RUP4wxAAyxIiLZffp2uKXrDN8nAlCGEwUQwTlHTE+H1l9U1cZPMLh5/WL+PBZjgAgAMLnDRPJv4twYnBOIEEQcnBMYq+/ATaWl1Ox2fx586gv4YgFoBkQWIg4AYG0KZz8MkT/Csq6xxYxM8qJMrQBku3Zdbfbc/Hak2WWUJACzAqQkEAKpLp/ebqXbGRgqfBCuPLh5eAl6vE2nOYfPRE4pSFbtLgNYDmIFEQ0ihpM5O1f+Yzu66zJcfXW2lGKd4i5fWTUyCMWPBhEB7tVw7oPkJCNFewAAIyPudkDEAsCiu7tHrV3/D0a5jxRAiqV06xbWRTK08Rw1suXHvH7z8zE0tLJwmtwWqNYH1KGrGwz6kFhzGUR+XZi+gET3cK31u3c3yHfx1SFDm5+gN2xxvHb9N/KfDG0+65QecWBwlRracAkPjlyjhjcJD478GLh4qbdya/d//Yan6w1bRA9vcmr9xn0YHH72HX7gkZHH6A1bRA1t+CawNVnsGxQv2rz3YihSeAmIiFlfBoCxdWuC0ZtuuF2PNDz8cB7a8FquqkupVHo1MZ8HZy1M1kDfNR3hw1naxW4x2aUE1jpxzoFonVLq3Ty04fO8fsP/w9q11VOo+3TZmB0uzX4MogvU4PjTFvv9X6wolsP31p0P4KlizQQTfx6Aw9VX29v7mtnS31KSvJ0UP0zStvFoGCkqVZajK1sq1m/x2kZ+VbuzoLW/R9Y6Il5DzE8l4k8x6RfgtrcKJNaWjX37DgHyaWjdBdBjFvv958V7xpdWizEkxt6Uzp8a+Y2+zfCk4MOSZV+AcXvhRIGZwSyAYyRJshQMt3QtFwCQRK+FswJnHYhYrGmKsz+Fs//NCjeEe+xw+xAxAtMhmAxCsg2bNq0Jj7EE896e3UsIg5RoMNHUKXb8BQDc/t0fcKO7nqaMfbIw7YJWDOeEmEcSS29ZCoZb2lgutbXBs1aB+BHiHMFJCayEiD7rbPoQO7r7/5m9e7ffzg0rfibibHolBNOskrOVc/dbzJv14ntR28ILY+oDKQjwQwC2gETd3isBQK5S7iLBWhg7CWcnhZiMc1OL/SS9q64GNSckTVM414ZSPyAGCak5jI01sW2bvmP3rAxAUoidtintLG5oSwHyq67t2x0AiLEjYg0c50fvqd5ACwBisz+GSEUE+0noiTDmPRr0X4v5w7kLG4OE0dEWWfPXyNxv2hL/mmu3vwST/bZaM/jk+Bmd6pWUpAqgW6xjGJct5s9AL1pqA+EIEYEyl8od65oLsFULTzySnKQEer0Z2/0DAD+wJzUnl66F6ak9sO/T+XfWDX8XSj9Z4F4N4EsF9Elu7+NmrjGtpDYNVr26yoMG2Bc2a7t0gtzWGkRw1JciWHkHqAgEQPT66ZdwUloN5kvt/l2fx7ZtGlu3Jkvw7m1CFBMAxNZ+E84dJVLnqjWDjy40DW/v50EVVOLmzBBJl1KsU0BQIHIUrEjKpXWnePN8l3b1+i0i9tWSZZC08S0AjO3bZbFTHBbJZQFkAGAO7vuuOPt9aN0trF5+R070FOrBUKpbrPmZIXvjUoDcrutSAYBEl78tWTpOWfYEtXbD40MapG4nA9UqTa8BaI2I+5w7dOjDp4C8LF0xnWL1BRgzRyKPxNDq8wrgyW3/TFac0wHnXhy+8QPs3j21mMmjarGyR+3UiWnq7XfE6nFCri6Kvoxmsx2OZncburaWB9f/Hgm9AdY0nOBPMDO1K29ELtoBscXL6JWpiau5q3sdmB9ODg/RvT3fd1NTB0Ma5m4Dmmi4r/ZHpNRL4dwuy+53MTU1ucTmxSkxeq3bu/OdYs2XidTTuKv+b3jTmyhMovFJpLmT/2153dBriNQHIXJIHF6LlQNXLtZC8BQabndVkChr228A5COkS+c64T/E0FAlpGHx/quTPo+4CWfYuHEDEf0OADixn8To6F7Ms4WXrlNRMNFr1z9CDY2IGhwWXjv0RbVm8Mm/arHpwfWvVOvWGzU4Impw/dvuBsxl6MENF2LVqtoiBw78Pezt7VZrhq5X6zcKD45cgeHhB936n62tYs2ac3nd8FVq/UbhdesvLQTPogZK6G7w2pjXjbyKCC8FsC5sZX/iYC7XqVtmbPtqdHSs0QYrAMAyPYuV/hMYC4j5gG03/wrHjh1bpLWHT6uGhlYop66wRM/Dvl0/XuS7qn9tq4c3s6aPEfAgWNeEoo8C+BIJpgwlY0CrqkRtANCCVs+FMc8E0C0in3ewL8XY2MG7w8m52GHOPDfldes/TcAzQKygE8CZGQi6ILIX4nrBqhsQgBXgzC6xeJcb2/O+kx9nEdaAVg2ufx9YvRROxkip55o9N1+5yBePv59r1qxlSt5FhGdD6zBxY1IQT4NQA1ADMYgZYg1gbUO57Pz04MGb4nvHkqrJaQjgLVtWk5E3ElEvRK4FZB8gawA6AmAQgAHzHJj2wbqP2aZ7sRzee8UpNrPu3ODYsOFRIP1PcM5AcY8zJsH05GfvQEp4Z0nqMGZmpmR68lLq7rmBRM4HUSsU4x1groBoDoK9yLKvi8M0ASOOaI/MTH/v7jL2THeDABZevfb1VKq8Gc5dZUv8dLRaszBqPRI3lRhalZXoBIxK0N95ED/96VxxAd4Zp9sp3/ehoW4FvhxQW+GMA+DASkHk3Xbf7lfcDQrYuMgFIyPdEKmg3e5GuQwtutdYOY6GOooTN84kqwYvcITviOLdDvpp2L9z990EnFjk2PvZZ5d49dofqfUbRa9Z/8eLTLnvVMUMGABK67ds0cObpvXwJqfWrfdfQxscrxs+hlWrBm8nuBDRPKXWDP2VXr/pwXcSOHFbBp4YZ59d4nVD29XQRuFV615zd5G+5cVef/D07J9SUt4KcZky8vlCCsEnQbzx3/aMH93nrOjA2rV9BTEDvt2Q6dBQxSB7hwBdAgGI/UITESIaYFX+F/Rv6bqNCzDeB8eDI69Fot8kWbrmTvqMBfOCDid/Hpx/f8eOlEBvAwTQyW9i48by3eH04EVdBK5aNUDCr4G1IkJ/3j6yfqwQBK6ATLnCv894SlqeLK9g0t9T64bfjLPPLoXnvq2niX9vAwOWnHs4rAWcC0uLAWaGiKEkeSJ3ZH8W3ivfhh3c8trBVxHRWwGywrzlTqZwyC18Hi4XywDY7t/7VYj8M5WSczizz4u9laUAOcUAIfDLoblXgCuclv8Attu7uLAjAEgtvYiYN4HojTzb/A6Ghs6/HdI4BGzTfHz8jyGoQUTgBHACiADWAM4pmMwS0R9j3cgDCgH4S2FXXjfyh6STd0LEhEX38EIdtlhqTbKO/gHONYj4HejbWF/M04SLNQf0N2vz5gFO7duIqM8Rvwiju29eLDQR7ut/HQnWw1lDzOsY/JvU3X1AatWDmJ1t3MpwFwNwyVDpHBA+C6Ik/BaBQ73rTxECyJHWnQRRMjXx+V+C+igAVg+OPAwknwZIQCAQQEzDXO/5mUxN/vwODJudfgG66YkT3N1zH9KlhyLJ5mRq8luL5PXdvVRNeLbxWC6VzhPIz7F/95WF1OouRWxKw2dthjH3gQhDaQURC+I6kfoP1uXPY8XgcHid+pYpNGeXrNh3wRcezgeDABI2UieAtQBBiTgB82/pdSMX3UKqFdPQmhN5C4gY1gocmIgdEWkR+fMw/ecWFfAi8lGxJiXBa7Bu3epTFqW7FwaI/9BXrlwG8GuFMEOs3ryYpGFSYyyR6oBiQMQDBuIEIo508lCuJB/F8PBmeM6Y+oV7vdp1kbgLw98SxIUs3QLOhlpEARLTTCk7kn/Cm97Et7CQnNLl9xDRo+HEglmBABHh0KAbxOHDyxfRArQAYB+85woQXUVJqVMJv3sxF+u8GF8Pc/kFVC6f44z9nB3d/T+LCC8nRfY8MNUhEDD7ukGEoBR7cW1+OIv6YrJuw30B2LCDz7/BxLwArDTECawlgHxapZQPDJr/N4mwOLGk9Ln84Y++vICYaQBIBjdsBfPzIc5BHEMk3CkLERFitVK37aZF9lkzLoVVTO8CAFH6EaXBjWefIhp4rwoQAuA6Rs5ZTkyvgnMgyJexeOy74g7+a5QkDMASE0EngNYgIpBzGs5ZZt7kFH2P161/AbZvN3lvZsWKDlj7KhAYRAImgMkHB1E4PwUUjw/nAEFQYVF/hZGR5YWdWIzYl4C5DEDATP4OOngVdSvirHLOPWKRsQkcAE53nftFZ83/kFIrjKL3L9ahqcUWINJuTm4C8wqx5vNubPSTxaP5Lr5PFqtXrwPRQ/x3yO/YzgLWeeFyZhCzEmssiDqJ1b/z2sEXh9dvle54PDEth4gANH/vCyiWA+CshTgLYgUwEcQJjOlVmf0jABarVlXV4Mj7WakXw7rCIBnNP6zAgRWI+P4FCHaR0Oa3MXCpJVb/Sko5ArZiZGRToY+yhGLdYqCuXLeVEvUlEI072BdhevrYItn9/Gx7X9/ZAL+WACJWEGtJnICYffuCKCb6TEQORESkns5d9Tr39CXQ9G6w7vNB4Wg+RXP+JCFGWTFADEcAae1rk7CsSOvzefmqK8nh+aT4lSQQQAjEBJEiCuYfl4hExEjXwBcwPT69eArhUQeAZOLEzdTTv5EUPZAymZOpicuBbSr8fOkEOTm9Yp08EaVSP5i/jf37rz8DtQed1OG9XdCzqFKft7hyIs4CSiMplaC0ghEBE/lUyTfE2RfiAmj9CjB/EcAwxIGYfXHubEixOBwkgg0rlmNkWT8YBDEWsBZETJQkJM7Vpdn4Npx7k8uMFRHACcEV9Vkc4ByIwUQEVnyuYnnoHfy8zwRIQgBgZ+beAkGTFP2eHhp6KLDdLKZTZLHk9hbr1t2XGL8DY8Ds3n6GPhQ5qcPLJ9FWbvnaFpRWnL0AzL7+EJC1FivrdZyzejVKAEya+uwJEmqBcPo5J4A4Uloo1BtUKvsfiweYhBhbVq5Ab0cHlnd1YeOyflhrAPK+QXAOsD6NQykR0lpJlpJkaahfQnqlVHhShlhjRURA7pG3I8enW5gGPBMpmse1j43tFMHHwarfOX4/hodXLCYiLS8KWHft2X1ald8L5vUQvCvbvXvHaS7aInt2ZWnTpvvo4eEHBtkfdxJt5Za9L4JQGoHuG1IZEucAa1FmQr1Sxnnr1qCiNZzf8X3a5BxyOJeYQUTiLCRL4U8gBrGCcw4ruzow0FFDZgwcgBXd3Vjd2wtLDCKGWOuLeYHAOYKzIKVBpZIPMv9cgAisc+AIH4sjcbJ1waL85UFBhU3E5rXf2rVVbNy47AwsXH+KzGWvF2sOUCk5jx2/+FcwB+5VNYgC4FRvzxOh+C+QpT+ypv0CzM6a0xwgCoDo/hXnirH/JxYv4Xb6DO7vfwR1dddUV0+vS9R4EIWQwuZRRNAEXd0PJaYLCQQhokopwWBfL4gIidbortUw3WyibTIoZp8+MYMUew8gEf/fkIYRMZy1KCvGur4+sAiU8qiwShL0Visw1mCq1YYKi99b0Tl/WoS6Bcy+xxjq/RX1LvR3dWKi2SRmBQArua/nJzI5edNJXWtVCAr/vY0by7p/xQO4p+951NX9TLVy5Z8xJxdry9+ykydOnOY5Ds/FmpuYVT39CYgfC+e6pKvjK5ienl4MMyP6Lhcq2Lo1kePjf0miWxD8DQ4dapwBSokDADNX+QnzxH5KkvMBOg9C5xHRc4WkrTrqY6jVfwBSn7WJfB+7du0vPkBpeHizNfTcSA1xzqFGGiWtISIQAPVaFSPLlmH3sWOYS1MkrOAg8IU8AeI8gOtCYZ4kEFXC2s4aeru6vDNDCCJnLZTWGOztxdRcA3OphSb2Jw8Qgsz/rnUOQoSOcglru+tY1duLnUePQVgRmB2IEkCeC+BLXphvu1pwQgwPr0jAT3XCL4bBMiBdAZ10gtkjdMAP0703nin9KgeAjcY/q7T9bNLlBynnXmmBVyyGNOsufwG8bv2nKUl+XYz5X7dvzzPP4KATA3BqcORTUOo5MDYDid9BneOQvoT6QQ4D7n8EfFgp/YWso3S9Tt1DJU2/CWYQICZrU2+thvus8axyFQJFMWG60cTNx45jttX2J4lYEGtAxC9w8evbWItlPb04e/VKOF+zwDkHmkehYLIMrBNcNzaGuVbLF++eigJhBQegqjWW17uwot6FcngdE60Wbjp8FE5EiInEmOO2pDZg587pvOm5fsPjADwBQr8JwgpSCjDG3wYiB2cNqUSB8Hqz+6ZLzmDDlgE4vXrwQimVLofIMSvZQ7Bv36G7emhM36W1z9CmLQT3DBhzVIH/2p1ZSJdDBnI9iRAICgLlA0METnx3zgnAvBIOLyGl4Jx5nZqxe0RrB60trFWAELHCsnodzlqwUrBZBicCA6CjVMLmZcswOjGOibnmfA0RqCSkEwgxEmKs7a6DiPKXwCBorX2TEACVSqiUSljX24sd+8fApZLPh6xBLUkw0F3H6u46OJwixlooZnTVakBSAokDsgxgpThzT+LBkf0Obis5XAzBRfEkgkAkTQWKQaUywTmCcAlOIKAfnOFOtz9FDu77rhoaeR+UfqUy7j1227bnYvt2ey9MsS4m4FKrxLwarJRYeW82tuvqMzsmuw3AdkDcPv9xEEDK08tjYeAcoDVC7uLALCAqQ+QsOBdKB4KzDhWdoF6rhfENn+owM8Q5GOdQq5Rxn5UrcOPR4xifnQOVNIAEkmaAADZtYd2KFaiVErTabVQqFYhzyLIMabuNNE2htUZfXx/SLMPaZQNwAG44cAhd1TJW1/vR19mJRCdgxciMgSKfECilfKHOBGP9uwOoF5n9pDA51pqFARjjwCRwwp4FzL6T4xwkyyQET0NRab+9czrdVCqpd6epeRGYL1a7Rz9kga/elacI30UGLU4Nb3w2iJ+HLBtPyH7yTivIhBnMvlEnobEW5eOZwEkCZt/hI2s1rPWojjgnzvkAAVAvl8HOITMmlAQEJr/7q9A4bLdSrOvswMp6F0w79U0/k8GZFH1dXVjVXQeYwURI0xTWWiil8lpEa41mqwVxDq1WC3WtcN+1q3Df1auwvLvbI84EpGkKApCUSiCl4KzzrwXwJ1egaJFzsYPvIM6BwHBOhQYOYC0kgAkF6st4ahv77wQqiANAzZtvPiDAH3t5ZvlHbOnvuivJlnwX1Twi1v4DmBNJ1Fva+/fvutMIic5WArVc4GzsV8BBYFghMwYZMaxOYEUgECJiJmKOnCkiQb1W9UGhlC+qQ4okIVhMZlCpVdHRUcOqrg4s6+yAceLTKyEMdHYA1iJNvbi5NQZZloHZO8OVKxWICFrNpg8AInR0dmGgsxOJ0rChf2IDvNtsNmGthTUGs3OzQJaho1r1NzTUPlQuAToRMYbJWqbw3sVaUCyMIL6XwyxECuLEelIl7rSZkS4xXxHnvkU62aIa9dff2wJEeHD4twhYJdZsd1n7M3fO6bHd62slyTWwtg2C8l6FfoF0lspY3V3HqnoX1nV3YbDeiZUD/ah1dMI4CwPfFCeRQCUElFZ+8YlAnINzDibL8jciIjDWolqpYtOK5ejUCsY6rOrrRW9HR94olHBaEDHSNAUzQ2uNSqWCSrUKF3obxmQQIj9KAuQBQSGosizz6JdSKCUJyqVSnFAEWEGMJbKGQAQjAmN9gHSUS9iycgVq1QpcmvmapdWCOANibmOsbu/MAJnat2+CQO8MuevL1dqhJ9xV47n6Tm8KDg72kpVLoEgT0T/iwIGx8DrMnfIqXDsBJzonCQZ6+cjyAfRUKyAOPp9KodFqIesymGk0MWsMDk9NITMWTECtXPIN8nBiSOBUERGyNM39QZOklH/v7NWrcMPhIxjo7EBFKQgzyJck0EkCkTQvhwRAZow/UbRGu93GzPQ0+gYGQETQzHDMsMaEgUTfU3HOQWsNYy2ymWmQC30/kwFKwWQZFIDuWhWKCL21CurVGkqlEtpHj/n5LWvhGy4MkLsa2JHeiZw4P79O9jsM9VnS+tdh8DQAl90VPZE7O0CcEnUJNK8Sa7/u2tWvnkZB6SI1hU52NYrHtJHKbiXZLBR3g32zzjqHmWYTNa0h7PN3pRTEWiTM6KlW0Augu1zC0ZlZVJVCWan8gSNE63mDjHa7Cef845QqFSRaA0RIlMLmlctRSkpwzB7CZYZzviRIkgTGWpgsQ7lcBivlLd1DoPT298OFUwMBFOBALQkNQRARSqUSFDMSpSBpGzZJQASUtMLqnh70lBJ0d3ZARJBmGRKlMdNuwVnrS5QkAUwGMSlA2LWAEnTrrQLB6bOAm1SDg3/jLD8WwG+Vhja9Nx29+ed3dsHOuDNnKdaO3A9E/w8QYrJvxrEds6f5xrqTaBL2FxQ2KnIcTMfz8dbQd7DW7/4qFNsx9QnVO6wIeqpVbF6+DH21KpRShd/xuz4xwRiDcrkMHYICIe1y1kIAdFaqfqVZ4zvwpRKYCFmWwVoLAqATHWodCqmXD4a03fa/E2oh5xysMbDWQmvt4ebwPACgmdFZqWBNdze2LBvAloF+rB/oQ293He0ASzMzLARlrVBihhMBrBUQKTA7OHyjwFdTt/AlOP1cLQdAZfv2XQ1nPgOluizsXwV60J3av9NnWFCteONEKfo9aF2Hyy41o/uvPE21h99Rhocfq5y6GGJFnPsBlHJk7BHWOJQBk8iyGRw8OIWpqQS1Lg/zWhGxhsIcB3wd7k8G5xyY2SNKALSOhTFQKZdhrM273iIOihUkLLikVIKIwBqDZqsFpTWU1iAAxjmY0IxT4fGZGaVyGRTSKoTHERFYZ/MKtdlsotbRgSQCA86h3WrNn2Dh5Gs2GgCAZV1dGOioIUl0GGL06VeWeSpMq9GAShJUKxVMtVoBDGDkOrtOmMgu5GWdfG3cWEapJJioapSOO4yOtk5r2uHkX8XaZ4Po6Wp86pEW+NqdSUGhMxQY9uTaQ63Z8Cgo+TgIy3RZb2nfdNOe03Rceo3btSPPhObPUhg7FeKAUEkbwByAKYicEEFKoAvA3iiPQrHb29GJLSuWBSTHQ6dKKX9ShIIbBZQq7tqRZsJhl7fOQSuPhlHosCulfDBYC2ZGY24O5UplwQ3Ksgy1Wg1ZlqHVaqFULqNSqeToVjzNlFL5aZMkSR6IkdEbIWYA4HDKzfdABYoZWZblz6mTBMyM6bk57Dh4GDAZqFQKxZmIEL2ADe8SNitEqSqYa4D0wLopkLJw9mJAqnCYcKL+BAd37T+NaZDvsA9teB20fpuz5ufOtLdibCz9JZpcsphPkPmbsn7LFs5azwLohOuufQStVo+k5pNEegWsfddpDI6cZ2Ur/GVu25+B6T4wzgJGgZiguAxBGUR9IAyThKe0LsyBk/9/a0KqZVGuVPLCW8Loq7M2P2VicNhQFCulfGoSUrM8OJQv+JVSPj1yDonWKJfLCxZ3lqb+cbT2VJOQ6lXKZUyFtCr2R2KN0Wq1cvQrRDCssyCaB3pMloXsj3O0i7T2gQ2gFIJFKYWkXAYnCRyF+jzQ50ncB4VtFcwg8emmV12hgtgdAZn5Zxw4rcExXzeO/tY71ODHnkNan6N19eUG+NtfuQYX0QkSi2OXrB4632n9exD7XDB3Q6QJkZ0CZER0AUTGrKpehL0/Hz29b2abBrYbGhx5Oyv1WmSpgUB7litJTrJyIShEOH/pSsG1WyhrjXNHRqDEwQEe1Wm3c9g0R6vCwospEHtxBZ/yhIUaAyNvICoFa0xel8SfpWkKxezjWGlYY3yghcD0C5xg0gy6lIR+hssfI6Zg1ljUajXYUNCrULzbkAbGUzE/8cJrlAAfayYcmJzGnmPHocj3UnMKvQsbs1Li8WWRfP7EOoFSDOLjVvjBGL1x7xlAu3xrYN3InxLjHQC3HOQ9zNQr1uyDiFWMK7KZZDfGd06f7iCh0/T3wmvW/wVr9RaUSiVptQDnDIg0wuICs8DYD9v9u198BiLdC6itG3mAs9m3SOuKn9sAeQkdlw8mgb2ymkTelU/DIAA2LV+GgXodaexlFBZSrE1ivyPfuTHPVJmvSfyitKG+4BAwztr8sZgVnLg8deLAo4polnUOrUYjT4HiAnfO+eI6pHn+1s5jLfHxXJwPoTiK4iFnEYHJMlBEz0RQ0hqjR49h3/g4dKJ9nyd21GN+tuBeBqqOE1+oWTuZZHJe6/De0TMQIAzAVddsXJsqtwPMXTmbOYIozk1C8ZSk7b9xB/Z/4HRSlk5L44UH17+amC4BkUKW+vNXa0XMXqJDnIUIgwGp930H0xPHT/ONFADKTU8c4HrvejBvBZGF1pwPEi3IVuPOiByBkgDL9nTUvEJJQJh03InDZ8K0cHeO8+gUFqoTQdZu54GT79SZ8cERi3Vj8tMAIkjC7h5TLQI8qzfUEuJcntpRCDZPNQlwbzhRIi8sPn+cQ4n3QCdJYJn47r2zFonWODY9g7k0BYNA4ef+fjmaV34s9I5iEJFAjHtbdmj0y2fo9ABWrao5pg8Tq/vnPLmgRQZnhZSqkVI9YH4S9fTeKJMT152uQv6OzSiPbO1W6zf9G6nkEoAcMQv57ZFCmkAQYRDpoEB4AZM82Z8e2/gMdGHJpvYSiGsQsyI4gfGdZCICjPGLPPGcJZ8aCUgErBXGm+0gEhIldwJ9JKBKfpLWIUtTL0UVdmxxwdYDgLMuDg/mC9YYE0QY5+fWldbQSYIsTZFlGTJj8t0/wrmxWy6huCYi6CSZnxkJ/ROTZf5UCM9ZKpVQKpV9V18EQuRrjBhYodAvl8soJQmmGw2caLY8G9g5GCIYJ/7EI/L8LBcnJF1ctv7NiKROuQ+fIZKpT690+WJi9VSfJltARIUvDSIlEJE0tbCOSOTf1NCGR91O2/DTfoIwAFE9ne+AUi/xuQQxnKN8l8F87kuswk0lENMG6V7535j60cxpRtF8DtWYHuee3i1w7jwYj9VKnFFSKpfV8amKT5ccxTFyi3KphHql4gMjBBYrNd/XEAdmladYaZqiWqtBaV9DJKWSZ9OGhR2L+Jj+EDOywL+KNU0s9iO0HN+NTnR+OkTOF4UgFPELmLXOYeXIAHYiyLI2tE58f6RQO9lwUiaJlwVOtMZMs4XJZgNlrVGrVFBLEtTKZX86hlMol84PpyUIDgIWuM/Jvn0fPkMCG4KhbRWi6U8FdzEhUuydIjA/v+NvJIPJgVXZWTOHtasvx7Fjd1jxX5/yYty2TcvufecSWeuPcOuPYYc4XxDQDo6pBMOr/Y0kyB6VAZ+MxfVpR9Ks+wiUeh4UWJyTRCkql8pIlKdtiLGolBO0U8+gaGUZSlqjq1qF1qEgD0xfYw0UK6QBxZJg5REXaOwr6CDWkLZTtNst38kul313OkZvSOVKpRJazSaoXEapVAqkWYENaVM8HSIs7E+g+dQMDCio+dNJKd+tDyedH95yvtaKjx37K0rltYfSGpkx6O2o4b6lVdDMwYGHwcRoh36NsRY2PNfRmVmcmJsDh3oODteert36lsQ8lBx4CohHgMigFI86Fuq+vCby9ZCw4Hl2bu5vAdxh0ECfcmTfeKCXyrwVzqqg7OelM3NFjziII/7F+/dnwaycy84B8ElcvF1w6en3qCB2MyIspBgCT7m439rVEGtAxHmOHhtmEY2Ku3c79Af8wnJot9tIkiSvM/KFzAoiDmmAaeMpobVGKezqCKcIB3hWRJBlmU95wmJFATXL0jTvnUQyYqSczJ9EACu/uyOcLDaedoHCQqAFgZWUSn5upJ36U8yYfLiKmVHRGrHOcM55yBiAVgqVUglMDJDg2PQMxDpQKWEhsqBk5xmlwjsxUPDFHYmPG4pFup0PFOcAZwkEC627lcjvWOCNd5TKxKdaOJXK3A+RzIsGhNn/yBx1BZUN8nynICxA4VPsBgBcetpvqsfN9+//EYh+CGIiJmlZh2ZIfzJjwuLwcK5xDjYoGppQV5RCIRspIjbLEBKLfPf1xbMvwpMkyWkfsY8RqeoIizOmQf7elX3jMMtgwyLO0a0QBCY8ljEWaauV90CyLIPNMmRp6uuoULM4a2EDfV7EF/QURnZNZuCsy+FpBDqNp6n4AzxywIrIVwQY0iyDiMPRqWmMN5tQSWJBTCT4nBu9+ZNnlB/FErqkkvd7YG0Q21Pzp0gufRQKJHEXYe3a6h31R+FTXYRpOrNPiHaBSGCtiwEhaTovhjb/Yv0bMpbEGCFjD55BrzwGwKyTPxBx4wRiK05OTE4hbac5t0kpRilJoNR8PYFQB6RB3yoSBllrWHF5uqS1rw2sMX6RhxoiQq7GGBhjfCBE1CgEjbUWWbsNYwySJEGSJPnzF38volEEyWuRVqvls4kYlOF5KTxnPNmSkqetaK1RKZej7J2fZAyBH7vyRPN0miI8TLGHE04Y6xyOz87BCsDhtBHghjPGjYpaZHAjYA7iE4EdEdVcpPDU8VQh8lrGRA+BrXXcFSiWD+VDhxqk9RuBoB4YpMWplBT6C+HXrYs2YwQBOXE3neKNPdkHT50kXZPrXGW7b7xOsmyHOAtKM3d4dhYz7TZ0oI+kaZrvyvOUdeRQKIUpPwkQbFIqLVhE/iTxH0qkfcT0rVqtolQq5Y9TDJqYDkUWb5qmaM7N+e+FtKoUahNjbBCOC7Bz6IlYa5GFRR4hW2L2AR2afEpr/5wFMQgOlJfIEI4wcA4Hh68IK5ss8wEoguPT0zg+PQOtEwigIGJAuMp/DlsX+hGejitokSmSK2FNG9YpOOujnJUPEMqFXuc1iZ0zYCYH9584dNM47qA5j7pDh9/EiZ3o6l5BzA+Cc9arlnv+D8IwkRdB8AOfpDUDcq3rqPw5jh2zp6iufjL3xn+vf0sX6p2rUVtjSj3JMLr7Hg6iZxBRP+uEMjBprbGsqxM2pDORwhEXsHPB0SAKSUdyYqWyAGWKhXTsc6BAbownSSzkI+UkIlgxnYopFDNDJwlM4FzpUOvEBRxfX3xsZs7rBmYGhxPR5SmZyQO7FETlpNDAzLljPF+LFektHF5r8W/SLMPo+AQyn7ZZMLGz7otu7863+Pt/yP0S9yu+A60E39uamjrMPb3DID4fTBasOKrg5wESZ4r9OKSC4glNpRfZyePH74oifWGQKHkLwAPQycUhwikEREAXOC+ixFmIce/Fnh3pKXQ7vdre2rXlMrDG2mQVEnq0I5kh4nWAeSosd4PbE1YqK6FUF/nBHwiElM1wdHwCy6pV1GsVZNYFnQLOd2cb8vhyueznNwA0Gw0/qRdgX4nSnmHBExE4pE5S6E+41KJUKgOBhVsJ0LEJQaAKDUhWjLKqIG21Cvq+gehIBOckD1BnjEesQi9DR+q7CGzohSTlMjRzPqqLcMLEXkmxiRh7MwvYAOG5rXPQAA5PTWNmrgGtFQRCnruW9SVrhs+RRKqwbFVqj7fLMoVSqYGdO9u38NlykTt3G/MsArZbIfoaEb0ITigv1CMYpFS8XQ5OWIiuJ/CL0j033HQ6oGd9R6VaMDp62K4+6yVKt0E6uVicdXAuzqVKKELYdz9BpNT5WLNxLQ7sHLuNxR0BYFo3/EZifiLElo11Q9CoQnGJcrQMIO/6NOAhTmUhwmItAX4xG2dxaGYW9VrFs29Lfuf2XWkF5+ZrjEgclGrVF8JZBtIqUNIzKFa+Zom1QuFEodAriKdJUirlcGxMi+KpxUqBqfD/8aQIyBVpT4TUgWTorPXwrwhKYcDKRuEIZj8sFRm/oQ7KeybFjnu8Z8XiNiBusVZSSmG2neLozCxY68jRYgAgrS9yzl4BIx0gZ01ZtZSiSVi0af3G3UJ8kMRdD6V/YNqzP8HYWPN2p9NbZwlXb01Ixs8N6yh2rOLUsUCEvBifE4AstHq12X3TD09XC4FOFw9KDQ7/Oogu9V30QOeI6JUNgt3iMihOxLorXNb7FBy6uvkrIML4+pjWrv8Q6+SFuVWAhI6f18GdnyRk5Z2biAgBoRFjQEHxw7TaWF7vwsZVK/PFFRd17CHUajXMzc7mtA+Tpn43DYUx5eOtNm8axiK60Wyir7c3T8+yNM3TgUq1irRAQ2GlPKwb0CsbuFg4CU6O6ZDWChMTU+jo6PDDWVmWgw6xox8HvIKKfD545ayJjgj54+fjvYW/jYEeA+WGw0cw2WxCs/JB5aTAwCukOpHQGQLQNxTJf+zWXgeRG8hk3zP7R//hNqQ9sc60PDT85wT+u9zeIQ/m2Iex87QX547YEg9h505zumzB1ekRn17bR6r0T0S0Tqz9OgMfhUgfidwggh1g9V4Sdy202gYnhggbmJur5XGTX8SOX1lE+WNy+cBlbO0mAPeDExPFbQnCQcKHwCowEZ2PIKUhxkQLgRA/jIYT1BKNznIpZIE+QBLtSYRpu+0pJVnmi+HQJ8li0Ro/QVb5qTEzO4sk0Vi5bh1OnBiHBOqIjb2GANGKc+BIOQ/pjQt0emsttNLQ5VJeb8TZE6U1pmdm8LALH4a//5u34awtm/Gja34CF5UQC3MqEjiEUhCUKLKLUUgPEeqXBcTLcPrtPXECk40mVBSKYPULjhCxrR74XvNe6RI6xtYKgVYS6L6SZv8ss9M33kaelPC69X9CTt7kpVNBQvQKOPoISFYSUQK4j4uz/wnnLgVApNS5lMkOmT59XKw7WINsU8B2w0ieScwPhcmOaysvSw/uuRF9fe/G+Pj0giR0aMNxErkEEAOlXsTf33C1w673hePwl3mgewrJzp1tu2rV73BS6SaiJ8C5jJRK5hmdwa8+nAYSeENEBNEalCTBRsD//g1HjmJDfz8GOjtgxUEJo91Oc/E3pXyzr1icxyGjeOI45/xkXruNc+9/P7zuL16NszZvxvNe9Lu47rrr0Fku57VEXOSRIGiKizcUxpWIlIlAB6RNhUagH7hy+PWnPwUjI8NYu3YN/vcLX8CPr/kJqtVqXv9opfzJGMZ3USj0XVAxUYHPFXsiWUjXokcJOYfjM7M4MTObU/g5PBaFjCAEDCHO1xSPJyJIuw3SGsTKgRlC6jn20M2f+xVptT85Nm7UqpU9CcTvzk8NJx93+3a/GwCwevXl0LoUpEn9exocngbx00DmEgysvgbHD+48Hf0ZvmOnx3aHobNXguT3YU0mwJ+lB/feCKB0UnAoAORGd/29c+4dIKUhMAR5G69d/8qQK96a9pGXfDl0qOE0vQpEN0GpRIxxkplIsw0icC6fE6cwJMSV6jwHSwAYg85KxWPCocsdzGb8QFK5Al1KvAJIWLylchnlIMPDcUQ3cJwajQbOO/dcnLV5M0QEz/+N52BqejL4DBZ6GkQoeWG6fN48QsExrUnTFHOzs2i3WjlfigA0mk1s3rgB555zDpxzaKUp9h046Hst4TW22+355+JiH0ryexSblcVeTqlUQpIkeQdfmNHX2YHzhgaxcfkAOkIdgzgyLN7yhCjUzCB/ukSv93BCAWSFwGKyj9udy/7nV0CuFDZsqzJ5Ioj/A4QUiiHOfsUmeHn+OwcPnijo9ioAypL7opj0ahIZYpatp8tCQd2BRo7G6Kjlrs7f4FLpJXB21O3b87KCQAIVvsK/tyaY/vnl3NWTQKtHAlIh4sdx37JOGej9PsbH7a3cQA9fTEwcke6+q4noXFK8Kk+Ctcqn3SjsuoYD/ClACYKK1uivd2JtXy/W9/ehXq3mNJBYf8QGWbHxl5RKyELfJM51o7DoIxr1+F97LJIkwfD6IRw/dhzX7fg5Ojq8ekilUsmhXA6eIHnhTgSTpnkjMlLqfQbjrRXm2m389ZveiLM2bwYz478+/Wl87fKvo6NazWHbmBrFfklMrYqIW3F+xIQ0MEoUxZMgnoyKCF3lCpZ319HdUUNnpYJapYx6tYLMGKTWwmmVn3IUTET9c7GBYi0i33Cwv4Gpa9NbqTcjHGySwQ1bBfJpAHUopSH0r67Ev49du6YXrqX8dPB7yNRURt09TQKeAeKVsmLZtzA+Pn5HUy11yqfH6Khg1aoaKfVGOLcJYv9Fpqcuv/UC7JAAYJme+Dp1do+SuCeHTsZFLOiVyYkvnNT4u6Ug0Zia2McdnbsgeCGsjVAyIbJzlQKSEvo7O9BTrWBtTw9W9HRjZXc3ejtqqCQa7bbvFcT5iIgcGWPQajZzNCkuonYorjmwemPXO+7Gh44cxokTJ/DIbY8As8JZW7bgi1/5iicNEues3iLdJBbINvMHaBbo+EkpAUBot9qoVCuYnJrC/e97Nv70ZS8FEaHZaOK1b3iTh3HD2Gzs5sfFHlM3Ks6oh+lFTz0J6igi+Y1uNZsLqDTWGO+7SISOchn1Ws3f01oNfR01dGiNjkRjtp1CrCkMMImhJNEw5lIH+3sYHZ26lc80F/fgdet/G0TvBrAWSpNAvlfl6h9ku2+4pYV+8mORTJ17PffMbgbkSWhlwBMf/1Xs2EF3TYAAkgys+Edo/Zvi3CGXtV6GubmJ29iYIZme+Am6exM49wgisRBcwPXuzTI99b+F41F+mSSMzEyNoqOrg7S6ELGnRUQd1SpGVq3CskoZ6/t70dfVhWpoWnrOlB8zjbssCnVAsanmnEPabkOxCiCNmqeph8U2jwQBWml893vfw8ZNG7F540bU63U4J7j8G1eg1tEx38cIgUUF2Z6kVPIoWLMZmoAqpHpliLXQWuF3X/hC3Pfss0FE+O/PfhZf+spl6AyPWxzrjWBCsRGoAgLlQQHOU64IR0dBh9gHyhdHrH/CDHvcNCJk3F2rocyME3Nz+XOKMZYUa3LuCtt2L8eB0bFf6vdy8cUKO3Y4DA2t5O6BFxLkg2DqD7y9bzkxT8n23nziNvrFMDBqVWf3GER+HcD99eFjX3VT4wfvSDddnWrdUtmwYZ0VvoSI6sS4xI3t//ztKIr8ETk9+Q101rtI5CJvpIFz0NHZhb6en2JqauZWXp9/s7PTX5WOru8S82OgdJ2IHADqqZSxrFbBXKMJZwzSMPoaCXw5dhy+F0deE52AtULWbkMnGs4JsjT1jcMAYaqQikVSYczxo0jcDTftxOMf+xhUKxVsPf88dNRq+Orll6O3p8cHRBR6KPCc4klFzKh1dPr00BgwgNQYnHP/++PVr/gzEBHGxg7gb9/9HrRTT5vJ/UQK3XydJH6wKl/8C7lgEYqlwOuK473xpCnO4OcBElIvOqlPtHd8wjtgecTQErESa/bYtPEIHD149FYawgo7dlhs3FjnjD5Fil8OcW34GdR/sR3l52Hnzrnb0ewTAORmJseoq+sxVC7fT4zV0rnhcsweMqcaILe/iLn4YgIgaSYvhKK1YswNplp+z+3M9QJvamsih/a/Sli9KRZ1rJM/Y4ursG7L6nBjb82XQuHQ/q8R0x/DGAuTcZZmcuP+MRyba6KrowOk5vsUxhhk6XzhLYUGnET0xfkG2dzsHCCCjs7OBcrtMaDMvNFMPqzUUavi2uuuw9/94z/lC/J3fvsFeMAF52N8YmJe6CGM5sb0LfZMarVaztiNEKzJDLY94uH5Yv3Xj3wUN+/chUqp5Ckz4b3Fx6VIurQ2n4GPJ1cs4l2opSScku1WC8ZauABGILyGVqvl2c8R6g4MX+9jIjg8NY3Dk5NQ/hS2UFqB8TMneCGOHZv9JcHBOQV91dBZqmW2E9xjQ5u/LM69yu7f/TLsOGW5U+Kk/CYIxqD176hk/MI7Mq+ibvfv79hh9dDQQ0D8TzC2SVn2fLdn182nBqkdEgBKzj7r+xif3k1MTwCRJmt7WNPF1NNXk6mJq8JNVr+sJpGpyeu5s/cakPw6ExRpjalWi7rKJdRKZbSzDNVKJTTkOF/wcaRVhaLbOU8CjDpXWmuUwtBTpKMXxaKjcMJ8v8Khr6cbO35+A4wxeNADvHfm+eeehy9ddhm0Vh46tn7eIgIDSTDMsSH/j3SUZquFVatW4nWvehVqtSrGxg7g7//xPUFkZJ7qzYURXy4I3xUbgnH3j3+3oAlZIDNGpnOwsoYiX7fEFK7ZbKJaLuPY1DT2TE6FdA0CAsNaA6VeJgdGL4uI1EmBEQNGeHD985nw72A+CwIHZi3OvsEd2PfOk9x1b/eadlMT+6i7Z5oUP12sdMv5534ao6PuVBrj6nZ33Zed3YFE/pl0cj8S+WtzYPTjIZc89ZnksbFMZqaukZ76FUz8aAC9EOkm5sdQV/fDpLf7W5iamvglrznUJJM3UL0XpPWjSbFYJzTXaKKnswPVihc5MSabL8wBpK1WkH/iBaJwUekwsmaTJMl/J//dgmkOF2YnEFK4a669FuuHBrFxwwb09fbirC1b8B+f+E9Ya3PyYxIC8GRZHv94DBDjxS/8bTzkQQ8EALzzXe/Fld/5Dgb6+nxTMQw+tYPmViQn5goTBcWVWE/EFC8+TxSdi7MjfiPgXMRb5dq/PkHI2ilmsgx7ToyjbSzYH8UAcAhkn2P3jX7xFk4OztHNtZvWUE/vmxn0TgA9oQueCtxfuLF9lxQyEblDHMG+3gNs8Fuk+AI9ceILbmrq4KkgWup2d83r3d2c0L9A3DGb0G9hfDzFjh1yGjryjKmpfdLZ/xlmqYPoggAZjrDQb1BH55T09+7A1FR2Cw6tBGxTMn3tt6mjcyOcO4eJpJllNDvXQH9HBxpzs6Fgnd9RYy6NIGwQzTNRgEN1gH6LwnDR9CZO8flZMZ+aRTp9q9XCz2+8GU96/ONQqVSwYvlybBheD2sd9u7di3K5BGaVM2Zi0GVZhlKphNm5Bt7+lr/CU5/8pLxp+LZLLvGQdHiOZquF7p4eDK9fj0q1ismpyTA77/svLqRNxfqDlYILTGEXDIBiLeKcQ7VWm2cWhwZjpOiXdILZdoqfHToM42zosJNvGDK9yI7uLQbHQofgkZFBVe+9kEj+mZmfnUu6EH4Oppe6fXs/fJLW7x1bT5OTs9TTq4nVY0VAMjX5xVMJEL5dwXExlCrJW+Fns7cXDCFxmoSnFQ7sHLP79/6ec/ZtIJr0GwytpHL5X5Wo7/Pa4ZcXPgR3EsJhhXAFmCHWWmUtpltt7Bg7AAvApKmfJgw5tSf/uXxW3DmXI0rF0wEFQesoI+oF1xizc3Not1N0dnai2WzhwKHDMMagq7MDhw8fwu++9OWYnJpCuVzC05/6VLzgeb+JdppBxHflTZYhTVN/CoQhKgSN3uUDAyiXSsiyDO993/sxPj6OSqWCJEkwOzuLDcPD+MS/fwgf+eC/4BP//iE8/7m/ianp6eBL6vL6JJ4EMaVEQRS7UqmgVC7n47mQ+SI8UuOdCBQRpttt7DwxAQag/TSfI2YS566ze3Z+5qQaw+U15Or1W5TBl8H8ZSI8KE7og+QdltwFdnT3/xRGY0+XkDmcxidF7GGw+n01NPKsW0nV7/AJogCImlj/NJTU38G5KU32uXZycvwMSE36BHhm6uvS2f1VAjaBaDhkeCuI8CTu6X2S6ls24Or9BzE1Pu7/dJRx9tmaU/t7AtlK3g2WWBxaArRNhnq1umCKMBbc83MeQRhtnpiUo1UR9YkplNIaU9PTeNADH4BL3vpWPOfZz8JDHvIgPGDrVvzw6mvQbDRRrVZw+PBh/PDH16De1YnBwUFcsf1buOqq76FUTsAhjSkFBZH4nC6ibczo6enBBz7yEbz/Xz6A/t5eL22aZah3d+Pd73wHhgYHQUQol8s479xz8fObd+LGG25EZ0fVQ9ohIIoBEtVKVBCocNaiVCqhHDrmSoVaSYJTmwhSEVx/8DBSY3z65yVOIHBE1ra5b2CHJCuPoHGsBUCwZmQT9/X8Bnf1vJ8ZfwGmdb6brwAn37JKvUBGd/87pqbMGbD9BnCxwsR3JtHd289aP1yMWS6bNvwnDh2yp5vN63/n7LMTnm19nZS6COLeZffuegVwsQIuPVPuQ/6U6O3t5krXs0nz26HUct8YVJ49mplJEP4NkA5i2iLECsBDkWaJWOO1ZRV7Zos41MtlDPX1olat+mIz0EZsQH2iyEI8NXIlw5BKxYJeMaPRaOD8887FO9/+NvT19i544duv/C5e9qevQK2SoFKtYWpqCssG+rFhZAO+c9X3UE40ap2duSNVKdDhY2c9EiCnZ2bArFBKdL7AdSAtPvpRj8K7LvmbvNiOonL/9enP4PVvfiuWD/Qv7NaHv03b7bzmyOHkyMCN/Z1Qt1hrveKjCK7ZNwYHQCvywuBF2R0nIO+nciUI74KTJ4DoYhB6/MCpi/YQ3xDwD6ykl2B0dLIQGHKmXI2xfHiFqvFX4OQcAE+3+3Z/+fYIOajbmoYlpc77gunNsO6IFX4ppscngR1ypu240Gq1ZHbqGlm5/CPcyraD6AKA+mGtAVMHKXUhKX6ACA0T0RDS1Itwxf5AqezdlQA0sgzTs7NY1l1HuVzO0wgbNHCZGbqQYuXFbkFPl4ICyeT0NB657RF43GMe7Z2gQp5vjMHI8Hr09vTg8m98E5VKBdVKBc1mC6Ojo6hWKznNPRbUcbQ1FunxKpfLUDQ/1EXBberE8eO44Jz7YdsjHrGA9es1uS2+/H9f838XT8qCKF1k87qCZleUNz15ShIgOHG5tlaj1YINutYFCrHXPxZxYFrv/V+wFUDFE7Y8NcSJfMDt2/McmRz/OqamWneCEY6vTecmZ6ne+wzSerMTN46piS/fnlEPvq31h9F4NrROoNSV2L9zF+4cW+B5/HoyU8RqGkliSCmGOAXnRJy14g38nBjjoto4lcv+5WUpRGmAGMu6ujC0fCDXpo32BrHeKBrS5B6AgRWbe3AUmoxFNXYqOD4ZY7B54wZo7f3TI02lVqstoIGg0IiLAg7Fsd0cgo5BFBCoUqWCzEmuqJLDuEQezmbKexmxu54LMhBBhTQzwr4q3AtdmHn3KWVQWgGwftkANq9cgVqi88J/vksRfOddkFPxgy1+ulREQZzA2rJaM/hkbNxYB+5UVzMiVf57iFgmfjpGRpbfHlNQvg0/l8rIyCA7+X04R2LttyJqdCe9QYuhTeepDv6KaPVtWHd/MQbQOoD1UCCEFneweCbOpfmtcygxY8NAPzatWI6eDi900W61YbIMWbudqw7KAoiUctQrdtGTJAEHhIoBHDl82J86UcPKOjjrd9wbbroRaTtFuVJBOdDmPdkxLDqieaUJ63LoNdfvDcGTBXvo3E3XWXR2dGLP3lF8+OOfwMTkJKanp336lKb47898dn5KMgQfCnq9UhDIjsFXHLgq/r8rzLA3m010lss4a9VKdJZ8US82HBBRlYfA/vMg5XmWvlYR55jL5RdRUvoiG3wFq1ZdUCAdnukNluyen18uNnsziNZxJh8OckC36RSh2zQtuG74nUiSV8GYMevSh2Bs7OAZPkHiIFaVSX2MSD0RzLUwE8sQ529+VHCMNGsnCyjvDoTuahXrurtQr9XmLceM8cLkSnkRtMIwUV6HhAUJAO122ysgEiPL0ryQTdMMb37j6/GYR27LTwcA+Pf//BT+6f3vR2el4jWlwuIvij7ELr4TgTM2xCQtYBQX59yj1XRc3K12G1OzsxhaNwhjDAb6+9FZq+JHP/kJOisV2ILkaRZEHOKpFxum/pa5/DZGNcYFIhQSZ6d9uyNRCplzODYzi8MzM2imGXScv8kj3oXPQfJJQz+MAyIiEuemiN3TzN693zqdSuy3KvYxdG634saPAQyTsQ80+3f/6LakefSrihy1dugJ0Ml/Q9ykSvgJ6c6dO+4kx1PvTDU8/Gw4+ihA1aAYrXIppCD9InEirjCBV1YK/Z01DC5bDq0Y7TT1bygszOJAUZF3lPO1iBacKNGTsJhqGWMwMzuL8849B4951KNQr3fj4IExfPK/Pw1rjXeICou8WFtIGN9VofeQFcw8i5T0YuEcF62O47kBXWq0WguK7e56HWkQxM7h60AhKVo3FMUb8iGnIJwXSZxFZm+kzOciDyJoWYs9JyYwMTcHHacOZT57IeVnRCT1wAB0YuCsBvFRK7wNozfdcCfUIvmAsBoa+RiYnwehH1upPRaj1079qo2ebvX02LqV1ZHjn0CpfLGY9DVu395L7lTL5hikg8MXA/hPgHzjIq6Y/LOg3NfFOoeEGVtWrUR3ODVyDaiw00nBAzAGQv7zAixa3MGLXWkp1AgAkKYZ2mnqm43Ooaen22v2pmle4Gdpmu+qXJDtKdYwWUGlvVQu56/NhQnD2FuLxXxmLBTTghMpyv7EqUcTdMWTROfP4cdndFBVJJRKCUCEtN1eUM8U33ckWuYFPJEf4HAOB6emsP/EhBeyyCV5/H9J6SiuYKG1dln2HQe8CqO7rrqTaxFgZGSZcnwDlUq9MPZPzO4b/xEXX6xw6S9HYtWtjOJalVSeBJ28FdZMKCNvcjNTR++k4nzBJKFMTf5Md/d/yRFtJK02ABRWhiLkOlS+3uiqVLB5xXJ0ViuwcVCoMBOxsO/BC3Z2CnoTuWD4STynyPp1hYahCxSP3t4edHZUUa1WF6BRuT5u2HWpqKtVeA0xGE2WhTRIQwoqK8VdP0LPuZNVQKaiRnD+/vJgDqLVBSQr1hvW2QU2blScQgwd9nw/KtRIzJRPY/bWaiAA0405QAWxBpuP4lpiYjCxS9MrHJIXYt/O6+6ooNspbbYTE7Oo15cx0YXi3DJZvfKj2L79VqVJ+ZcWN2efXYLIM0FMAnpPdnD0GuBNOMP5In6ZsXy2b9ePXULPgtiPBHsmgjU21h8+NSCs6e1BV7UKY12uX8WFCcGiZ0eRk+TJh3Fnp5xGfnKARbp85DTFufVms4ksMzk3KiofRiWU6HSrlJ7XzgoKh7lCewABYjEuJz1fcXIw71cUinwUNLAiIhcDK8LKEmqSfPYjDIO1221fD+VGOzrnnXGYc0+SJHfjtdZ59iF7FXjjnBc8cc6XGwQBsQVIuSybsca+w+3f+2jsy/0p7+x1JF74Qf5a2tn1sPYBaqbxyF/BFr+FE8QTD4Vr3S9grd8gWbbfSfZiTE83ge10J0f9wpn08fGWTP7aF6lrbJLEbYXSnV5qUhGMISF4b4tSCYoYIhEZwoI+QO7UdJIOblDXDsXqPLRbVDos5uOxyI6nigvi0REyjeOsNgpgF70OC2THaNAZx39zB9yIIoWpxFywrnC6meBrGOuGWIvEfoYrOPD6IM7y+RZIod4IDcfcGkEplEvl3A4Oof+jtUYSOvCtLMNkq42bDh/BRGPOL6agogkmJqVYRL5G0H/q9u/64EmjsnfFpTA11aT+gTYRP01ENkp18FOYO5Ld9gDZscMXNL29bwTx2c65D2Js3xfu4jdWqDh2iExPXqUH+r4ijjQl+oHkHVUcEWii0UIr7GjGWnSUy7lCpQmS/6UgGJ0X6gXJG+e8l0ZMgSK5MUKi8TSIKRECnUMHNm90sM2VT0LRX7Rki7v7yQFqjMmDIw31S94bCYs4V2wh8ieHuPwkMYF4GEuzCCdb5zA7N4dVq1Zj3dq1GJ+czDlfMShxkhxpfK3RD74cxCGcczgyNY3jMzPYffw4Dk9O+ZQz0cEwlSxppSCYE5v9lUubr5CD+284TSzd06JFreq9FVhzMbEa5rL5vkyO/1IpInVLD6CHNz0IxG8HZFZZ+VM3PXH0TkKubjvnf2LiiEyNX4buXgdrzwWhBuec0prm0gzjc7OYaaVotNtgrVBJEpQDHTw2w6IdQHH6LvZPYvc4FqdxMRebi1EJJf47LuC0ncJYkweTFNQUIw8q7v5x5iR6FMZ5k9wANMj1eBqTyusVEBZQ7CMtJDJ9ldZotFqYazSQaI0LzjsPf3/J3yBrp/jWlVei3tWVG/TEk6zophWfp5wkSJ1DZg3mWimu3z+GfSdOYLLZgHMSmpLzPTlKEobINzih37B7dn8ac3PZmeFa3RG934l96OntIp1sE2Pr0lH5HGZnb3HqUN+SSJvNsmeocrns0vRrbmzvz86AvdZpqUsAGLd355v10ND/CemvQCU94qwogKAUMmtwZLqNo40merq60NdZQ6vRxIquLs9vCkNPWZrCBE1epVRug4ACoiMFEWrn5mHb4ryIiPgmIjEUedqKKTg7AUC72czFEmKNEhdknBNpt9sol0q5PZs4B0XKF/Cx9hCE3d3BWcmnJuN0Y5pmuN/9zsZ555yDR1z0MJx3zjmoVCo4evQo4CTvb6jCKHKcy/fppV/8x6ansevIUTh4TlaWZVDOgrT2/oUI/nbB2Vqc+Rtr9Aex58aDBb0zu4jWjgPAkup3i6SPJlZP0bqy1QDfvqWejP4FBcORkeXUaP+GJAkAdel813y7weK6cvkXMzr6vfLg4AUZ9D8T0ePFGAsiFbWnUC5jstXCxOysHxVotbGxvwedVT/7oEslcIBsozBccSLPF9om3/WBebg1pimxEx9PhUR53d9mo4FarZYrJ4oIktCz8WabJVhjMDs7Gwr+gq9hbFiGGiXLMiS12nzNEizukoTzgtuKYMXy5Xj1n78Cj7joYQvqJhHB8IgnRudDUOT1xJxz3t02QsEiAGm0M4O5ZtuLzdkM2vtJe8JiZD4TLHnuymvMzpveNZ+NLLo1M4/AHt55jAaHbwTzQ8TJC7B27Y8wNpbeGorlG3MGr6FyZVhM9llXpv8KAnGL8Y0WbRDQziozJHZl8Cfznt6sAKUB58DWQtsMZDMoa1BSOu8w51pYgdKRF+0hjWo2Gpida2B6ZhbtdhvT0zOYnZnJRaOj3E6SJJ4YGMdnnUNnZ2f+mPkAVgHmbbdaXiROa7TbbRjjYd40TZG22zBBj0sphVqttkB8utVuY3JqCifGx0FKodbRiSzNsHLlCmx7+EULJgjjSTh24IAvusOpWLRCyNM3zNN0lnV1YtPqlX7DYAUh9qdGPhYggLVKjJWo3Hi6ZD/PcC1ClPAHYUwLkN9Voh58S/MiqtiQS4Y3nyPA+wBoMvYvZHTPzxf5m/W57eCmEVbmC8R8HkACCC9oWFkDEsAyo7dawYZly5AET4526ERHKDcqDbbbKUaGh/CWN7wBmzZtRH9/H+6zZQsOHTuGFf19WLZyFY6Nj8PZLE9NolNTvafbN+ICwhQt2uQkWSEXxbPDSRTp9bHOiSahUbI0S1OkxuDYseMwxqLW2YVz739/POSBD8Bb3vB6/PT663H06FEcPn4CFz30oVi+bOAXiu8vXfZ/2D92wCuihDqsWMvgpHl2J4K+zg5k1mK61fI+6gGA8Kxpm5vYEKsncHfPSpmc+FIBPpVFurGSm5jYz/0DQwBthbiaPP5x/xOmY6WYYsXiW1lr30GKO2HtR21Tf3sRIFe/0gUVg4MjyqZfQykZgXUWELVAjywUzhaEChE2r1qVF8KVajX3Hdfs6SjR3y/KqW294Hw8MIgvAMDE5AQqlSqqlQp+tmMHrvvZDvzXpZdi9+7dKJfLqNe7MTU5jblmE/XODnDw6fCokSALUqk60SDMy4+2W60cSk0S39lutVpotFqod3X54al6HWvXrsVZZ23B+nWDePyvPRq9vb05f2rVypW45pprkLZTTE1NLsxHQ+B1dnZ56+pKZV6IIo7iBkXFvFEYkLNWWzDY2wNnLQ5OTkFF00wKSvJMABMR4MDqD3nN0FpXTZ4dfEJokQYJAYA27UuMo+cgSZ6jfvjjT1jg88VaZH6ue9WqKiv1D7A2Uxa/bY/tObCI35wP3LVrH8SiPkxK3RfirLeddfOM3ChkzR6yHO7rRVe1ChUo4nE6L8r+lKLZpnOoVavYvW8fHDEeeMH5+fx5tVr1BjYAli9bhvvf92yYLMN3f/ADOAdsGF6PP/ujl2P8xAnoUD84EczNzeHE+CSUYpRLCbROvA5vs4l2y6dK7VYbmTWYnWtgbmYGywaW4aILH4qxAwcwPTODpzzpSXjXO9+Bh1/4UNz/vmejWq3mbrbx/Xzz21ciSRI86lGPxPDQkE+xAlXFWotP/felGBs74BG9gmxRZC4vYDQXwAUA6CqXACLMpqmXRY0/C+qW5PM0C+AsdrAyNfGtO4Gxe4dOETs9Pc69A1ug9bkiriKTE/91cpHug0DVVgOuJITdqbT3L+LgUABsx8jI8lZqPw9gRahWFSh6RaCAxjiUmLC+twcDXV1otlq5T3lR7SOSBuNMuoignCT4+Y7r/Y0qjN7iJP3epz71Kdh+1VX44Q+vRssaPP7xj8OTn/REzMzMYOzgQVTKJRw4dBjbr/wuDh4Yw3eu+j6USrFp00asXLYMrXaKJz/pibj55puxf2wMj7jo4ejrqeMhD34wfvijq3HZVy8HEyENg1+ZMXl/plgr7T90GK12GwTg5pt34VEXXZQDCXONObz1be/Ad777XXT39ORCEVHYoVyQVJ2HvOeHwOKptr6/D8YJjs3OerKomNztSSAgpZkAA6I3qfUbtd278/WLuBZRAAys+W8QXkiQR1TXrl3THBs7EDdhDWxjYLvTCZ4uVOqQrP1tHDrUWKQB4tOqgYFVzUw+xaXyCjGZrx6j7bRSPi+OyiVE2LhsAPVqFY1gcRb5Ue1Wa4HG7skaWB21Gn7wgx/im9u/jUdue3jOhC0OTVnn0F2vY2BgGeYac4AQZmfn0F2vo6urC/fZsgUAMLx+GBc99KEY3bcPv/OHL8WhQ4fwgAu24pV/8kc5VIwnPuEX3nBHZwcsBLVSCd1dXXmw5izcAiN3enIy77esGOgDEeG666/H3n378PFPfBI33HQz6t3dyFLv9itE3pw0ThkGOssCOdaCwAMJwRFhy6oVKB8B9k1MISklcARQBEXgKNaGRPRaNTTSbWHfgNHRmTM4XntH2gWwGj9X1k2Apd96i/IDhRNkuwUAo+i/VJruFZbvLNJj0adVW7Z0qVb2t6T0I8SGkwPzcyCInCQiiBOsX74MXdWqVyEMLlCVSiWf/vOOroKklMz3HAKdPAbA9u9ciUc/alt+snizT8rTGhHBmuXL0G61MTtxAip4yxQpLrE47+7uRjlJUEoSXL/jeqRp6qHeQsc9JwUqhfHxcfTUuzA5NYW5UKfISaTCqApfLnl6S7lSwd59+/Guf3ofvvilL+HQ0WNItEZHrYo0Tb2HSFCGPJmpjEhxLxTsNgjZlSvlnK/V19WFE802GkE9JeiIQDLjSXE+9RIQvVyJYgu8DEACIFtsaRZGR/dicOMfCDmdju7dUfRS1HlE79w5ZoGxRXoU+h7N0FBFp/YjIniWtNsplCoVxj7nrbiYYLMMq3t7sLzeNS/xGU4AHZQMK5WKXzAlnc9PRL9ApRSMCCrlMr74pa/grE2b8MCtF2Djxo1QaiGrlogwMddEvacHh48exc27duGC88/PWbXFQrlaqWDz5s3Yu28fpqdnMD0zg/6+voVz8AXnWWudJxo6wf3PPnvBz2LhHWkjxlq0Wi0sGxjAJz75qRzi7axWcwuHIq0kS1NIQO+yBd7plNsn2CzLxe0i3T0zBh2VCrasXomfHTg0L/xgpUB3z9+MBfML1PqNn7N7d371ThiQOrVaZN/OS38Vm5cKRfuiQxuwbFknC38CzM/yPHApFRUE5wemfOiv7O3F+v7+0MBDPixUDZN/WUizioaVPqVA3hCMk4alUoJXvuY1eM5zn4eXv+KV+MKXv5Iv/siV2jCy3tMudAnWybz9WeErCjF0dnbAWosjRw7jyJGjBU4WCr/v/7+zsxPNYMb5sx03zBMoQ/108PARfP+HP8SHPvJRfP2Kb6KrszOcRoxmZlCt1fDyl/wB/vV978WFFz4Us3NzqFQq0KFvc7KSe6TWpO02jHU5dUUn3is+3isBUC+Xcd+Vy716vFs4LOWnCskbsBJ1AvTfau3IMwFYXHyxwuIr2G/Rslqf9EsWixTO1dWuPxOlniXGZNBaRSs1WDtfLjkDC0KtUsam5QNeXTAKvmkNUgrNRsOLpZXKuYGnCb2P2CiM1PKY5mRZhnXrBgEA27dvxze+/nV8+rP/g4c/7EJs3rIZJZ1gx09/ilqlgkazhe9c9T08cOsFv3gqFIOFCD3dPeiud/keSSTCRsNvsSDSqNZqyDKDarWCc84+K+dn3bxzJ777ve/jM5/7PA4dOpRTWjo6OiEA7nv2fXDB1q343d9+PqqBwjJ+4gQ6OzqQBrp7LL5zFCtCvWE4K+pkSRTEhrdis9YisxbNNMVMmNS08dQJPDFQ7vpM4pwB0A3GB8trN1zXvvTSnYuwheDOhE/6nSLaUNlw33VGsheQ704nuYEkxJFOWJzNp53YWaTWYvTEBMqKUU0SdJbLHuoVQuYcxFovyAxCqVSCBBoIh4VhrGfFUihOY5BorVGv1yEi+MEPf4hrf/pTNNspKpUyyqGfAgj27d/nOVUh34+NuDiNt3rlityaTSm9YCAp0l1KQVHxsv/7KkrsWb3/+4Uv4qrv/wAHjx7FwbExNBoNv9iNQWYsOjpqsNaAhPGnL38pzj3nHH9COoe/eN1f4vs/+CEGBgbQbDQgQH6C5BYQhSlLaIVW5iclkySBEcHEzCwyY9FIvRZwI01hXPRZByRKABFJGHj3otYMDVIAMJC12x/CypUX4/Dh44sYKT2tNtBnfC4dmzcPaEo228bcs5j5BcFqeoDYI1aedm6tnzC0JMTk/PdQThJUlIIQoZYkUMwoJwmyLEW5VEJXrYY0zaCZ0FGtwlqLJJwmJtDhi+O3fspOo1KtYHpyEq1WK6fOVyoVEBF6enqgFUPrBH19fZicmgFrhQsfcAGOnjiBG268CYcPH4bWGuedey5qtSqICJ21Gg4eOYojx45ixcBytNM2du7cmddHmTGYmpoKQeVPxt6+Ppx/7rl45lOfgk9/4UvY/s0rMNDfj/f8/d/ivHPOhVKMPXv34mGPegxWrViRy5E2Gw2wUkgSnSs8QgSpMdh14gTEOjStL9g1k7dbk3m/QxIHjnPqvvZznuZDXlnGunmWL9MeybIdcPicc7wDhyo/BHakuBtci/0E8SvyppuOG+A4gO/awcH3wwJKV9YL4dlw5jeIdS90ovyHxyCI1UwETjizDu3MgJgw3WzMq6AQe18LnEBnpYz7rFrpu9mFlIgLc9la+0JeRDAzPYUPf+D92D92AF+9/Ovo7u7Gj67+EW644UZ09/Rgenoa+/aPIUkS1OtdfkpPBDuuvx7OWZSSEjo6O0BE+O73vpczgMuVsp/UY8LNN+2Ecxa1Wg2VSiWvoR78oAehVErQ2dmJB23divvf7744/9xzAQCHjx7F17/2VUzMzASNK19Y/9tH/wO9PT3I0iyn9pdDJ51Z5ScnRJBoDc0Kx+fmDXVMZsGYlyqF8+qWwhDxAykAk/IqitKAc8cBtMS5ncT8j9bon2L/zYdwN7z03ei1et7Vvn27A4C9G8A3sGLFO1Wlcz059yAAW8D0DID7RKINNHLTTSjyuXGQugEBFoRlnZ15Lt5qt+eVQwIUGsdqOai3G2vx7x/7BN7+5jfh1x7zaADA5NQUXvkXr8NPfvpTKMX4o5e9FDfedCNG9+3HimXLMDUzi4H+Xmil0Wg2MT01hWPHj6OzowOrVq5Evd4NQFAqldBsNNBotrBm9Sr09HTjR1f/GOPjE3jcrz0Wb3rda9HZ1bng6DdBNmjfocNgrUHW4eiRo6D73Q//+4Uv4iuX/R+q1SpUnIIMdUYWBPS8kF6YbwGwuruOiUYTEF/fMTHEWYgRFIb2vVS44iD66/aSuHcY8NVgexxKTWD3nqmTCYIFofKlADkTTZ0C0uCh3yNH9loc2QvgmwCQDG16r3XpeQD9Pin9UI8QufmiMZ4y5PWoOipV9HTUoIKbLQfFQSLyhp2hk5zTz1mho6MDn//85zHQU8efv+IVMFmGnu5uPONpT8E11/4EUzMNPOUJj8frXvXnOHzkKBKtUK/X0W63QczoqNVw+de/jle+7vVIswyv/LM/wUMf/GDftGTG8ePH0dnZif6+Phw4eAi//9KX4fiJE9i9axeSROez5T7FD0QIpTHQXc89DtetXYsvXXYZ3vDmt6Crs3OefBj1riKMbExuZBpFGspao6NcwmyjCYYXw6OA8ME6gFlADHHZNIguJ7Ifs3PTV5xk/Y2TRmzd0gly16ANXKilbDZ6808A/AQjI9/Q1v0MpLqCYBNRFHgI6vtOgO5yCdVSCVmkhUdpG6K8Yx0toIkJxngd3XpXFz71mf/FM5/5TGzasAHWWhw4fBitNENnrYqxgwdwzv3vh5UrlucvNHegFcG6devQ292NYydOIMsydBSE5zoGB/P/X7N6Fe5zn7Nw8NAhHDh8CFNTU1ixYoUfc82Le//2+3t7PSigGR/9xCewa9fuPLAljOTqZN7WIDY648+ZCO12G5oZ63p7cGOaec2xPO0kQHNQm4OiRP+L3bfnNSe7AJw0imBxN74Yd/8r+lD4KcOtWxOsWNGhk/IHoHSnRC4JhR4DPLXdpimSRGNVf98C6dHYXY/z52mrldPPxUmOalWqVRAB73rvP2Hnbr8QH/Xwi7BiYADjk5O4+trrFniRx8CIHfPMWozPzkIrhe3fuhJpmi2AgYtf0UNw8sQ4pqdnfgFdiXXS2OHDEAC1SgWXffVr2L1nD3rqdX8yRgFuCRYI8KalKtHzw1axx0FekbKilb+pcbAqyPCCglWuyO9h9bqnxvjHvGeLW+zo1L0pQBYe6VdfnamOnvcQqScIcRDGirVHJNX53XLL8mXoCKOtUWghDjyh0K8owqCxex4p41d+5yr89u/+Pv7va1/D4Lp1qNS8LpYJMjuqwJuigkr85g0bcL/Nm5EZg5t37UKz1cy73EWbaCLCxpERP5nYVceBQwcXQMI53SQMaCnlSYfVIB4hhdHeSK+JfDKBgIhzfa2osMJMEGu9VUS5DMfzWschUAhMgNJ9Kin/fWn9li2BQnJPW0/3qDfEAKwa2vAEZO3fcWnbwRmGyfxMCDxWTwBsmqKvXkdfvQ4TFElicywfHopmMzS/GGPnPaoTOufQ3dWJVrOJV7zmdfjs57+ALZs2YXaugXZm4MLc+AJxutA1L5VK6Ovvhwk9mEj1wC2cDBdeeCFqnZ0wWYqDh478wpwH4AOv0faz9ZFLFuuUaHUAIjhjcykhV9gE4vShh7N9T6OvsxPr+3vDbExhBoRV6DuJJUWbjE3/BSMj3bdHNX0pQO789yHYcPZG0sk/kU4I1mtJ+Q+T5msPZwFnUS+V4EJakaZp7jArBUXEeRIfchHofM49LLo0NPU6ajW875//BT/+yTVYs2I5vv3tb2Hnrl357EhxojA+x6oVXjc4TbMFHfeTr6nJyfmpNp5P1aJ5jlKMa6/7GX7w/e9DK87hWxR+z0ZbaISx2tDTiCdmtDRQ2lNKdPCCr5XLfk6EANIqn2GHNQCgJE0tKX4kO/wvtm7VUd5kKUAWWzMREDbpBwBsAODAxJKrI3qBaxJvv1wrlzHQXffOUmHhpu22Z6xWq3mdkSQJFCskOplPwaICSJDwiSlOlO0xmde2ajWb+MSnPoUf/ejHMCZbYFDjrRAsLnroQ0GsMD01iR/86Ed5+vYLdQghWMdpDK7zlmvx9fz0uuvwqr98Pf7wj/4EBw8dRGdHR6glOLe8jmWYztUdFZRiaCI/VzIv2hNYBkGowjlUtUZvreZVE+HVVFjrYDFBgNIKAkPgR/Kx8T8I9cc9JjNR95D34PS6kZcQ0x+IOPFmLr6OoEQDrEDi/+0ArKjXsaK3O5fvLNodK5o3wDTWoh04TnFMl05KlYojqnG23QWZzmuvux4f+djHcMNNN2F4/XqfchmPWHHI6796+ddx9NgxrFq1Cg9/2IULAin+f6vZwue+9GW0Wk1se/jDUKlW8dPrfoYPfPCD+Nt3vwc33nQzlGIkylus5VB1gQsWaS7xMU/MzKKRpbBBcyt6L8b5+qJQtgmAQoSUxTqQToI4NYMQoHORc2r9vZ/IJibm7gbCDfdYmPeWTg84Rb9JQALnLIIVMsRBrJs3xAls7EwcxqdnvJ1zINilxiBzPi1LnUXaamOq1UJmLYb6+rCqrxdpGGyKzk1RjAEF05m4dVrrUO/sRGdHDVd97/u46aabYQQoJRqbt5yFtStXQsShUi6jXCph1+49uH7HDejt7fanl9ZoNJool8u44cabYEyGzloNH/rIf+DY+DhGd+9BrVpBV72OSlBjtCGwc0V4/Ysfr4hgam4Ou44dC1u9DwIOvRQdxKcrSYK2yfwqD6elBK6ZRwQDSdQJBGCCWFFqbdNkLwJwyT3lFKF7wGsXtfGst8K510mWEawlCuOjOe06j6SgKBJJeeEnEjhXrDSMiM+vyUvbMCucP7gO9c4O70UY9XCLyFYIjiiUHRsAUTGkWqui1WjCukBDb7aCZCijq6vTP6a1mJyYRE9PN3r7epHoBHNzc164odlEEmza0jQFAahUqzmEHOnnKMDJuSd8QQUyIl0igusPHsJUswVFgJDKR2YldskD48BbQjg/BOYE0CrsPQ7Q2iO+3hjUgZlE5Fq3rPdBuPrq7O5ARrwnp1jR86Gb2ulbiHgNERwBjAJqBBVqBcW52xEJcjFoX4MTgvGBz93J5+/iBL2dHVhe71pohFMsasPizGc64OuF4tBRnOsmJpTKFXTUaqhWKvnO75wXy66H55mba2BqcjK3MyiVSp4KAvJiC4V5+Fwy9CSd36K/uwuoVYRziYDMCaYazYJqvT9NmBkMPzHp/01g52k7ub2dFCs/CaomTGAWZl6FRmtWJse/cxdYHCwFyMm1B5erfwRSLyCGI6UVol4ToiyNyk8PxHQrpgooONnGmHPRstjXEn3VMurlMrKgHBK74bHeyOHZIDynlPJau3HWG57g6kmtnPsjogAfS1EzK+z80dgzcqciKBCZvdEsp+jpXrRFiNORIvNTjbkAt7NQRDg6M+MzptjnKIwr51+xKS4UKDrh/jEAc9Lsh4eMhYDHcn3gOzJ1YtfdPUjuznmi9XSH6jOICMiMSJoaGGNJkSWlLZyzsMaIOAMnBnAGTmx+dOT4jZw03OtC78TlkG/U0J2b9eqKETYtfrFSubp7u9UChQZkFlCs2KHXiaect9tt3xMJf+NCmhM723HIioJfiQoTjPE1uQBE+EZmwewn9zd0CyDmqATJrKCIvb7VgollCv9l5CIYnpfjQGTBZAViQWRhxYDZgtg/kacZgIgcac3C7rWLUNP5XhMg/nWvHTkbYs4FgVEqaQAaRAo6UUJQ0ImCVhoCDSINVn74IRTsObFU4twC52iOcw6VUhll8vVBtIfWWuf+GjnDN0CnpdCVbzabSLMMc7OzaDQa4fF8MzCmRnE+npmDQabkZjg5GhaF3ALE6gqehUrrXOwBwdmk2K0vpnwSfu6cn2/3dJQyltfr/vWYDPPjslKQFUX8f8+AJFKwTkFk/k3773ss3fPdtWTZDMRNAFv13b15eHdFsULBYG+2wCPYuAeCeYaI7wNiIM0mRNw2EjcjTD8nQTeYumAcieKNBDx6weaQ75SC6J7rgtROT0cNCEEQzXJOvuKij+mPcw7lUgk2qhaGxZ5lvtEYAyzOe7dDA7IoxiBFekg4baLlQawvKAAESQgIVzDpLL435zwbt+g9SAAqcSY9OtIWWc8+OLwrE9wPycrPAVUG0zEwNeFcE2ITCKVCGCOtD6HVZtG6ZF12LYgawFMscDXuzinWPYoWcJuujRvrKnVjUKoLznr2Yi6jOZ9yOeewvqcby3t6UCqX8xlua62fwlMaJpwIUTcqBkq5UkHmkZ38e5VKxZt0BvX3+HixKx+tDiLlJTpYgQgmqK1H4x4q1BlRfDoKwLm8u64WuObmaJfMq8db57Dj8BHMNJtQIK+F4Rygk6hbRGCyZN2jzdjeb+FeePE95D2ohV8Xq8IsggqOvQkAVql9BIiqweQjdtGC6BlAoYfQVamgv7vbkxWdQ7PRgA32zaB5V9kk1BUqnDKlIOkZrZqj1q6ntLTzzrbWOldYkQJBMRS6eUEda4uoEC9hpj7SZCRQ9GM9kgQETQRItFpgVupcQRVSBJUkwUBXp7cyiNCuymvqiGYoUep/yps3D4f7qW/5ni/44nvK5ntP6KTLL37tkF/42aFDBECo3vsUInpizn2PuH+Q9CcATml0d3ZiZd27MKHg8xftmJ0xaKQp9k1OocSMUqgn0mCIyUE9PWpTNZtNMM27U2XBDEcFzlNM6YvOuhSQp6ITLoICZPxdKjhERcHp2UYTNx875kUUwolRCs60885YPnjm2inGG8351awK6RaCm6jWHSK8202c+D62bWOMjtpbvu8Lvu4Rl8a941IArF43cpHAvTGvSGNdicIYqfZuUZVgY1bTGmmrBccM4xymZ2Yx1WigkWXIgrJHf7Wad69jypO2295KoVz2LGHmUIP4OicOZcXTJLJvc6G5OOQU5lQkcMDK1Sq0Ul7wLtQQabudp3laKVgmzLRTzBw9Dgo1Si3RqFer6O3q9HZ0IaB6alXwvM+HxwYjkpckoWsEseL6AQi237tSLH1verNO0WqC7vZJPngB1u9c3kiEMUiDsc2x6Wm0jcFMO8VcmiEzQayZFZgAchbTzSb6613zHiMB7UpbLWTEKFXKUADaxmA2zdDf1eXtywqOTlSQ3ylS7mP6dXSuge5aFTUitNM0ZxbHlCyabQqrvPGp2Dc7jbOYbGaYbLawf3oaNa1RShKUkwQd0fGWGGDJhagLVaqCCJGzL6kND79/bs/2I4vcFmMpQO5AMrYxMOskTscRBx1fa4HMQJQCO4djzRZmDhxEM009vOoEDAcdRZpFfO6uEkw0m1idZahVKrkYgjEGSbBYIyKoUoKbDx/Jp/UyY1Aul/PawgT925gmxV4IEdB2wJ7jJ9BdrWAjMzRzfjJFEmWcU1HMODwznXf8AQqNRZU3JRupD3YQQ/HsfIOQA/wd3l+g8HqrA2CgDQwCOLJUpN9zI2QcIuThTHimb5T8z6eprBcocA4N4wetNCvochmsvTefEEFYAb43hpYTzLRacMagGRTkrbUoVcrQwYPwyPQMJlttzMzN4djsHDo7OjyxMJ8EVLnjVOx6e2YtMNtuQ2mFyUYDu48d96haYBnHk6ZUKqFarWCi0cB0sw0V31dQdxFrA0plPSkx0dCaMU/LCWacEfKm2BOJerswZExjCcW6R17bCABY0B3SKiGOO6oNNmJBIV7rfMiKxQlp5YRZolo8CtZjYo1fVM7h+PQMUmuhgzpKZ2cXGrNzMFkGy4y9x8c9HAvg0MQkTPA1FMArHYpAhxkPKfZXmHFibg4W3qpgvJ1iz/HjKCUJrAhKlUph0tHg2PQsjAtBzqpAQwk9Hp34xqQrSPgweYkfZ3ELescEgQNTYqEfd28LEHXveJujfs319P0Za302xUo5DlRRYQhOnIMxjpgEIt5fzFmSmPMXbAK8JwaDCWhkGfq76ugolwOM46nzTIQbDx5CK009cgSgnWVwTtBTrSAzBknwZI/d75hiMYCjc3M4OjOT6/ZSlmFyZhaptegqJblLVrvVghHB0bk5WOtyj5RAAvMzMQX76eL/54rsPJ+GoSAplBO6xFmZnvzUgmbt0gmCewytn5jmBAKxVnL7MedErBN4i1YXunBKRBSMgdjsWhF3E+LfOevp8EoHCzKJytTYNz7u0y/r6Su1ahVH5+Yw3WyBtYaAfI3DCsenpzE1N+dp8wEha7VaC2fTFWN8ehbWWD93EdIdrRQOnTiBydnZvBHIRJhtNNBKU5BERkCBZyYuiOILQBBxLqoiygJRi8Dr8l0k8gTPyJC2bhArVlQLFtxLAXLPuC4Ohh4yGXZNEXFOjBFY4/UclA5TQW4XRD4h1rzWEv+aGxs9D6w+RErPa3KxCuMiNsxR+GK/mXrRBHjOPQ6Oj2Pv+ARUqbSAwsFao+0cxiYmUUoS3/grdMjBXlT78NQ0ppuNYOIiQlpbEImIH4zaf+x4rg1MzJhotnynXfE8fSQGiszPi8A6gnNeVtoYgjEBAvNqPUQEUtqnjzH1dA4kbhlQWn9vYmHcS1Cs6I0iRMQGcEqkuDnQUQG+IdZd5qrJl3DTTccXqovgeii2JMw+DRGI8bAwJcqPoAYx8+lGA8vqXRifncOBqWm/sEJnO/KeYu9jfG4OBycmsaK7ng9b6eCX7pTCVLPl8aN5JqFCABAIhJZzODAziw3BmHSu3QbnXh1u3nWLVKgzxAHCIu5ycvJucfxXRPQAOKcABySJg7GAOIK1BHGgQNsXAiCqDk6m7k0plr7XALwAYGU5SqyFMENJckgg3yHT/rBh7MWunftvQTKTAWRottqoVTOAyj69Cj7hzHlPxKuvW8xlBt2ZxZ7j42gFs00JlD9PHnbBCIRAxNg/Po6uShmVgGgZeAGItrOYSzOw1iJEJM7eRO32x8D0KrCqi7Oiy2U6OjsLYx2WdXUiC6gawvxJcfefZwsIQOrTdmz3l9A99B1Vsw8Cq/8nwDMI1Ick8WmWz/18usgUlX84IenOvBMZ3RuC5N4SIA4AbDr3RcrSG3S9+3+zm3dcf5JfXlFHdqFkplY1iJTB7NVRWIBoo2wNYDKITsAEzLTbuP7gITTarYAuBVQo9hTEAdbrThEEToBdR4/hPqtWoZxoZKEG2H9iAqnJoImtiAiDX2zGdl/Ja4cOEvBvIBbfoVc00W5hstkMjUO3kJVbnA3zcu9CzhwHoDA1Ommn8FUAX8Xghvdp5x4pIs+GdfdBont8HyX8sWJAXCNDOnFvOkHufWzeXy6uLL9UFGLtpjWKzPdBtAbWOIgwksSjPs5GQWdAKbhQZLM3kQm6CMFhJu7g4nJ9KRI//LSuvw/r+nphrUWz3caOg4fgiBzphJG1P2jH9v0BNm4sY+fOth5c/3oRfiucsfkUFhX4hQt8GyNLQAuYSZy7wWk8BLt3TxVQzIXvf836c1nTk8TYzUTcRUyZI76ZnN3qEn5u+NulE+QeCkoUA+K2iStn0xlKtZBSafZBERAh68ULEAaPGLCh6ehxVTev/jFfTsxT6wW+9jg6M4uuJEG9UsahmVkYIqeVYifuy86Z1wFQ2Hm+AXaSKem/5VQeS0pvA/nJygWjt67AFyQGtAomjVYR0U/DAueT3nvumYYDe691wLUnHxNyS2nrEop1j0u1zO0QV/b5xZGzxqHV5eG8dXkDbn7YyB8LIgZaKfJmPkdh7cchyMDsSCkhrRYKH4RONSlGZi3GJqdwbK6BybmGcGYgxraUwxtx8OCJADbY4EjcdlqeI8BVIFYQeMnE2PwLfY8FE4IiAqUBwYHCyXnyvXEnjRAU55IVsDQPsnTdYpq13SCzbZJgNRYKc2+YTi6QuthPUdmP2My83ZF+lB3b+3xi/msQsYTch0R8B54L6RB78bWZdgt7TozDiTiulFmIvpnt23X1Sbu9D9rdu486yZ4txlwJQEX6TM6hKm7yxAgQNkRw022gpEfFfLmn2BgsBciZ9GcHWJjO8iipcKgfvFda+LfA/UicvMyO9f++jO3+S+zbuQOAMlnv35HI14k1g8hB69BjcPOUDhsEqIlAHu8FgANOsnf8kjrRB8n+/QddVn8CnHu7Rw5g5zkkhVFwJqFSiUE0p5W74t6UIi0FyJmHh731G9H/BRRK4MTAOYZzmVi3HS57uiN5uBvb837g6qwwVQccuroh5fLfQvGcWOvEWvH0loLnRs6VIojNHIxRLrPvxNjY9luhlntv7yM/bdixvX8pYv/SCyiwzRd/bJ+IiDgHODmQ9u/dvRQgSwFy+o8Sg+96+RtWgGiBXAXmZ7kDo4+0+/d/HqOjLWBbVDe3hTSF7Y3X/58Y+3Fi1l7Jp+DxTuyRMBFAKaFyRYHwE+fa/3kb5i4i5YPd/tF3OGv/Hsw6CE8IlIoUkiBtjytwNQzwJl4KkKUAOd14X4+HndwcgA+7knqC3bfni4WC19cqv7jwBADbMv+lAO+lqCJdLs8rqfgZE0dgwLgJTfJsHDp0/Dbu9HmzQvbvfaWz9u0+QDjKtXgWmqBNTn08jCTT0ge6BPOe3lzLSpXICZz7bXtg32dQGOX9FYvY/+yGG05Y4I957dAQKfUUZJlQUlISyIqwBpIZctb9Y/vQ/l2Fx8ZtRtsAJWN7/1LWDo+TVn8HkQziGMTK2exmJ+bqgIa5pU906QQ5rTQVR9gP4AkhOLiQSt3Wx2AA7MZGnyUi14iIAmCJCLDGgpmF6Drp7fq7UxxpDSp4Fys3tufv4exHwSoBU+hcqiY2bMiWmsNYmgc5Izyu6Yl9Mj25+w7MY0tuE7di9Q4493QY00HMlkgpGJM64Dex6+ab71iXegcBYFk2cCVnZhVYXwASxyLvdT/9yZVLBfpSgJxJyFfdQbECAbZpd+JHe3XvsuMCeRQICUAzEHmmjO294jRQOPzfjo/PSb3zMmYNEG8D5N0yNXFzSKuXUqyla/HXfmpw+ClqaIOoNYOfOgM1YZ4+8+Dw8/Ta9duW0uql625X//Hghuer1eueVuCJnQky5tK1dC1dvyKVXgqUpetuzTBeupaupWvpWrqWrqXrHnP9fxkBhXTRJ9CTAAAAAElFTkSuQmCC';   /* 老師提供的病毒圖片（鍵盤小勇士） */
+function enemySVG(th){
+  if (KIND === 'key') return `<img src="${VIRUS_IMG}" alt="" style="filter:hue-rotate(${(th-1)*55}deg) saturate(${1 + (th-1)*.15})">`;
+  const C = [['#8BC34A','#5E8F2E'],['#F28C38','#B85E1A'],['#6B7BD1','#3E4A99'],['#C2410C','#7C2D12'],['#4B5563','#111827']][th-1];
+  const horns = th >= 3 ? `<path d="M30 22 L24 4 L40 16 Z M70 22 L76 4 L60 16 Z" fill="${C[1]}" stroke="#1B2836" stroke-width="3"/>` : '';
+  const mask = th >= 4 ? `<path d="M30 40 Q50 30 70 40 L66 52 Q50 46 34 52 Z" fill="#fff" stroke="#1B2836" stroke-width="3"/>` : '';
+  const cape = th === 5 ? `<path d="M18 52 Q50 40 82 52 L90 100 Q50 92 10 100 Z" fill="#7F1D1D" stroke="#1B2836" stroke-width="3"/>` : '';
+  return `<svg viewBox="0 0 100 110" aria-hidden="true"><ellipse cx="50" cy="104" rx="28" ry="5" fill="rgba(0,0,0,.25)"/>${cape}
+    <path d="M22 96 Q16 50 50 28 Q84 50 78 96 Z" fill="${C[0]}" stroke="#1B2836" stroke-width="4"/>${horns}${mask}
+    <circle cx="40" cy="48" r="7" fill="#fff" stroke="#1B2836" stroke-width="3"/><circle cx="60" cy="48" r="7" fill="#fff" stroke="#1B2836" stroke-width="3"/>
+    <circle cx="38" cy="49" r="3" fill="#1B2836"/><circle cx="58" cy="49" r="3" fill="#1B2836"/>
+    <path d="M36 66 Q50 74 64 66" fill="none" stroke="#1B2836" stroke-width="4" stroke-linecap="round"/></svg>`;
+}
+$('#player').innerHTML = PLAYER_SVG;
+/* 換背景；announce＝關卡編號（不是背景編號：新手只有 3 關，背景用第 1、3、5 種） */
+function setTheme(n, announce){
+  const T = THEMES[n-1], sc = $('#scene'); sc.dataset.th = n; sc.style.background = T.sky;
+  sc.querySelector('.far').style.background = T.far; sc.querySelector('.near').style.background = T.near; sc.querySelector('.ground').style.background = T.ground;
+  if (announce){ const b = $('#stageBig'); b.textContent = `第 ${announce} 關・${T.name}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+    [523,659,784].forEach((f,i) => Sound.tone(f + announce*40, .18, 'square', i*.09, .06)); }
+}
+/* 清掉上一局留下的大字（避免倒數時背後隱約出現「第 5 關」） */
+function clearBig(){ ['#stageBig','#dBig'].forEach(id => { const b = $(id); if (b){ b.classList.remove('go'); b.textContent = ''; } }); }
+const stageCount = C => C.len.length;
+const stageEvery = C => Math.ceil(C.goal / stageCount(C));
+const stageOfKills = (C, k) => Math.min(Math.floor(k / stageEvery(C)) + 1, stageCount(C));
+const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-1) * (THEMES.length-1) / (C.len.length-1)) + 1;
+function ninjaHud(){
+  hud([[KIND === 'key' ? '等級' : '忍者', NINJA[N.id].name, 't'], ['生命', `<span class="hearts">${Array.from({length:N.C.lives},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
+    ['擊退', `${N.kills}/${N.C.goal}`], ['分數', N.score], ['關卡', `第 ${N.stage} 關`, 't']]);
+}
+function startNinja(id){
+  stopAll();
+  const C = NINJA[id];
+  N = {id, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
+  show('ninja'); kb.blank(C.blank);
+  setTheme(themeOf(C,1), 0); ninjaHud();
+  const d = N;
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${PK.enemyHint}！擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+    if (N!==d) return; N.locked = false; N.nextAt = 0; focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
+}
+/* 新的字串不能和畫面上的敵人一樣，也不能是彼此的開頭（才能自動判斷要打哪一個） */
+function freshWord(len){
+  for (let t=0;t<30;t++){ const w = makeWord(len); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) return w; }
+  return null;
+}
+function spawn(){
+  const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
+  if (!word) return false;
+  const dur = C.time[N.stage-1] + C.per*(len-1);
+  const el = document.createElement('div'); el.className = 'enemy';
+  el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}`; el.style.left = X0 + '%';
+  $('#enemyLayer').appendChild(el);
+  const e = {word, el, dur, start:performance.now(), w:el.querySelector('.word')};
+  N.es.push(e); drawWords(); return true;
+}
+const maxNow = () => N.C.multi[N.stage-1] || 1;
+function drawWords(){
+  const v = $('#tin').value.toLowerCase(), any = v && N.es.some(e => e.word.startsWith(v));
+  N.es.forEach(e => { const m = any && e.word.startsWith(v), pos = m ? v.length : 0;
+    e.w.classList.toggle('dim', !!any && !m);
+    e.w.innerHTML = [...e.word].map((c,i) => `<span class="${i<pos?'ok':i===pos?'cur':''}">${H(SHOW(c))}</span>`).join(''); });
+  if (N.C.glow){ const t = target(v); kb.glow(t ? [...t.word][any ? [...v].length : 0] : null); }
+}
+/* 要提示的敵人：符合目前打字內容、離忍者最近的那一個 */
+function target(v){
+  const c = N.es.filter(e => !v || e.word.startsWith(v));
+  return (c.length ? c : N.es).slice().sort((x,y) => progress(y) - progress(x))[0];
+}
+const progress = e => (performance.now() - e.start) / (e.dur*1000);
+const X0 = KIND === 'en' ? 96 : 90, X1 = 22;   /* 敵人從右邊（96%）走到忍者前面（22%） */
+function ninjaTick(now){
+  if (!N || N.over || screen!=='ninja') return;
+  if (!N.locked && paused==null){
+    /* 出現新敵人：畫面上的少於這一關的上限，而且還沒到目標數 */
+    if (N.es.length < maxNow() && N.kills + N.es.length < N.C.goal && (N.es.length === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+      if (spawn()) N.nextAt = now + N.C.gap*1000;
+    }
+    for (const e of N.es.slice()){
+      const p = Math.min(1, (now - e.start) / (e.dur*1000));
+      e.el.style.left = (X0 + (X1 - X0)*p) + '%';
+      if (p >= 1){ enemyHits(e); if (!N || N.locked) break; }
+    }
+  }
+  loop = requestAnimationFrame(ninjaTick);
+}
+/* 忍者：比對打字欄位，自動找出要擊退的敵人（不用按 Enter） */
+function ninjaInput(v){
+  if (!N || N.locked) return;
+  if (!v){ N.badLen = 0; tinState(''); drawWords(); return; }
+  const ms = N.es.filter(e => e.word.startsWith(v));
+  if (ms.length){
+    if (v.length > N.lastLen) { Sound.key(); throwStar(target(v)); }
+    N.lastLen = v.length; N.badLen = 0; tinState('');
+    const hit = ms.find(e => e.word === v);
+    if (hit) return defeat(hit);
+    drawWords(); return;
+  }
+  drawWords(); N.lastLen = v.length;
+  if (v.length <= N.badLen) return;           /* 刪字時不再算錯 */
+  N.badLen = v.length;
+  const t = target(v.slice(0,-1)), want = t ? t.word[v.length-1] : null;
+  N.combo = 0; if (want){ learn(want,'bad',null); N.weak.add(want); save(); }
+  tinState('bad', !N.es.length ? '' : KIND === 'key' ? '沒有病毒頭上是這個鍵，看清楚再按' : '沒有敵人是這樣拼的，按 Backspace 刪掉再打');
+  N.es.forEach(e => { e.w.classList.remove('err'); void e.w.offsetWidth; e.w.classList.add('err'); });
+  Sound.bad();   /* 打錯一律不扣命（老師 2026-10-28） */
+}
+function throwStar(e){
+  if (!e) return;
+  const st = document.createElement('div'); st.className = 'star'; st.textContent = '✦';
+  const stage = $('#nStage'), pl = $('#player').getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  st.style.left = (pl.right - sr.left - 10) + 'px'; st.style.bottom = (sr.bottom - pl.top - 40) + 'px'; stage.appendChild(st);
+  const er = e.el.getBoundingClientRect();
+  requestAnimationFrame(() => { st.style.left = (er.left - sr.left + er.width/2) + 'px'; st.style.bottom = (sr.bottom - er.top - er.height*.55) + 'px'; });
+  setTimeout(() => st.remove(), 220);
+}
+function removeEnemy(e){ N.es = N.es.filter(x => x !== e); e.el.classList.add('poof'); setTimeout(() => e.el.remove(), 400); }
+function defeat(e){
+  const rt = (performance.now() - e.start)/1000, remFrac = Math.max(0, 1 - rt/e.dur);
+  const pts = SCORE.base + Math.round(SCORE.speed * remFrac);
+  N.score += pts; N.kills++; N.combo++; N.maxCombo = Math.max(N.maxCombo, N.combo); N.rts.push(rt);
+  e.word.split('').forEach(c => { if (learn(c, remFrac > .5 ? 'good' : 'ok', rt/e.word.length)) N.weak.add(c); }); save();
+  e.w.innerHTML = [...e.word].map(c => `<span class="ok">${H(SHOW(c))}</span>`).join('');
+  removeEnemy(e); Sound.slash();
+  const pl = $('#player'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
+  const p = document.createElement('div'); p.className = 'pts'; p.textContent = `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
+  tinReset(); kb.clear(); drawWords(); ninjaHud();
+  if (N.kills >= N.C.goal) return ninjaWin();
+  const st = stageOfKills(N.C, N.kills), n = N;
+  if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
+  else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
+}
+function enemyHits(e){
+  N.combo = 0; e.word.split('').forEach(c => { learn(c,'bad',null); N.weak.add(c); }); save();
+  const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
+  removeEnemy(e); if (wasTarget) tinReset();
+  N.holdUntil0 = performance.now() + 700;
+  drawWords(); loseLife(`被${FOE}碰到了！`);
+}
+function loseLife(msg){
+  N.lives--; Sound.bad();
+  const pl = $('#player'); pl.classList.remove('hurt'); void pl.offsetWidth; pl.classList.add('hurt');
+  const f = document.createElement('div'); f.className = 'flash'; $('#nStage').appendChild(f); setTimeout(() => f.remove(), 450);
+  fx($('#nFx'), 'no', N.lives > 0 ? msg : '沒有命了！'); ninjaHud();
+  const n = N;
+  if (N.lives <= 0){ N.locked = true; return setTimeout(() => { if (N===n) ninjaEnd(false); }, 1200); }
+}
+function ninjaWin(){
+  N.over = true; N.es.forEach(e => e.el.remove()); N.es = []; const n = N, b = $('#stageBig');
+  b.textContent = `🏆 ${n.C.goal} 個${FOE}全部擊退！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+  [523,659,784,1047,1319].forEach((f,i) => Sound.tone(f,.25,'triangle',i*.12,.12));
+  setTimeout(() => { if (screen==='ninja') ninjaEnd(true, n); }, 1800);
+}
+function ninjaEnd(win, fin){
+  const n = fin || N; N = null; $('#enemyLayer').innerHTML = '';
+  const R = P.ninja[n.id], prev = R.hist.length ? R.hist[R.hist.length-1].score : null, bestBefore = R.best || null;
+  R.hist.push({score:n.score, kills:n.kills, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
+  const tiBefore = titleIndex(), nWas = NINJA_ORDER.map(ninjaOpen);
+  if (n.score > R.best) R.best = n.score;
+  if (win) R.cleared = true;
+  save(); Sound[win ? 'win' : 'soft']();
+  const trend = win ? {cls:'best', text:'🏆 通關！'} : trendOf(n.score, prev, bestBefore, 100);
+  const notes = [];
+  if (!win){ const st = stageOfKills(n.C, n.kills); notes.push(note(st < stageCount(n.C) ? `再擊退 ${st*stageEvery(n.C) - n.kills} 個，就能看到第 ${st+1} 關（${THEMES[themeOf(n.C, st+1)-1].name}）・離通關還有 ${n.C.goal - n.kills} 個` : `最後一關！再擊退 ${n.C.goal - n.kills} 個就通關`, true)); }
+  NINJA_ORDER.forEach((id,i) => { if (!nWas[i] && ninjaOpen(id)) notes.push(note(`${PK.ninjaName}「${NINJA[id].name}」打開了！`)); });
+  if (titleIndex() > tiBefore) notes.push(note(`🎖 得到稱號「${TITLES[titleIndex()]}」！`));
+  const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
+  const nx = NINJA_ORDER[NINJA_ORDER.indexOf(n.id)+1];
+  const nextBtn = win && nx && ninjaOpen(nx) ? `<button class="btn" type="button" id="rNext">挑戰${PK.ninjaName}「${NINJA[nx].name}」</button>` : '';
+  showResult(`${PK.ninjaName}・${n.C.name}${win ? '：通關！' : ''}`, trend, `<div class="r-stars">${win ? '🏆' : '🥋'}</div><div class="r-score">${n.score}<small>分</small></div>`,
+    [['擊退', `${n.kills}/${n.C.goal}`], ['打到', `第 ${stageOfKills(n.C, n.kills)} 關`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最高分', R.best]], false,
+    notes, n.weak, [], R.hist, h => `${h.kills} 個`, 1, () => startNinja(n.id), nextBtn, () => startNinja(nx));
+}
+
+/* ---------- 打字欄位與鍵盤事件 ----------
+   學生要自己切換成英文輸入法：欄位裡出現注音或中文字，就提醒按 Shift；英文打對了自動送出，不用按 Enter。
+   虛擬鍵盤只顯示學生按了哪些鍵（依實體按鍵位置），不影響判斷。 */
+const tin = $('#tin');
+/* 選字中的橘色虛線（老師 2026-10-30：比照一般打字，有虛線 → 按 Enter 虛線消失、同時判定 → 下一題）
+   瀏覽器在輸入框裡不一定畫得出底線，所以網頁自己量字的寬度，在字下面畫一條虛線 */
+function compLine(inp, on){
+  let d = inp._cl; if (!d){ d = inp._cl = document.createElement('div'); d.className = 'compline'; d.hidden = true; document.body.appendChild(d); }
+  if (!on || !inp.value){ d.hidden = true; return; }
+  const cs = getComputedStyle(inp), cv = compLine.cv || (compLine.cv = document.createElement('canvas').getContext('2d'));
+  cv.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const fs = parseFloat(cs.fontSize), ls = parseFloat(cs.letterSpacing) || 0, n = [...inp.value].length;
+  const w = Math.max(fs * .6, cv.measureText(inp.value).width + ls * n), r = inp.getBoundingClientRect();
+  d.style.left = (r.left + r.width/2 - w/2) + 'px'; d.style.width = w + 'px'; d.style.top = (r.top + r.height/2 + fs*.62) + 'px'; d.hidden = false;
+}
+let composing = false, remindT = 0;
+function remind(text){ const el = screen==='ninja' ? $('#nRemind') : $('#dRemind'); el.hidden = false; el.textContent = text; clearTimeout(remindT); remindT = setTimeout(() => el.hidden = true, 2200); }
+function tinState(kind, msg){ if (KIND === 'key'){ if (kind === 'bad' && msg) remind(msg); return; } tin.classList.toggle('bad', kind==='bad'); tin.classList.toggle('ime', kind==='ime'); const h = $('#thint'); h.className = 'thint' + (kind==='bad' ? ' bad' : kind==='ime' ? ' warn' : ''); h.textContent = msg || ''; }
+function tinReset(){ tin.value = ''; composing = false; tin.classList.remove('comp'); compLine(tin, false); tinState(''); if (N) { N.lastLen = 0; N.badLen = 0; } }
+function focusTin(){ if (!$('#typeZone').hidden && $('#signWrap').hidden && $('#certWrap').hidden) tin.focus({preventScroll:true}); }
+const IME_MSG = '輸入法是中文喔！按一下 Shift 換成英文（看到ㄅㄆㄇ或中文字，就是還沒切換）';
+const HALF_MSG = '打出來是半形（英文）的符號，算打錯：輸入法換成「中」，按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打';
+tin.addEventListener('compositionstart', () => { composing = true;
+  if (KIND === 'en'){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); }
+  else { tin.classList.add('comp'); tinState('', '看到橘色虛線：按 Enter 送出'); compLine(tin, true); } });
+tin.addEventListener('compositionupdate', () => { if (KIND === 'punc') setTimeout(() => compLine(tin, composing), 0); });
+tin.addEventListener('compositionend', () => { composing = false; tin.classList.remove('comp'); compLine(tin, false); setTimeout(onTin, 0); });
+tin.addEventListener('input', e => { if (e.isComposing || composing){ if (KIND === 'punc') compLine(tin, true); return; } onTin(); });   /* 選字中的字在 input 時才進到欄位 */
+function onTin(){
+  const raw = tin.value;
+  if (KIND === 'punc'){
+    /* 標點：只接受全形標點。半形（英文）符號＝沒按 Ctrl 或沒切成全形：提醒、不算答錯；注音、字母、中文字＝打錯 */
+    const v = raw.replace(/\s+/g,'');
+    if (screen==='drill') drillInput(v); else if (screen==='ninja') ninjaInput(v);
+    if (/[,.;:?!'"]/.test(v)){ tinState('bad', HALF_MSG); remind('半形符號算打錯！輸入法要是「中」'); }   /* 遊戲中打出半形算錯（老師 2026-10-29） */
+    else if (/[^，。、；：？！]/.test(v)) tinState('bad', '這不是標點符號：按住 Ctrl 再按符號鍵。按 Backspace 刪掉再打');
+    return;
+  }
+  if (/[^\x00-\x7F]/.test(raw)){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); return; }   /* 注音、中文字：不算答錯，請學生刪掉、切換 */
+  if (/[A-Z]/.test(raw)){ tinState('ime', '打出來是大寫字母：先按 Caps Lock 關掉大寫燈，刪掉再打'); remind('大寫燈亮了！按 Caps Lock 關掉'); return; }   /* 大寫不算（訓練學生確認輸入狀態） */
+  const v = raw.toLowerCase().replace(/\s+/g,'');
+  if (/[^a-z]/.test(v)){ tinState('bad', '只要打英文字母喔，按 Backspace 刪掉'); return; }
+  if (screen==='drill') drillInput(v); else if (screen==='ninja') ninjaInput(v);
+}
+tin.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (composing || e.isComposing || e.keyCode === 229) return;   /* 中文輸入法選字中：讓輸入法用 Enter 送出 */
+  e.preventDefault();
+  if (KIND === 'punc'){ if (tin.value) onTin(); return; }
+  if (tin.value) remind('英文打對了就會自動送出，不用按 Enter');
+});
+/* 鍵盤小勇士：直接按鍵（不用打字欄位）。按下的鍵換成代表符號，接到和打字一樣的判斷；
+   按錯不用 Backspace（Backspace 本身就是要練的鍵）：按錯只記一次，再按正確的鍵就好 */
+function keyFeed(tok){
+  const before = tin.value, v = before + tok;
+  tin.value = v;
+  if (screen === 'drill'){ if (!D || D.locked){ tin.value = before; return; } const ok = D.word.startsWith(v); drillInput(v); if (!ok && D && !D.locked) tin.value = before; return; }
+  if (screen === 'ninja'){ if (!N || N.locked){ tin.value = before; return; } const ok = N.es.some(e => e.word.startsWith(v)); ninjaInput(v); if (!ok && N){ tin.value = before; N.lastLen = before.length; drawWords(); } }
+}
+document.addEventListener('keydown', e => {
+  if (!$('#signWrap').hidden || !$('#certWrap').hidden) return;
+  if (!(screen==='drill' || screen==='ninja')) return;
+  if (KIND === 'key'){
+    const tok = keyTok(e.code);
+    if (tok || e.code === 'Space') e.preventDefault();   /* Tab、方向鍵、空白鍵、Backspace 不要動到網頁 */
+    kb.els(codeKey(e.code)).forEach(x => x.classList.add('down'));
+    if (e.repeat) return;
+    Sound.init();
+    if (!tok){ if (!/^(Control|Alt|Meta|OS)/.test(e.code)) remind('這裡要練的是特殊鍵，看清楚題目的鍵名'); return; }
+    if (paused == null) keyFeed(tok);
+    return;
+  }
+  if (e.target !== tin && e.target && e.target.tagName === 'INPUT') return;
+  Sound.init();
+  if (e.target !== tin && !e.metaKey && !e.altKey && (KIND==='punc' || !e.ctrlKey)) focusTin();   /* 點到別處也能直接打 */
+  const k = codeKey(e.code), el = k && kb.el(k); if (el) el.classList.add('down');
+});
+document.addEventListener('keyup', e => { const k = codeKey(e.code); if (k) kb.els(k).forEach(x => x.classList.remove('down')); });
+['nStage'].forEach(id => document.getElementById(id).addEventListener('click', focusTin));
+document.querySelector('[data-screen=drill] .stage').addEventListener('click', focusTin);
+
+/* ---------- 視窗失去焦點時暫停 ---------- */
+(function(){
+  const pill = $('#focusPill');
+  const off = () => { if (!$('#signWrap').hidden || !$('#certWrap').hidden) return; pill.hidden = false; pill.textContent = (D||N) ? '遊戲暫停中：點一下這裡繼續' : '點一下這裡，讓鍵盤連上遊戲'; if (paused==null) paused = performance.now(); kbEl.querySelectorAll('.down').forEach(x => x.classList.remove('down')); };
+  const on = () => { pill.hidden = true; if (paused!=null){ const d = performance.now() - paused; paused = null; if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; } } focusTin(); };
+  window.addEventListener('blur', off); window.addEventListener('focus', on);
+  pill.onclick = () => { window.focus(); on(); focusTin(); };
+})();
+
+/* ---------- 獎狀（老師 2026-10-30：取消下課自動頒獎；連點左上角黃色鍵帽 3 下，依目前的紀錄跳出獎狀） ---------- */
+function showAward(preview){
+  const el = $('#certIn');
+  if (!SET){ el.innerHTML = '<p class="cert-empty">還沒有選練習範圍。</p>'; $('#certWrap').hidden = false; return; }
+  const ti = titleIndex();
+  if (ti < 0 && !preview){
+    el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-empty">今天還差一點點！<br>把第一關完成 ${L1.plays} 次，就能成為「${TITLES[0]}」。</p>`;
+  } else {
+    const t = TITLES[Math.max(0, ti)], S = SETS[SET];
+    const nin = NINJA_ORDER.filter(id => P.ninja[id].best || P.ninja[id].cleared).map(id => `<div>${P.ninja[id].cleared ? '🏆 ' : ''}${PK.ninjaName}${NINJA[id].name}・最高 ${P.ninja[id].best} 分</div>`).join('');
+    el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-sub">獎　狀</p>
+      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(AWARD_LINE[Math.max(0,ti)])}，<br>特頒此狀，恭喜成為</p>
+      <h2 class="cert-title">${t}</h2>
+      <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div><div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>${nin}</div>
+      <p class="cert-date">${todayStr()}${preview && ti < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
+  }
+  $('#certWrap').hidden = false; Sound.win();
+}
+$('#certClose').onclick = () => { $('#certWrap').hidden = true; };
+$('#certPrint').onclick = () => window.print();
+/* 小機關：連點左上角的黃色鍵帽 3 下（2 秒內）。遊戲進行中鍵帽會收起來，所以只會在選單、結算畫面叫出來。
+   每次都依「現在的紀錄」產生，之後再練習、關掉再打開，下次叫出來的獎狀也會跟著更新 */
+(function(){
+  let n = 0, t = 0;
+  document.querySelector('.tagk').addEventListener('click', () => {
+    n++; clearTimeout(t); t = setTimeout(() => n = 0, 2000);
+    if (n >= 3 && !(screen==='drill' || screen==='ninja') && $('#signWrap').hidden){ n = 0; showAward(false); }
+  });
+})();
+
+/* ---------- 老師隱藏設定：連點標題 5 下 ---------- */
+(function(){
+  let clicks = 0, t = 0;
+  $('#title').addEventListener('click', () => {
+    clicks++; clearTimeout(t); t = setTimeout(() => clicks = 0, 2000);
+    if (clicks >= 5 && screen==='home'){ clicks = 0; renderPanel(); $('#tpanel').hidden = false; $('#tpanel').scrollIntoView({behavior:'smooth'}); }
+  });
+  function renderPanel(){
+    $('#tpanel').innerHTML = `<div class="row"><b>老師設定</b>
+      <button class="btn sm" type="button" id="tAward">預覽獎狀</button>
+      <button class="btn sm" type="button" id="tUnlock">解鎖全部</button>
+      <button class="btn sm" type="button" id="tReset">清除這台電腦的紀錄</button>
+      <button class="btn sm" type="button" id="tClose">關閉</button></div>
+      <p class="tnote">叫出獎狀：連點左上角黃色鍵帽 3 下。老師示範：網址後面加 #demo。要指定${PK.unit}，請到「中英文打字修練 → ${PK.setupName}」（${PK.setup}）。</p>`;
+    $('#tAward').onclick = () => showAward(true);
+    $('#tUnlock').onclick = () => { P.unlock = true; save(); renderHome(); };
+    let arm = false;
+    $('#tReset').onclick = () => {
+      if (!arm){ arm = true; $('#tReset').textContent = '再按一次確認（清除所有範圍）'; setTimeout(() => { arm = false; const b = $('#tReset'); if (b) b.textContent = '清除這台電腦的紀錄'; }, 3000); return; }
+      try{ Object.keys(localStorage).filter(k => k.indexOf(PK.store)===0).forEach(k => localStorage.removeItem(k)); }catch(e){}
+      loadSet(SET); $('#tReset').textContent = '已清除'; renderHome();
+    };
+    $('#tClose').onclick = () => $('#tpanel').hidden = true;
+  }
+})();
+
+/* ---------- 環境檢測（標點，老師 2026-10-29）：開始前確認輸入法是中文、會用 Ctrl＋符號鍵、知道要按 Enter ---------- */
+const CHK = [{ch:'，', how:'Ctrl ＋ ,'}, {ch:'？', how:'Ctrl ＋ Shift ＋ /'}];
+let CHECKED = false, chkI = 0, chkComp = false;
+function afterSign(){ show(KIND === 'punc' && !CHECKED ? 'check' : SET ? 'home' : 'sets'); }
+function chkDraw(){
+  $('#chkList').innerHTML = CHK.map((c,i) => `<div class="chk-item ${i<chkI?'ok':i===chkI?'now':''}"><b>${c.ch}</b><span>${PUNC[c.ch].name}：${c.how}</span></div>`).join('');
+  $('#chkGo').disabled = chkI < CHK.length;
+}
+function chkStart(){
+  chkI = 0; chkComp = false; const i = $('#chkIn'); i.value = ''; i.className = 'tin'; i.disabled = false; compLine(i, false);
+  $('#chkMsg').className = 'thint'; $('#chkMsg').textContent = '先點一下格子，再打第一個符號';
+  $('#chkSkip').hidden = !DEMO; chkDraw(); setTimeout(() => { if (screen==='check' && $('#signWrap').hidden) i.focus(); }, 60);
+}
+function chkSay(kind, t){ const m = $('#chkMsg'), i = $('#chkIn'); m.className = 'thint' + (kind==='bad' ? ' bad' : kind==='warn' ? ' warn' : ''); m.textContent = t; i.className = 'tin' + (chkComp ? ' comp' : '') + (kind==='bad' ? ' bad' : kind==='warn' ? ' ime' : ''); }
+function chkTest(){
+  const i = $('#chkIn'), v = i.value.replace(/\s+/g,''); if (!v || chkI >= CHK.length) return;
+  const want = CHK[chkI].ch;
+  if (v === want){
+    Sound.good(); chkI++; i.value = ''; chkDraw();
+    if (chkI >= CHK.length){ CHECKED = true; saveSess(); i.disabled = true; chkSay('', '✓ 輸入法設定好了！按「開始練習！」'); Sound.win(); $('#chkGo').focus(); }
+    else chkSay('', `✓ 很好！再打「${CHK[chkI].ch}」（${CHK[chkI].how}）`);
+    return;
+  }
+  Sound.bad();
+  if (/[,.;:?!'"]/.test(v)) chkSay('bad', '打出來是半形（英文）符號：右下角要是「中」，按一下 Shift 切換；按 Backspace 刪掉再打');
+  else if (/[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/.test(v)) chkSay('bad', '出現注音了：要先按住 Ctrl，再按符號鍵；按 Backspace 刪掉再打');
+  else if (/[A-Za-z]/.test(v)) chkSay('bad', '打出英文字母了：右下角要是「中」，再按住 Ctrl 按符號鍵；按 Backspace 刪掉再打');
+  else if (/[，。、；：？！]/.test(v)) chkSay('bad', `打出來的不是「${want}」：看清楚要按哪個鍵（${CHK[chkI].how}）；按 Backspace 刪掉再打`);
+  else chkSay('bad', `要打的是「${want}」（${CHK[chkI].how}）；按 Backspace 刪掉再打`);
+}
+(function(){
+  const i = $('#chkIn');
+  i.addEventListener('compositionstart', () => { chkComp = true; i.classList.add('comp'); chkSay('', '看到橘色虛線了！按 Enter 送出'); setTimeout(() => compLine(i, chkComp), 0); });
+  i.addEventListener('compositionupdate', () => setTimeout(() => compLine(i, chkComp), 0));
+  i.addEventListener('compositionend', () => { chkComp = false; i.classList.remove('comp'); compLine(i, false); setTimeout(chkTest, 0); });
+  i.addEventListener('input', e => { if (e.isComposing || chkComp){ compLine(i, true); return; } if (!i.value){ chkSay('', chkI < CHK.length ? `打「${CHK[chkI].ch}」（${CHK[chkI].how}）` : ''); return; } chkTest(); });
+  i.addEventListener('keydown', e => { if (e.key === 'Enter' && !chkComp && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); chkTest(); } });
+  $('#chkGo').onclick = () => { Sound.init(); show(SET ? 'home' : 'sets'); };
+  $('#chkSkip').onclick = () => { CHECKED = true; show(SET ? 'home' : 'sets'); };
+  $('#reCheck').onclick = () => { CHECKED = false; saveSess(); show('check'); };
+})();
+
+/* ---------- 啟動 ---------- */
+document.querySelector('.tagk').textContent = PK.tag; $('#title').textContent = PK.app; $('#verBadge').textContent = PK.badge;
+document.querySelector('.intro h2').textContent = PK.intro[0]; document.querySelector('.intro p').textContent = PK.intro[1];
+document.querySelector('.tlabel').innerHTML = PK.tlabel;
+if (DEMO){ $('#verBadge').classList.add('demo'); document.title += '・示範'; WHO = {code:'', text:'老師示範'}; renderWho(); }
+if (ONE) document.querySelectorAll('.navout').forEach(el => { el.hidden = true; el.classList.add('gone'); });
+if (SETS.cus) loadSet('cus');
+const resumed = loadSess();
+afterSign();
+if (!DEMO && !resumed) openSignin();
+/* 練習或遊戲進行中不小心按到關閉／重新整理：瀏覽器先問一次（這一局還沒結束，關掉這一局要重玩） */
+window.addEventListener('beforeunload', e => { if (!DEMO && (screen==='drill' || screen==='ninja')){ e.preventDefault(); e.returnValue = ''; } });
+</script>
+</body>
+</html>

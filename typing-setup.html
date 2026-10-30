@@ -60,6 +60,8 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
 .msg.ok{color:var(--good)}
 .msg.err{color:var(--bad)}
 .sublinks{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn[aria-pressed=true]{background:var(--hl);box-shadow:inset 0 -4px 0 #D9A400,3px 3px 0 var(--ink)}
+.row .btn[aria-pressed=true]::before{content:'✓ '}
 </style>
 </head>
 <body>
@@ -73,7 +75,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
   <nav class="flow" aria-label="設定流程">
     <a href="#s1" id="f1"><b>1</b>選字母<small>至少 2 個</small></a><span class="arr">→</span>
     <a href="#s2" id="f2"><b>2</b>練習目標<small>當作網頁名稱</small></a><span class="arr">→</span>
-    <a href="#s3" id="f3"><b>3</b>其他設定<small>頒獎時間、班級座號、姓名</small></a><span class="arr">→</span>
+    <a href="#s3" id="f3"><b>3</b>其他設定<small>班級座號、姓名、獎狀</small></a><span class="arr">→</span>
     <a href="#s4" id="f4"><b>4</b>預覽<small>看學生畫面</small></a><span class="arr">→</span>
     <a href="#s5" id="f5"><b>5</b>發給學生<small>連結或捷徑檔</small></a>
   </nav>
@@ -88,7 +90,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
       <button class="btn" type="button" data-p="qwertyuiopasdfghjklzxcvbnm">全部</button>
       <button class="btn" type="button" data-p="">清空</button></div>
     <div class="kb" id="kb"></div>
-    <p class="note">已選：<b id="picked">—</b>　點鍵帽可以加入或取消。</p>
+    <p class="note">已選：<b id="picked">—</b>　點鍵帽可以加入或取消；快速選可以複選，再按一次就取消。</p>
   </section>
 
   <section class="card step" id="s2">
@@ -102,9 +104,6 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
   <section class="card step" id="s3">
     <h2><span class="n">3</span>其他設定</h2>
     <div class="grid3">
-      <label class="field">下課自動頒獎時間
-        <span class="typein time"><input type="text" id="end" inputmode="numeric" maxlength="5" placeholder="11:59" value="11:59" list="endList"></span>
-        <small>直接打數字（例：1159 或 11:59），或從清單選。</small></label>
       <label class="field">班級最多幾班
         <span class="typein num"><input type="text" id="classes" inputmode="numeric" maxlength="2" value="20" list="clsList"></span>
         <small>直接打數字，或從清單選。</small></label>
@@ -112,12 +111,12 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
         <span class="typein num"><input type="text" id="seats" inputmode="numeric" maxlength="2" value="40" list="seatList"></span>
         <small>直接打數字，或從清單選。</small></label>
     </div>
-    <datalist id="endList"><option value="08:40"><option value="09:30"><option value="10:20"><option value="11:10"><option value="11:59"><option value="14:10"><option value="15:00"><option value="15:50"></datalist>
     <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
     <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
     <aside class="tip-block" id="nameTip" hidden><b>📣 給老師（學生畫面不會出現這段）</b><ul><li>中文或英文名字都可以，不限定輸入法。</li><li>名字可以空白：不會打的學生，口頭提醒他直接按 Enter 就能進入，獎狀會改印座號。</li></ul></aside>
+    <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>不會自動頒獎。要發獎狀時，請學生<b>連點畫面左上角的黃色鍵帽 3 下</b>，就會跳出目前的獎狀，可以列印。</li><li>獎狀依「現在的紀錄」產生：叫出獎狀後再練習（或關掉再打開），下次叫出來的獎狀也會跟著更新。</li></ul></aside>
     <p class="msg err" id="msg3"></p>
   </section>
 
@@ -126,7 +125,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <dl class="sum">
       <dt>練習目標</dt><dd id="sumGoal">—</dd>
       <dt>字母</dt><dd id="sumKeys">—</dd>
-      <dt>下課頒獎</dt><dd id="sumEnd">—</dd>
+      <dt>獎狀</dt><dd>學生連點左上角黃色鍵帽 3 下</dd>
       <dt>班級座號</dt><dd id="sumCls">—</dd>
       <dt>學生姓名</dt><dd id="sumName">—</dd>
     </dl>
@@ -177,14 +176,13 @@ function normTime(v){
 }
 const numIn = (id, lo, hi, d) => { const n = parseInt($('#'+id).value, 10); return n >= lo && n <= hi ? n : null; };
 function state(){
-  const end = normTime($('#end').value), c = numIn('classes',1,30), s = numIn('seats',1,60);
-  return {keys:keysNow(), goal:$('#goal').value.trim(), end, c, s, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && end && c && s};
+  const c = numIn('classes',1,30), s = numIn('seats',1,60);
+  return {keys:keysNow(), goal:$('#goal').value.trim(), c, s, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && c && s};
 }
 function params(st, demo){
   const p = new URLSearchParams();
   p.set('keys', st.keys.join(''));
   if (st.goal) p.set('goal', st.goal);
-  if (st.end !== '11:59') p.set('end', st.end);
   if (st.c !== 20) p.set('classes', st.c);
   if (st.s !== 40) p.set('seats', st.s);
   if (st.nm) p.set('nm', '1');
@@ -193,32 +191,33 @@ function params(st, demo){
 }
 const linkOf = (st, demo) => base() + '#' + params(st, demo);
 function render(){
-  document.querySelectorAll('.k').forEach(b => b.setAttribute('aria-pressed', picked.has(b.dataset.k)));
+  document.querySelectorAll('.k').forEach(b => b.setAttribute('aria-pressed', picked.has(b.dataset.k))); syncPresets();
   const st = state(), k = st.keys;
   $('#picked').textContent = k.length ? k.join(' ').toUpperCase() + `（${k.length} 個）` : '—';
   $('#ok1').hidden = k.length < 2;
   const errs = [];
   if (k.length < 2) errs.push('第 1 步：至少選 2 個字母');
-  if (!st.end) errs.push('頒獎時間要像 11:59 或 1159');
   if (!st.c) errs.push('班級要是 1～30');
   if (!st.s) errs.push('座號要是 1～60');
   $('#msg3').textContent = errs.filter(e => !e.startsWith('第 1')).join('；');
   $('#sumGoal').textContent = st.goal || '老師指定（沒有填目標）';
   $('#sumKeys').textContent = k.length ? k.join(' ').toUpperCase() : '還沒選';
-  $('#sumEnd').textContent = st.end || '時間格式不對';
   $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
   ['open','demo','copy','shortcut'].forEach(id => $('#'+id).disabled = !st.ok);
   $('#link').textContent = st.ok ? linkOf(st) : '設定完成後才會出現連結';
   const m = $('#msg'); if (!st.ok){ m.className = 'msg err'; m.textContent = '還不能發給學生：' + errs.join('；'); } else if (m.classList.contains('err')){ m.className = 'msg'; m.textContent = ''; }
-  $('#f1').classList.toggle('done', k.length >= 2); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.end && st.c && st.s));
+  $('#f1').classList.toggle('done', k.length >= 2); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s));
 }
 $('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; picked.has(b.dataset.k) ? picked.delete(b.dataset.k) : picked.add(b.dataset.k); render(); });
-document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { picked.clear(); b.dataset.p.split('').forEach(c => picked.add(c)); render(); });
-['goal','end','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
+/* 快速選可以複選（老師 2026-10-30）：按一下加入這一組、再按一次取消；「清空」全部取消 */
+const presetKeys = b => b.dataset.p ? b.dataset.p.split(',').length > 1 ? b.dataset.p.split(',') : [...b.dataset.p] : [];
+document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const ks = presetKeys(b);
+  if (!ks.length) picked.clear(); else if (ks.every(c => picked.has(c))) ks.forEach(c => picked.delete(c)); else ks.forEach(c => picked.add(c)); render(); });
+function syncPresets(){ document.querySelectorAll('[data-p]').forEach(b => { const ks = presetKeys(b); if (ks.length) b.setAttribute('aria-pressed', ks.every(c => picked.has(c))); }); }
+['goal','classes','seats'].forEach(id => $('#'+id).addEventListener('input', render));
 $('#nameOn').addEventListener('change', render);
 $('#nameOn').addEventListener('change', () => { $('#nameTip').hidden = !$('#nameOn').checked; });
-$('#end').addEventListener('blur', () => { const t = normTime($('#end').value); if (t) $('#end').value = t; render(); });
 ['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
 document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));
 function say(t, ok){ const m = $('#msg'); m.className = 'msg' + (ok ? ' ok' : ''); m.textContent = t; }
