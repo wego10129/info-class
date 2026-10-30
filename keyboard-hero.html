@@ -210,6 +210,8 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .thint.bad{color:var(--bad)}
 .word.dim{opacity:.55}
 @media (max-height:700px){ .kb-case{display:none!important} }
+/* 重要按鍵練習：一定顯示虛擬鍵盤（老師 2026-10-30）；畫面矮時鍵盤縮小 */
+@media (max-height:700px){ html[data-kind=key] .kb-case:not([hidden]){display:block!important;width:min(100%,calc(clamp(80px,24vh,200px)*3.6))} }
 
 /* 鍵盤（字母三排） */
 .kb-case{flex:none;background:var(--case);border:3px solid var(--ink);border-radius:18px;padding:1.2%;box-shadow:5px 5px 0 var(--ink);width:min(100%,calc(clamp(110px,22vh,200px)*3.6));margin-inline:auto}
@@ -317,8 +319,8 @@ html[data-kind=key] #nStage>.scene,html[data-kind=key] #player,html[data-kind=ke
 .virus img{width:100%;display:block;filter:hue-rotate(var(--h,0deg))}
 .virus.walk img{animation:wobble .5s ease-in-out infinite alternate}
 @keyframes wobble{to{rotate:8deg}}
-.virus.tgt img{filter:hue-rotate(var(--h,0deg)) drop-shadow(0 0 5px #FFE066) drop-shadow(0 0 10px #FFE066) drop-shadow(0 0 16px #FFB800)}
-.virus.tgt::after{content:'▼ 先處理';position:absolute;top:-1.4em;font:900 13px var(--f-body);color:#fff;background:var(--ink);border-radius:999px;padding:0 8px;white-space:nowrap}
+
+
 .virus.die{transition:transform .3s,opacity .3s!important;transform:translate(-50%,-50%) scale(.1) rotate(180deg)!important;opacity:0}
 .virus.grab{transition:transform .3s!important;transform:translate(-50%,-50%) scale(1.6)!important;opacity:.6}
 .virus .vtag{font:900 clamp(14px,2.4vh,20px) var(--f-body);margin-top:-6px;padding:0 10px;border:2px solid var(--ink);border-radius:10px;background:var(--hl);box-shadow:0 3px 0 var(--ink);white-space:nowrap}
@@ -617,9 +619,9 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
    time[關卡]＝病毒爬到電腦中間的秒數；multi＝同時最多幾隻（從四面八方來，電腦畫面顯示最前面那一隻的情境）
    tag＝病毒舉鍵名牌；glowAfter＝幾秒後鍵盤亮出答案（null＝不亮）；blank＝鍵帽沒有字 */
 if (KIND === 'key') Object.assign(NINJA, {
-  novice:{name:'小兵',     goal:10, lives:3, tag:true,  glowAfter:null, blank:false, len:[[1,1],[1,1],[1,1]],             time:[8,7.5,7],           multi:[1,1,1],       gap:2.5, tip:'病毒舉著鍵名牌'},
-  brave: {name:'勇士',     goal:20, lives:3, tag:false, glowAfter:3,    blank:false, len:[[1,1],[1,1],[1,1],[1,1],[1,1]], time:[6.5,6.1,5.7,5.3,5],  multi:[1,1,1,1,1],   gap:2,   tip:'病毒變快、沒有鍵名，3 秒後鍵盤亮燈'},
-  master:{name:'傳奇勇者', goal:30, lives:3, tag:false, glowAfter:null, blank:true,  len:[[1,1],[1,1],[1,1],[1,1],[1,1]], time:[6,5.6,5.2,4.9,4.6],  multi:[1,2,2,2,3],   gap:1.6, tip:'病毒更快、一次好幾隻、鍵帽沒有字'},
+  novice:{name:'小兵',     goal:10, lives:3, tag:true,  glowAfter:0,    blank:false, len:[[1,1],[1,1],[1,1]],             time:[8,7.5,7],           multi:[1,1,1],       gap:2.5, tip:'病毒舉著鍵名牌，鍵盤亮燈'},
+  brave: {name:'勇士',     goal:20, lives:3, tag:false, glowAfter:3,    blank:false, len:[[1,1],[1,1],[1,1],[1,1],[1,1]], time:[6.5,6.1,5.7,5.3,5],  multi:[1,1,1,2,2],   gap:2,   tip:'病毒變快、沒有鍵名，3 秒後鍵盤亮燈；後面的關卡一次 2 隻'},
+  master:{name:'傳奇勇者', goal:30, lives:3, tag:false, glowAfter:null, blank:true,  len:[[1,1],[1,1],[1,1],[1,1],[1,1]], time:[5.6,5.2,4.8,4.5,4.2],  multi:[2,2,3,3,4],   gap:1.4, tip:'病毒最快、一次好幾隻（最後一關 4 隻）、鍵帽沒有字'},
 });
 const VSTAGES = ['電腦有點怪怪的…','病毒變多了！','警報！警報！','紅色危險！','最終防線！'];
 const NINJA_ORDER = ['novice','brave','master'];
@@ -1431,8 +1433,8 @@ function vStart(id){
   show('ninja'); kb.blank(C.blank); $('#kMon2').hidden = false; $('#kMon2').dataset.stage = '1';
   kS2.load({lines:[''], c:0}); $('#vLayer').innerHTML = ''; setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, (C.tag ? '病毒舉著鍵名牌衝過來了！' : C.glowAfter != null ? `病毒變快了，沒有鍵名！想不出來時，${C.glowAfter} 秒後鍵盤會亮燈。` : '病毒更快、一次好幾隻，從四面八方衝過來！鍵帽沒有字。')
-    + `看電腦畫面的狀況，按下可以解決的鍵（發光的病毒先處理）。擊退 ${C.goal} 隻就通關，被病毒碰到電腦才扣命。`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, (C.tag ? '病毒舉著鍵名牌衝過來了！鍵盤也會亮燈。' : C.glowAfter != null ? `病毒變快了，沒有鍵名！想不出來時，${C.glowAfter} 秒後鍵盤會亮燈；後面的關卡會一次來 2 隻。` : '病毒最快、一次好幾隻，從四面八方衝過來！鍵帽沒有字。')
+    + `看電腦畫面的狀況，按下可以解決的鍵。擊退 ${C.goal} 隻就通關，被病毒碰到電腦才扣命。`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; cancelAnimationFrame(loop); loop = requestAnimationFrame(vTick); });
 }
 function vTarget(){ return N.es[0] || null; }
@@ -1440,7 +1442,7 @@ function vSyncScene(){
   const t = vTarget();
   N.es.forEach((e,i) => e.el.classList.toggle('tgt', i === 0));
   if (!t){ N.sceneTok = null; return; }
-  if (N.sceneTok !== t){ N.sceneTok = t; kS2.load(situation(KEYDEF[t.tok].id)); kb.clear(); }
+  if (N.sceneTok !== t){ N.sceneTok = t; t.glowed = null; kS2.load(situation(KEYDEF[t.tok].id)); kb.clear(); }
 }
 function vSpawn(){
   const C = N.C, keys = KEYS(), tok = keys.length > 1 ? pickWeighted(keys, N.lastTok) : keys[0];
@@ -1462,8 +1464,8 @@ function vTick(now){
     if (N.es.length < maxNow() && N.kills + N.es.length < N.C.goal && (N.es.length === 0 || now >= N.nextAt) && now >= N.holdUntil0){
       if (vSpawn()) N.nextAt = now + N.C.gap*1000;
     }
-    const t = vTarget();
-    if (t && N.C.glowAfter != null && !t.glowed && now - t.start >= N.C.glowAfter*1000){ t.glowed = true; kb.glow(t.tok); }
+    const t = vTarget();   /* 亮燈提示：小兵＝馬上亮、勇士＝3 秒後亮、傳奇勇者＝不亮（老師 2026-10-30） */
+    if (t && N.C.glowAfter != null && t.glowed !== t.tok && now - t.start >= N.C.glowAfter*1000){ t.glowed = t.tok; kb.glow(t.tok); }
     for (const e of N.es.slice()){
       const p = Math.min(1, (now - e.start) / (e.dur*1000));
       e.el.style.left = (e.from.x + (e.to.x - e.from.x)*p) + '%'; e.el.style.top = (e.from.y + (e.to.y - e.from.y)*p) + '%';
