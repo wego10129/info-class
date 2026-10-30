@@ -304,7 +304,7 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
     <div id="hud" class="hud" hidden></div>
     <div class="row">
       <button class="btn sm" id="soundBtn" type="button">聲音：開</button>
-      <button class="btn sm" id="setsBtn" type="button" hidden>換練習範圍</button>
+      <button class="btn sm navout" id="setsBtn" type="button" hidden>換練習範圍</button>
       <button class="btn sm" id="homeBtn" type="button" hidden>回關卡選單</button>
     </div>
   </header>
@@ -313,7 +313,7 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
       <div class="intro"><h2>選擇要練習的字母</h2><p>先選一排，三個關卡都會用這一排的字母出題。每一排的紀錄分開算。</p></div>
       <div id="demoBar1"></div>
       <div class="sets" id="sets"></div>
-      <nav class="footnav"><a class="btn sm" href="typing.html">⬅ 回上頁</a><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
+      <nav class="footnav"><a class="btn sm navout" href="typing.html">⬅ 回上頁</a><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="check" hidden>
       <div class="card check">
@@ -324,13 +324,13 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
         <p class="thint" id="chkMsg"></p>
         <div class="r-btns"><button class="btn primary" type="button" id="chkGo" disabled>開始練習！</button><button class="btn" type="button" id="chkSkip" hidden>跳過（老師示範）</button></div>
       </div>
-      <nav class="footnav"><a class="btn sm" href="typing.html">⬅ 回上頁</a><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
+      <nav class="footnav"><a class="btn sm navout" href="typing.html">⬅ 回上頁</a><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="home" hidden>
       <div id="demoBar2"></div>
       <div id="entries" class="entries"></div>
       <div id="tpanel" class="card tpanel" hidden></div>
-      <nav class="footnav"><button class="btn sm" type="button" id="backSets">⬅ 換練習範圍</button><button class="btn sm" type="button" id="reCheck" hidden>🔍 再檢查一次輸入法</button><a class="btn sm" href="index.html">🏠 回目錄</a></nav>
+      <nav class="footnav"><button class="btn sm navout" type="button" id="backSets">⬅ 換練習範圍</button><button class="btn sm" type="button" id="reCheck" hidden>🔍 再檢查一次輸入法</button><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
     </section>
     <section data-screen="drill" hidden>
       <div class="stage"><div class="dojo" id="dojo" data-tier="1"><div class="scroll"><div class="tierbar" id="tier" hidden></div><p class="lbl" id="dLbl"></p><div class="target" id="target"></div><p class="how" id="dHow"></p></div></div>
@@ -361,10 +361,10 @@ html[data-kind=punc] .word,html[data-kind=punc] .target,html[data-kind=punc] .ti
 <div id="signWrap" class="modal-wrap" hidden><form class="card signin" id="signForm" autocomplete="off">
   <h2>👋 輸入班級座號</h2>
   <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
-  <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼" placeholder="30101">
+  <input id="sCode" inputmode="numeric" maxlength="5" aria-label="班級座號碼">
   <p class="preview" id="sPrev"></p>
-  <label class="nmfield" id="sNameBox" hidden><span>你的名字</span>
-    <input id="sName" maxlength="20" aria-label="姓名" placeholder="王小明"></label>
+  <label class="nmfield" id="sNameBox" hidden><span>你的名字<small>例：王小明</small></span>
+    <input id="sName" maxlength="20" aria-label="姓名"></label>
   <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
 </form></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
@@ -473,6 +473,9 @@ const qKeys = [...new Set([...(Q.get('keys')||'').toLowerCase()].filter(c => ALL
 const GOAL = (Q.get('goal') || Q.get('name') || '').trim().slice(0, 20);
 document.title = PK.app;
 if (qKeys.length >= 2){ SETS.cus = {name: GOAL || '老師指定', keys:qKeys, color:'var(--c-cus)'}; if (GOAL) document.title = GOAL === PK.app ? GOAL : GOAL + '・' + PK.app; }
+/* 單頁練習（老師 2026-10-30）：從教師設定頁的連結／捷徑檔打開（網址有指定字母或符號）＝發給學生的網頁，
+   只有這一組練習，不顯示「回上頁／回目錄／換練習範圍」 */
+const ONE = !!SETS.cus;
 const dispKeys = k => [...k.toUpperCase()].join(' ');
 
 /* ---------- 小工具 ---------- */
@@ -527,12 +530,26 @@ $('#signForm').addEventListener('submit', e => {
   if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
   const nm = CFG.nameOn ? $('#sName').value.trim().replace(/\s+/g,' ').slice(0,20) : '';   /* 中文或英文名字都可以 */
   if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }   /* 有名字：「三年一班 王小明」（老師 2026-10-29） */
-  WHO = r; $('#signWrap').hidden = true; renderWho(); Sound.init(); afterSign();
+  WHO = r; $('#signWrap').hidden = true; renderWho(); saveSess(); Sound.init(); afterSign();
 });
 $('#sNameBox').hidden = !CFG.nameOn;
 function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name ? WHO.name : ''; $('#sPrev').textContent = WHO ? parseCode(WHO.code).text || '' : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
 function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
 $('#who').onclick = () => { if (screen==='home' || screen==='sets') openSignin(); };
+
+/* ---------- 簽到、輸入法檢測、正在練的範圍（老師 2026-10-30）：關掉再打開時接著練，不用重新簽到、重新檢查
+   存在這台電腦的瀏覽器（和練習紀錄一起），老師按「清除這台電腦的紀錄」一起清掉；示範模式不存 ---------- */
+const SESS_KEY = PK.store + 'sess';
+function saveSess(){ if (!DEMO) store.set(SESS_KEY, {code: WHO ? WHO.code : '', name: WHO && WHO.name ? WHO.name : '', checked: CHECKED, set: SET}); }
+function loadSess(){
+  if (DEMO) return false; const s = store.get(SESS_KEY, null); if (!s) return false;
+  if (s.set && SETS[s.set] && !ONE) loadSet(s.set);
+  CHECKED = !!s.checked;
+  const r = parseCode(s.code || ''); if (r.err !== undefined) return false;
+  const nm = CFG.nameOn ? String(s.name || '').slice(0,20) : '';
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }
+  WHO = r; renderWho(); return true;
+}
 
 /* ---------- 紀錄（每一排分開；課堂內紀錄存 localStorage，規格書 2.2） ---------- */
 const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, best:null, stars:0, crown:false, hist:[]},
@@ -618,7 +635,7 @@ function show(name){
   document.querySelectorAll('[data-screen]').forEach(s => s.hidden = s.dataset.screen !== name);
   $('#hud').hidden = !(name==='drill' || name==='ninja');
   $('#homeBtn').hidden = !(name==='drill' || name==='ninja' || name==='result');
-  $('#setsBtn').hidden = name !== 'home';
+  $('#setsBtn').hidden = ONE || name !== 'home';
   $('#kbZone').hidden = !(name==='drill' || name==='ninja');
   $('#typeZone').hidden = !(name==='drill' || name==='ninja');
   tinReset(); kb.clear(); kb.blank(false); if (SET) kb.setIn(KEYS());
@@ -628,6 +645,7 @@ function show(name){
   if (name==='home') renderHome();
   if (name==='check') chkStart();
   $('#reCheck').hidden = KIND !== 'punc';
+  document.querySelectorAll('.footnav').forEach(n => n.hidden = ![...n.children].some(c => !c.hidden));
 }
 $('#homeBtn').onclick = () => { stopAll(); show('home'); };
 $('#setsBtn').onclick = () => show('sets');
@@ -643,7 +661,7 @@ function renderSets(){
       <span class="st">${ti >= 0 ? `目前稱號：${TITLES[ti]}` : p && p.l1 && p.l1.plays ? `第一關完成 ${Math.min(p.l1.plays, L1.plays)}/${L1.plays} 次` : '還沒開始'}</span></button>`;
   }).join('');
 }
-$('#sets').addEventListener('click', e => { const b = e.target.closest('[data-set]'); if (!b) return; Sound.init(); loadSet(b.dataset.set); show('home'); });
+$('#sets').addEventListener('click', e => { const b = e.target.closest('[data-set]'); if (!b) return; Sound.init(); loadSet(b.dataset.set); saveSess(); show('home'); });
 
 function card(num, color, deco, title, inner, lock){
   return `<div class="entry ${lock?'locked':''}"><div class="entry-band" style="background:${color}"><span class="num">${num}</span><span class="deco">${deco.map(d=>`<span>${H(d)}</span>`).join('')}</span></div>
@@ -1188,7 +1206,7 @@ function chkTest(){
   const want = CHK[chkI].ch;
   if (v === want){
     Sound.good(); chkI++; i.value = ''; chkDraw();
-    if (chkI >= CHK.length){ CHECKED = true; i.disabled = true; chkSay('', '✓ 輸入法設定好了！按「開始練習！」'); Sound.win(); $('#chkGo').focus(); }
+    if (chkI >= CHK.length){ CHECKED = true; saveSess(); i.disabled = true; chkSay('', '✓ 輸入法設定好了！按「開始練習！」'); Sound.win(); $('#chkGo').focus(); }
     else chkSay('', `✓ 很好！再打「${CHK[chkI].ch}」（${CHK[chkI].how}）`);
     return;
   }
@@ -1207,7 +1225,7 @@ function chkTest(){
   i.addEventListener('keydown', e => { if (e.key === 'Enter' && !chkComp && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); chkTest(); } });
   $('#chkGo').onclick = () => { Sound.init(); show(SET ? 'home' : 'sets'); };
   $('#chkSkip').onclick = () => { CHECKED = true; show(SET ? 'home' : 'sets'); };
-  $('#reCheck').onclick = () => { CHECKED = false; show('check'); };
+  $('#reCheck').onclick = () => { CHECKED = false; saveSess(); show('check'); };
 })();
 
 /* ---------- 啟動 ---------- */
@@ -1215,9 +1233,13 @@ document.querySelector('.tagk').textContent = PK.tag; $('#title').textContent = 
 document.querySelector('.intro h2').textContent = PK.intro[0]; document.querySelector('.intro p').textContent = PK.intro[1];
 document.querySelector('.tlabel').innerHTML = PK.tlabel;
 if (DEMO){ $('#verBadge').classList.add('demo'); document.title += '・示範'; WHO = {code:'', text:'老師示範'}; renderWho(); }
+if (ONE) document.querySelectorAll('.navout').forEach(el => { el.hidden = true; el.classList.add('gone'); });
 if (SETS.cus) loadSet('cus');
+const resumed = loadSess();
 afterSign();
-if (!DEMO) openSignin();
+if (!DEMO && !resumed) openSignin();
+/* 練習或遊戲進行中不小心按到關閉／重新整理：瀏覽器先問一次（這一局還沒結束，關掉這一局要重玩） */
+window.addEventListener('beforeunload', e => { if (!DEMO && (screen==='drill' || screen==='ninja')){ e.preventDefault(); e.returnValue = ''; } });
 </script>
 </body>
 </html>
