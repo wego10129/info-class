@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>鍵盤小勇士・教師設定</title>
+<title>重要按鍵練習・教師設定</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
@@ -70,9 +70,9 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
 <body>
 <div class="wrap">
   <header>
-    <p class="crumb"><a href="index.html">資訊課練習遊戲</a> ／ 鍵盤小勇士・教師設定</p>
-    <div class="brand"><span class="tag">Esc</span><h1>鍵盤小勇士・教師設定</h1></div>
-    <p class="sub">照下面的步驟設定，最後把連結或捷徑檔發給學生。設定裡只有按鍵和練習目標，沒有任何學生資料。<br>學生的練習：第一關單一按鍵（正數計時）→ 第二關譜面分歧 → 第三關病毒來襲。</p>
+    <p class="crumb"><a href="index.html">資訊課練習遊戲</a> ／ 重要按鍵練習・教師設定</p>
+    <div class="brand"><span class="tag">Esc</span><h1>重要按鍵練習・教師設定</h1></div>
+    <p class="sub">照下面的步驟設定，最後把連結或捷徑檔發給學生。設定裡只有按鍵和練習目標，沒有任何學生資料。<br>學生的練習：第一關單一按鍵（看電腦畫面的情境按鍵，正數計時，完成 3 次）→ 第二關病毒來襲（小兵 → 勇士 → 傳奇勇者）。</p>
   </header>
 
   <nav class="flow" aria-label="設定流程">
@@ -167,7 +167,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
 </div>
 <script>
 const $ = s => document.querySelector(s);
-/* 每一個特殊鍵用一個符號代表（和遊戲 keyboard-hero.html 的 KEYDEF 一樣），網址裡放的是這些符號 */
+/* 每一個重要按鍵用一個符號代表（和遊戲 keyboard-hero.html 的 KEYDEF 一樣），網址裡放的是這些符號 */
 const KEYN = {'⎋':'Esc','⇥':'Tab','⇪':'Caps Lock','⇧':'Shift','␣':'空白鍵','⌫':'Backspace','⌦':'Delete','⏎':'Enter','↑':'↑','↓':'↓','←':'←','→':'→'};
 const nameOf = c => KEYN[c] || c;
 const picked = new Set([...'⎋⇥⇪⇧␣']);
@@ -238,7 +238,7 @@ $('#copy').onclick = async () => {
 };
 /* 捷徑檔：小網頁檔（.html），點兩下用瀏覽器打開後自動跳到練習網址。
    不用 Windows 的 .url：瀏覽器會把 .url 當成有風險的檔案，改名成 .download（老師 2026-10-29 回報） */
-const DEFNAME = st => '鍵盤小勇士・' + st.keys.map(nameOf).join(' ');
+const DEFNAME = st => '重要按鍵練習・' + st.keys.map(nameOf).join(' ');
 const HE = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 $('#shortcut').onclick = () => {
   const st = state(), name = (st.goal || DEFNAME(st)).replace(/[\\/:*?"<>|]/g, '').slice(0, 40), url = linkOf(st);
