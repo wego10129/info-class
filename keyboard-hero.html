@@ -248,6 +248,8 @@ html[data-kind=key] .word span{display:inline-block;margin:0 .18em}
 html[data-kind=key] .chipk,html[data-kind=key] .setcard .keys{text-transform:none;font-family:var(--f-body);font-weight:900}
 html[data-kind=key] .setcard .keys{font-size:18px}
 .enemy img{width:100%;display:block;animation:bob .5s ease-in-out infinite alternate}
+html[data-kind=key] .word.txt{font-size:clamp(14px,2.6vh,21px);white-space:normal;width:max-content;max-width:min(260px,40vw);text-align:center}
+html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .enemy.poof img{animation:poof .35s forwards}
 
 /* 結算 */
@@ -307,6 +309,22 @@ html[data-kind=key] .setcard .keys{font-size:18px}
 .cert-date{color:var(--ink-soft);font-weight:700;margin-top:6px}
 .cert-seal{position:absolute;right:18px;bottom:16px;width:78px;height:78px;border-radius:50%;border:4px solid var(--bad);color:var(--bad);display:grid;place-items:center;font-weight:900;font-size:15px;line-height:1.2;transform:rotate(-12deg);background:rgba(255,255,255,.6)}
 .cert-empty{font-size:20px;font-weight:900;padding:30px 10px;line-height:1.8}
+.cert{position:relative;overflow:hidden}
+.cert-grade{display:inline-block;font:900 20px var(--f-body);border:3px solid var(--ink);border-radius:999px;padding:2px 16px;margin:2px 0 4px;background:#fff}
+.cert.g-blue .cert-in{border-color:#3A9FEF;background:#F4FAFF}
+.cert.g-blue .cert-grade{background:#DCEFFF}
+.cert.g-bronze .cert-in{border-color:#B8733A;background:linear-gradient(160deg,#FFF6EC,#F6DEC6)}
+.cert.g-bronze .cert-grade{background:#F0C9A0}
+.cert.g-bronze .cert-title{color:#8A4B1C}
+.cert.g-silver .cert-in{border-color:#9AA7B4;background:linear-gradient(160deg,#FFFFFF,#E3E9EF)}
+.cert.g-silver .cert-grade{background:#DDE3EA}
+.cert.g-silver .cert-title{color:#5A6878}
+.cert.g-gold .cert-in{border-color:#D4A017;border-width:8px;background:linear-gradient(160deg,#FFFBEA,#FFE8A3)}
+.cert.g-gold .cert-grade{background:linear-gradient(#FFE27A,#F5B700)}
+.cert.g-gold .cert-title{color:#A86A00;text-shadow:2px 2px 0 #FFF2B8}
+.confetti{position:absolute;top:-16px;width:9px;height:16px;border-radius:2px;z-index:5;pointer-events:none;animation:conf 3s linear infinite}
+@keyframes conf{0%{top:-16px;opacity:1}85%{opacity:1}100%{top:105%;opacity:0;margin-left:40px}}
+@media print{ .confetti{display:none} }
 @media print{ body>*:not(.cert-wrap){display:none!important} .cert-wrap{position:static;background:none;padding:0} .cert{box-shadow:none} .cert .r-btns{display:none} }
 .focus-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:#fff;border:3px solid var(--hl);border-radius:999px;padding:10px 22px;font:700 16px var(--f-body);cursor:pointer;max-width:calc(100% - 32px)}
 @media (max-width:720px){ html,body{height:auto} .wrap{height:auto} .stage{min-height:360px} }
@@ -405,20 +423,21 @@ const PUNC = {
   '！':{name:'驚嘆號', keys:['ctrl','shift','one'],  how:'Ctrl ＋ Shift ＋ 1'},
 };
 /* 鍵盤小勇士：每一個特殊鍵用一個符號代表（題目、紀錄、網址都用這個符號），畫面上顯示鍵名
-   code＝鍵盤事件的按鍵代碼（依實體按鍵位置）；use＝用途（第一關題目下方顯示） */
+   code＝鍵盤事件的按鍵代碼（依實體按鍵位置）；use＝用途（第一關題目下方顯示）
+   u＝病毒來襲「勇者」病毒頭上的用途；sit＝「大師」病毒頭上的情境（老師 2026-10-30：先維持舊版的「只提示用途」「只看情境」） */
 const KEYDEF = {
-  '⎋':{name:'Esc',       code:/^Escape$/,          use:'關閉視窗、取消'},
-  '⇥':{name:'Tab',       code:/^Tab$/,             use:'跳到下一格'},
-  '⇪':{name:'Caps Lock', code:/^CapsLock$/,        use:'大寫鎖定（看大寫燈）'},
-  '⇧':{name:'Shift',     code:/^Shift(Left|Right)$/, use:'切換中／英（按住打大寫或上排符號）'},
-  '␣':{name:'空白鍵',    code:/^Space$/,           use:'空一格'},
-  '⌫':{name:'Backspace', code:/^Backspace$/,       use:'刪除游標左邊的字'},
-  '⌦':{name:'Delete',    code:/^Delete$/,          use:'刪除游標右邊的字'},
-  '⏎':{name:'Enter',     code:/^(Numpad)?Enter$/,  use:'確定、換行'},
-  '↑':{name:'↑',         code:/^ArrowUp$/,         use:'游標往上'},
-  '↓':{name:'↓',         code:/^ArrowDown$/,       use:'游標往下'},
-  '←':{name:'←',         code:/^ArrowLeft$/,       use:'游標往左'},
-  '→':{name:'→',         code:/^ArrowRight$/,      use:'游標往右'},
+  '⎋':{name:'Esc',       code:/^Escape$/,          use:'關閉視窗、取消', u:'關閉視窗', sit:'🪟 廣告視窗跳出來了'},
+  '⇥':{name:'Tab',       code:/^Tab$/,             use:'跳到下一格', u:'跳到下一格', sit:'📝 報名表要填下一格'},
+  '⇪':{name:'Caps Lock', code:/^CapsLock$/,        use:'大寫鎖定（看大寫燈）', u:'大寫鎖定', sit:'🔠 打出來全是大寫'},
+  '⇧':{name:'Shift',     code:/^Shift(Left|Right)$/, use:'切換中／英（按住打大寫或上排符號）', u:'切換中／英', sit:'🈶 要打英文，卻出現注音'},
+  '␣':{name:'空白鍵',    code:/^Space$/,           use:'空一格', u:'空一格', sit:'🔤 Goodmorning 字黏在一起'},
+  '⌫':{name:'Backspace', code:/^Backspace$/,       use:'刪除游標左邊的字', u:'刪除左邊的字', sit:'⬅️ 游標左邊多打了字'},
+  '⌦':{name:'Delete',    code:/^Delete$/,          use:'刪除游標右邊的字', u:'刪除右邊的字', sit:'➡️ 游標右邊多打了字'},
+  '⏎':{name:'Enter',     code:/^(Numpad)?Enter$/,  use:'確定、換行', u:'確定、換行', sit:'💬 「要存檔嗎？」按確定'},
+  '↑':{name:'↑',         code:/^ArrowUp$/,         use:'游標往上', u:'游標往上移', sit:'⭐ 星星在游標上面'},
+  '↓':{name:'↓',         code:/^ArrowDown$/,       use:'游標往下', u:'游標往下移', sit:'⭐ 星星在游標下面'},
+  '←':{name:'←',         code:/^ArrowLeft$/,       use:'游標往左', u:'游標往左移', sit:'⭐ 星星在游標左邊'},
+  '→':{name:'→',         code:/^ArrowRight$/,      use:'游標往右', u:'游標往右移', sit:'⭐ 星星在游標右邊'},
 };
 const keyTok = code => Object.keys(KEYDEF).find(t => KEYDEF[t].code.test(code)) || null;
 const PACKS = {
@@ -430,7 +449,7 @@ const PACKS = {
     tlabel:'在這裡打字<small>（要用英文輸入法；打對了會自動送出，不用按 Enter）</small>',
     l1:'第一關・單一字母', l1sub:'單一字母', l2:'第二關・字母組合', l2sub:'2～4 個字母',
     ninjaName:'打字忍者', enemyHint:'敵人頭上有字母，在下面的打字欄位打出來就能擊退它（不用按 Enter）',
-    titles:['見習忍者','下忍','中忍','上忍'],
+    titles:['見習忍者','下忍','中忍','上忍'], perfect:'完美上忍',
   },
   punc:{
     app:'標點符號大挑戰', tag:'，。', badge:'全形標點', unit:'符號', store:'punctype1_', setup:'punct-setup.html', setupName:'標點符號・教師設定',
@@ -440,7 +459,7 @@ const PACKS = {
     tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵，再按 Enter 送出）</small>',
     l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1～4 個符號・連對升階',
     ninjaName:'標點忍者', enemyHint:'敵人頭上有標點符號，在下面的打字欄位打出來就能擊退它',
-    titles:['標點見習生','標點下忍','標點中忍','標點上忍'],
+    titles:['標點見習生','標點下忍','標點中忍','標點上忍'], perfect:'完美標點上忍',
   },
   key:{
     app:'鍵盤小勇士', tag:'Esc', badge:'特殊鍵', unit:'鍵', store:'kbkey1_', setup:'keyboard.html', setupName:'鍵盤小勇士・教師設定',
@@ -450,13 +469,15 @@ const PACKS = {
     tlabel:'',
     l1:'第一關・單一按鍵', l1sub:'單一按鍵', l2:'第二關・譜面分歧', l2sub:'1～4 個按鍵・連對升階',
     ninjaName:'病毒來襲', foe:'病毒', enemyHint:'病毒頭上有按鍵的名稱，按下那個鍵就能擊退它',
-    titles:['鍵盤見習生','鍵盤小兵','鍵盤勇士','鍵盤小勇士'],
+    titles:['鍵盤見習生','鍵盤小兵','鍵盤勇士','鍵盤傳奇勇者'], perfect:'完美傳奇勇者',
   },
 };
 const PK = PACKS[KIND];
 const FOE = PK.foe || '敵人';
 /* 畫面上顯示的文字：鍵盤小勇士顯示鍵名，其他照原字 */
 const SHOW = c => KIND === 'key' && KEYDEF[c] ? KEYDEF[c].name : c;
+/* 病毒頭上顯示的文字：依這一級的鷹架（鍵名／用途／情境） */
+const FOE_LBL = (c, C) => KIND === 'key' && KEYDEF[c] && C && C.hint === 'use' ? KEYDEF[c].u : KIND === 'key' && KEYDEF[c] && C && C.hint === 'sit' ? KEYDEF[c].sit : SHOW(c);
 const SETS = PK.sets;
 /* 第一關（兩個主題相同，老師 2026-10-28 決定）：單一字母／符號 n 題；不限時、打錯可以一直改到對；
    正數計時：great 秒內＝優、good 秒內＝良、good 秒以上＝可；要完成 plays 次才打開第二關 */
@@ -493,6 +514,10 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
   brave: {name:'勇者', open:4, goal:20, lives:3, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]],     time:[8.5,8,7.6,7.3,7],   per:3,   multi:[1,1,1,1,1],   gap:3},
   master:{name:'大師', open:5, goal:30, lives:3, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[2,2],[2,2]],     time:[8,7.6,7.2,6.9,6.6], per:3,   multi:[1,1,1,1,2],   gap:3},
 };
+/* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
+   新手＝鍵名＋鍵盤提示、勇者＝只提示用途、大師＝只看情境（鍵帽沒有字）；2 個鍵的病毒＝兩種情境都要完成才會被消滅 */
+if (KIND === 'key'){ NINJA.novice.hint = 'name'; NINJA.brave.hint = 'use'; NINJA.master.hint = 'sit';
+  NINJA.novice.tip = '病毒舉著鍵名，鍵盤會提示'; NINJA.brave.tip = '病毒只寫用途，想一想要按哪個鍵'; NINJA.master.tip = '病毒只寫情境，鍵帽沒有字'; }
 const NINJA_ORDER = ['novice','brave','master'];
 const SCORE = {base:100, speed:100};   /* 每擊退一隻：100 分＋越快越多（最多再加 100） */
 const THEMES = [
@@ -503,6 +528,12 @@ const THEMES = [
   {name:'雷雨大將', sky:'linear-gradient(#1F2933,#4B5563)', far:'#111827', near:'#0B1220', ground:'#374151'},
 ];
 const TITLES = PK.titles;
+/* 獎狀等第（老師 2026-10-30：不同的成就有不同的獎狀）
+   特優＝完美稱號＋金色獎狀＋彩帶：三級都通關、第一關與第二關都 5 顆星
+   金＝第三關最高一級通關（上忍）；銀＝第二級通關、最高一級還沒過；銅＝第一級通關；見習＝第一關完成 3 次 */
+const GRADES = [{id:'blue', name:'見習獎'}, {id:'bronze', name:'銅獎'}, {id:'silver', name:'銀獎'}, {id:'gold', name:'金獎'}, {id:'gold', name:'特優・金獎', ribbon:true}];
+const isPerfect = () => titleIndex() === 3 && NINJA_ORDER.every(id => P.ninja[id].cleared) && P.l1.stars >= 5 && P.l2.stars >= 5;
+const gradeIndex = () => titleIndex() < 0 ? -1 : isPerfect() ? 4 : titleIndex();
 const TITLE_RULE = ['第一關完成 3 次',`${PK.ninjaName}「新手」通關`,`${PK.ninjaName}「勇者」通關`,`${PK.ninjaName}「大師」通關`];
 const AWARD_LINE = ['認真完成第一關 3 次'].concat(['novice','brave','master'].map(id => `擊退${PK.ninjaName}「${NINJA[id].name}」的 ${NINJA[id].goal} 個${FOE}`));
 const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
@@ -740,14 +771,14 @@ function renderHome(){
     o2 ? '' : `第一關要完成 ${L1.plays} 次（現在 ${P.l1.plays} 次）`);
   const nBtns = NINJA_ORDER.map((id,i) => { const C = NINJA[id], R = P.ninja[id], o = ninjaOpen(id);
     const lock = `第二關拿到 ${C.open} 顆星${i ? `，或「${NINJA[NINJA_ORDER[i-1]].name}」通關` : ''}就打開`;
-    return `<button class="diff" type="button" data-n="${id}" ${o?'':'disabled'}><span>${C.name}<small>${o ? `擊退 ${C.goal} 個${FOE}・${C.lives} 條命・打錯不扣命${C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
+    return `<button class="diff" type="button" data-n="${id}" ${o?'':'disabled'}><span>${C.name}<small>${o ? `擊退 ${C.goal} 個${FOE}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
       <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
   const anyN = NINJA_ORDER.some(ninjaOpen);
   const c3 = card(3, 'var(--c-ninja)', ['忍'], `第三關・${PK.ninjaName}`, nBtns, anyN ? '' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`);
   const ti = titleIndex();
-  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${ti<0 ? '還沒有' : TITLES[ti]}</b>
+  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${ti<0 ? '還沒有' : isPerfect() ? PK.perfect : TITLES[ti]}</b>
     <span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>
-    <span class="tnote" style="width:100%">${ti < 3 ? `下一個：${TITLE_RULE[ti+1]} → 「${TITLES[ti+1]}」` : '已經是最高稱號！'}</span></div>`;
+    <span class="tnote" style="width:100%">${ti < 3 ? `下一個：${TITLE_RULE[ti+1]} → 「${TITLES[ti+1]}」（${GRADES[ti+1].name}）` : isPerfect() ? `已經是「${PK.perfect}」！特優・金獎` : `最後的挑戰：第一關、第二關都拿 5 顆星，${PK.ninjaName}三級都通關 → 「${PK.perfect}」（特優・金獎＋彩帶）`}</span></div>`;
   $('#entries').innerHTML = tb + c1 + c2 + c3;
 }
 $('#entries').addEventListener('click', e => {
@@ -1001,7 +1032,7 @@ function startNinja(id){
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${PK.enemyHint}！擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
 }
 /* 新的字串不能和畫面上的敵人一樣，也不能是彼此的開頭（才能自動判斷要打哪一個） */
@@ -1024,7 +1055,8 @@ function drawWords(){
   const v = $('#tin').value.toLowerCase(), any = v && N.es.some(e => e.word.startsWith(v));
   N.es.forEach(e => { const m = any && e.word.startsWith(v), pos = m ? v.length : 0;
     e.w.classList.toggle('dim', !!any && !m);
-    e.w.innerHTML = [...e.word].map((c,i) => `<span class="${i<pos?'ok':i===pos?'cur':''}">${H(SHOW(c))}</span>`).join(''); });
+    e.w.classList.toggle('txt', !!(N.C.hint && N.C.hint !== 'name'));
+    e.w.innerHTML = [...e.word].map((c,i) => `<span class="${i<pos?'ok':i===pos?'cur':''}">${H(FOE_LBL(c, N.C))}</span>`).join(''); });
   if (N.C.glow){ const t = target(v); kb.glow(t ? [...t.word][any ? [...v].length : 0] : null); }
 }
 /* 要提示的敵人：符合目前打字內容、離忍者最近的那一個 */
@@ -1066,7 +1098,7 @@ function ninjaInput(v){
   N.badLen = v.length;
   const t = target(v.slice(0,-1)), want = t ? t.word[v.length-1] : null;
   N.combo = 0; if (want){ learn(want,'bad',null); N.weak.add(want); save(); }
-  tinState('bad', !N.es.length ? '' : KIND === 'key' ? '沒有病毒頭上是這個鍵，看清楚再按' : '沒有敵人是這樣拼的，按 Backspace 刪掉再打');
+  tinState('bad', !N.es.length ? '' : KIND === 'key' ? (want && N.C.hint !== 'name' ? `按錯了！最近的病毒要按「${SHOW(want)}」` : '沒有病毒頭上是這個鍵，看清楚再按') : '沒有敵人是這樣拼的，按 Backspace 刪掉再打');
   N.es.forEach(e => { e.w.classList.remove('err'); void e.w.offsetWidth; e.w.classList.add('err'); });
   Sound.bad();   /* 打錯一律不扣命（老師 2026-10-28） */
 }
@@ -1085,7 +1117,7 @@ function defeat(e){
   const pts = SCORE.base + Math.round(SCORE.speed * remFrac);
   N.score += pts; N.kills++; N.combo++; N.maxCombo = Math.max(N.maxCombo, N.combo); N.rts.push(rt);
   e.word.split('').forEach(c => { if (learn(c, remFrac > .5 ? 'good' : 'ok', rt/e.word.length)) N.weak.add(c); }); save();
-  e.w.innerHTML = [...e.word].map(c => `<span class="ok">${H(SHOW(c))}</span>`).join('');
+  e.w.innerHTML = [...e.word].map(c => `<span class="ok">${H(FOE_LBL(c, N.C))}</span>`).join('');
   removeEnemy(e); Sound.slash();
   const pl = $('#player'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
   const p = document.createElement('div'); p.className = 'pts'; p.textContent = `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
@@ -1100,7 +1132,8 @@ function enemyHits(e){
   const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
   removeEnemy(e); if (wasTarget) tinReset();
   N.holdUntil0 = performance.now() + 700;
-  drawWords(); loseLife(`被${FOE}碰到了！`);
+  drawWords(); loseLife(KIND === 'key' && N.C.hint !== 'name' ? `被${FOE}碰到了！要按「${[...e.word].map(SHOW).join(' → ')}」` : `被${FOE}碰到了！`);
+  if (KIND === 'key'){ kb.clear(); [...e.word].forEach(c => kb.show(c)); const n = N; setTimeout(() => { if (N === n) kb.clear(); }, 1500); }
 }
 function loseLife(msg){
   N.lives--; Sound.bad();
@@ -1205,7 +1238,7 @@ document.addEventListener('keydown', e => {
     kb.els(codeKey(e.code)).forEach(x => x.classList.add('down'));
     if (e.repeat) return;
     Sound.init();
-    if (!tok){ if (!/^(Control|Alt|Meta|OS)/.test(e.code)) remind('這裡要練的是特殊鍵，看清楚題目的鍵名'); return; }
+    if (!tok){ if (!/^(Control|Alt|Meta|OS)/.test(e.code)) remind('這裡要練的是特殊鍵（Esc、Enter、方向鍵……），看清楚再按'); return; }
     if (paused == null) keyFeed(tok);
     return;
   }
@@ -1235,13 +1268,26 @@ function showAward(preview){
   if (ti < 0 && !preview){
     el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-empty">今天還差一點點！<br>把第一關完成 ${L1.plays} 次，就能成為「${TITLES[0]}」。</p>`;
   } else {
-    const t = TITLES[Math.max(0, ti)], S = SETS[SET];
+    const gi = Math.max(0, gradeIndex()), G = GRADES[gi], t = gi === 4 ? PK.perfect : TITLES[Math.max(0, ti)], S = SETS[SET];
+    const line = gi === 4 ? `第一關、第二關都拿到 5 顆星，${PK.ninjaName}三級全部通關` : AWARD_LINE[Math.max(0,ti)];
     const nin = NINJA_ORDER.filter(id => P.ninja[id].best || P.ninja[id].cleared).map(id => `<div>${P.ninja[id].cleared ? '🏆 ' : ''}${PK.ninjaName}${NINJA[id].name}・最高 ${P.ninja[id].best} 分</div>`).join('');
     el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-sub">獎　狀</p>
-      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(AWARD_LINE[Math.max(0,ti)])}，<br>特頒此狀，恭喜成為</p>
+      <p class="cert-grade">${gi === 4 ? '🏆' : gi === 3 ? '🥇' : gi === 2 ? '🥈' : gi === 1 ? '🥉' : '🎖'} ${G.name}</p>
+      <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(line)}，<br>特頒此狀，恭喜成為</p>
       <h2 class="cert-title">${t}</h2>
       <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div><div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>${nin}</div>
       <p class="cert-date">${todayStr()}${preview && ti < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
+  }
+  const gi2 = ti < 0 && !preview ? -1 : Math.max(0, gradeIndex()), cert = document.querySelector('.cert');
+  cert.className = 'cert' + (gi2 >= 0 ? ' g-' + GRADES[gi2].id : '');
+  cert.querySelectorAll('.confetti').forEach(x => x.remove());
+  if (gi2 === 4){   /* 彩帶動畫 */
+    const cols = ['#E5484D','#F5B700','#3A9FEF','#2BB673','#9466EE','#FF8A3D'];
+    for (let i = 0; i < 46; i++){ const c = document.createElement('i'); c.className = 'confetti';
+      c.style.left = (Math.random()*100) + '%'; c.style.background = cols[i % cols.length];
+      c.style.animationDelay = (Math.random()*1.6) + 's'; c.style.animationDuration = (2.2 + Math.random()*1.8) + 's';
+      c.style.transform = `rotate(${Math.random()*360}deg)`; cert.appendChild(c); }
+    [523,659,784,1047,1319,1568].forEach((f,i) => Sound.tone(f,.28,'triangle',i*.1,.12));
   }
   $('#certWrap').hidden = false; Sound.win();
 }
