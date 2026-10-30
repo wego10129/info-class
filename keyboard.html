@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
 <link rel="stylesheet" href="site.css">
+<style>
+.share{margin-top:18px}
+.share h2{font-size:22px}
+.share-rows{display:grid;gap:8px}
+.share-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-top:2px dashed var(--edge)}
+.share-row b{min-width:9em}
+.share-row .btns{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.share .ok{color:#15803d}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -18,6 +27,13 @@
   </header>
 
   <div class="tiles" id="weeks"></div>
+
+  <section class="card share" aria-labelledby="shareH">
+    <h2 id="shareH">📣 給學生的連結（老師用）</h2>
+    <p class="sub">用這裡的連結或捷徑檔發給學生：學生打開後只有這一週的練習，沒有「回上頁」「回目錄」。上面的卡片是老師瀏覽用。</p>
+    <div class="share-rows" id="share"></div>
+    <p class="note" id="shareMsg" aria-live="polite"></p>
+  </section>
 
   <nav class="footnav"><a class="btn" href="index.html">⬅ 回目錄</a></nav>
 </div>
@@ -43,6 +59,26 @@ document.getElementById('weeks').innerHTML = WEEKS.map(w => {
       <span class="prog">${started ? lvTag : '<span>還沒開始</span>'}${P.title ? '<span class="on">⌨️ 鍵盤小勇士</span>' : ''}</span>
       <span class="go">開始 →</span></span></a>`;
 }).join('');
+
+/* ---------- 給學生的連結（老師 2026-10-30）：網址加 #student＝單頁練習；捷徑檔＝小網頁檔（.html），同英文打字教師設定（規格書 14.1.2） ---------- */
+const studentLink = w => new URL(w.file, location.href).href.split('#')[0] + '#student';
+const HE = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const say = (t, ok) => { const m = document.getElementById('shareMsg'); m.textContent = t; m.className = 'note' + (ok ? ' ok' : ''); };
+document.getElementById('share').innerHTML = WEEKS.map((w,i) => `<div class="share-row"><b>${w.week}・${w.name}</b>
+  <span class="btns"><button class="btn" type="button" data-copy="${i}">複製學生連結</button><button class="btn" type="button" data-file="${i}">下載捷徑檔</button></span></div>`).join('');
+document.getElementById('share').addEventListener('click', async e => {
+  const c = e.target.closest('[data-copy]'), f = e.target.closest('[data-file]');
+  if (c){ const w = WEEKS[+c.dataset.copy], url = studentLink(w);
+    try{ await navigator.clipboard.writeText(url); say(`✓ 已複製「${w.week}・${w.name}」的學生連結：${url}`, true); }
+    catch(err){ say(`請手動複製：${url}`); } }
+  if (f){ const w = WEEKS[+f.dataset.file], url = studentLink(w), name = `鍵盤小勇士・${w.week}・${w.name}`;
+    const body = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${HE(name)}</title>
+<meta http-equiv="refresh" content="0;url=${HE(url)}"><script>location.replace(${JSON.stringify(url)});<\/script></head>
+<body style="font:20px sans-serif;padding:24px">正在打開「${HE(name)}」……<br>沒有自動打開時，請點 <a href="${HE(url)}">這裡</a>。</body></html>`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], {type:'text/html'}));
+    a.download = name + '.html'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    say(`✓ 已下載「${name}.html」。用派送軟體放到學生桌面，學生點兩下就會打開練習。`, true); }
+});
 </script>
 </body>
 </html>

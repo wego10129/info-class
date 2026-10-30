@@ -362,7 +362,7 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
     <!-- 首頁 -->
     <section data-screen="home">
       <div id="entries" class="entries"></div>
-      <nav class="footnav"><a class="btn" href="keyboard.html">⬅ 回上頁</a><a class="btn" href="index.html">🏠 回目錄</a></nav>
+      <nav class="footnav" id="siteNav"><a class="btn" href="keyboard.html">⬅ 回上頁</a><a class="btn" href="index.html">🏠 回目錄</a></nav>
       <div id="tpanel" class="card tpanel" hidden>
         <b>老師設定</b>
         <button class="btn sm" type="button" id="tDemo">老師示範（全部打開、不存紀錄）</button>
@@ -1423,8 +1423,15 @@ setupFocus($('#focusPill'), {
   focus: () => { if (paused!=null){ const d = performance.now()-paused; if (G){ G.deadline += d; G.start += d; } if (V){ V.deadline += d; V.start += d; } paused = null; } }
 });
 
+/* ---------- 學生連結（老師 2026-10-30）：網址後面加 #student＝發給學生的單頁練習，不顯示「回上頁／回目錄」
+   連結在「鍵盤小勇士」選週次頁的「給學生的連結」產生；從網站目錄點進來時照舊有回上頁、回目錄 ---------- */
+if (location.hash === '#student') document.getElementById('siteNav').hidden = true;
+/* 熱身、救援隊、病毒挑戰進行中不小心按到關閉／重新整理：瀏覽器先問一次（這一局還沒結束；紀錄本身都存在這台電腦） */
+window.addEventListener('beforeunload', e => { if (!DEMO && ['warm','game','virus'].includes(screen)){ e.preventDefault(); e.returnValue = ''; } });
+
 show('home');
 })();
+
 </script>
 </body>
 </html>
