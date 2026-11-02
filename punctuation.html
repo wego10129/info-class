@@ -429,13 +429,16 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .boss-stage{background:linear-gradient(#3B1D5E 0 70%,#5A3A2A 70% 100%)}
 .boss-stage::before{content:"";position:absolute;left:0;right:0;bottom:30%;height:34%;background:#2A1440;clip-path:polygon(0 100%,0 40%,6% 40%,6% 20%,12% 20%,12% 40%,30% 40%,30% 10%,36% 10%,36% 40%,64% 40%,64% 10%,70% 10%,70% 40%,88% 40%,88% 20%,94% 20%,94% 40%,100% 40%,100% 100%)}
 .boss-stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:30%;border-top:4px solid var(--ink);background:repeating-linear-gradient(90deg,#5A3A2A 0 58px,#4A2E20 58px 62px)}
-.boss-stage.rage{background:linear-gradient(#5E1D2A 0 70%,#5A2A2A 70% 100%)}
+.boss-stage.p2{background:linear-gradient(#5B2A1D 0 70%,#5A3A2A 70% 100%)}
+.boss-stage.rage{background:linear-gradient(#5E1D2A 0 70%,#5A2A2A 70% 100%);animation:storm 3s infinite}
+.boss-stage.p2 .b-boss{filter:hue-rotate(45deg) saturate(1.3)}
+.b-shot.big{font-size:clamp(44px,9vh,72px)}
 .b-player{left:7%;bottom:24%;z-index:4}
 .b-boss{position:absolute;right:5%;bottom:24%;width:clamp(150px,30vh,250px);z-index:3;transition:filter .3s}
 .b-boss svg{width:100%;display:block;animation:bob 1s ease-in-out infinite alternate}
 .b-boss.hit{animation:bhit .45s}
 @keyframes bhit{20%,60%{transform:translateX(14px);filter:brightness(2)}40%{transform:translateX(-8px)}}
-.boss-stage.rage .b-boss{filter:hue-rotate(-60deg) saturate(1.5)}
+.boss-stage.rage .b-boss{filter:hue-rotate(95deg) saturate(1.6)}
 .b-hp{position:absolute;right:16px;top:12px;z-index:6;display:flex;align-items:center;gap:8px;font-weight:900;color:#fff;text-shadow:0 2px 0 var(--ink)}
 .b-hpbar{width:clamp(140px,22vw,260px);height:18px;border:3px solid var(--ink);border-radius:999px;background:#2A1440;overflow:hidden}
 .b-hpbar i{display:block;height:100%;background:linear-gradient(#FF6B6B,#E5484D);transition:width .4s}
@@ -940,7 +943,7 @@ function renderHome(){
   const c3 = KIND === 'key' ? card(2, 'var(--c-ninja)', ['🦠'], `第二關・${PK.ninjaName}`, nBtns, anyN ? '' : `第一關完成 ${L1.plays} 次就打開`)
     : card(3, 'var(--c-ninja)', ['忍'], `第三關・${PK.ninjaName}`, nBtns, anyN ? '' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`);
   const bo = bossOpen(), BR = P.boss;
-  const c4 = KIND !== 'punc' ? '' : card(4, '#5B2A86', ['👹'], '第四關・魔王戰', `<button class="diff" type="button" data-boss="1" ${bo?'':'disabled'}><span>句子填空・打敗標點大魔王<small>${bo ? `看句子填對標點：攻擊回合填對才打得到魔王，防禦回合填對才擋得住；填錯就落空・${BOSS.lives} 條命` : '標點忍者「大師」通關就打開'}</small></span>
+  const c4 = KIND !== 'punc' ? '' : card(4, '#5B2A86', ['👹'], '第四關・魔王戰', `<button class="diff" type="button" data-boss="1" ${bo?'':'disabled'}><span>句子填空・打敗標點大魔王<small>${bo ? `看句子填對標點才打得到魔王、擋得住火球；填錯就落空・魔王 ${BOSS.hp} 滴血、3 個階段・${BOSS.lives} 條命` : '標點忍者「大師」通關就打開'}</small></span>
     <span class="lv-r">${bo ? `<span class="lv-best">${BR.cleared ? '🏆 打敗魔王！' : ''}</span><span class="lv-best">${BR.best ? `最高 ${BR.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`, bo ? '' : '標點忍者「大師」通關就打開');
   const ti = titleIndex(), gi = gradeIndex();
   const awd = awardOpen() ? `<button class="award-btn" type="button" id="awardBtn">🏆 領取獎狀</button>` : '';
@@ -1583,7 +1586,13 @@ function vReach(e){
    句子填空：句子裡有一個空格，填對標點才發動攻擊（攻擊回合）／擋下魔王的攻擊（防禦回合）；填錯就落空。
    題目由程式依句型隨機組合（人物、事情、東西都會換），避免學生背答案；空格的位置也會換。
    ===================================================================== */
-const BOSS = {hp:6, lives:3, defSec:20, rageSec:15, rageAt:3};   /* 魔王 6 滴血；防禦回合 20 秒（魔王生氣後 15 秒）；攻擊回合不限時 */
+/* 魔王 10 滴血、學生 3 條命，三個階段越打越兇（老師 2026-11-02：大師通關才打開，要更有刺激感）：
+   alt＝攻擊、防禦輪流（攻擊回合也有時間）；counter＝每一題都有火球，擋下就同時反擊；double＝兩顆火球，一句兩個空格
+   until＝魔王剩幾滴血以下進入下一階段；sec＝火球飛到的秒數；comboAt＝連續答對幾題「連擊」傷害加倍 */
+const BOSS = {hp:10, lives:3, comboAt:5, phases:[
+  {until:7, name:'第一階段', mode:'alt',     atkSec:12, sec:10, banner:'⚔ 第一階段！',          tip:'攻擊、防禦輪流：攻擊回合要在 12 秒內填對；火球 10 秒就飛到！'},
+  {until:3, name:'第二階段', mode:'counter', sec:9,             banner:'😠 第二階段：反擊！',     tip:'魔王每一題都丟火球：填對就擋下來，同時反擊打到魔王！'},
+  {until:0, name:'第三階段', mode:'double',  sec:13,            banner:'😡 第三階段：狂暴！',     tip:'兩顆火球一起來：一句話有兩個空格，依順序打出兩個標點才擋得住、打得到！'}]};
 const pk = a => a[Math.floor(Math.random()*a.length)];
 const pkN = (a, n) => shuffle(a.slice()).slice(0, n);
 const M = (m, b = true) => ({m, b});   /* 標點；b＝可以挖成空格（答案不會有爭議的位置才挖） */
@@ -1625,21 +1634,26 @@ const Q_GEN = [
   () => { const [a, b, c] = pk([['下課時，同學有的在跳繩','有的在盪鞦韆','有的在聊天'],['公園裡，有的人在散步','有的人在跑步','有的人在餵鴿子'],['池塘裡，有的魚是紅色的','有的魚是金色的','有的魚是黑色的'],['花園裡，有的花是白的','有的花是黃的','有的花是粉紅色的']]);
     return [a, M('；'), b, M('；'), c, M('。', false)]; },
 ];
-/* 出一題：先依錯題權重挑要考的標點，再找有這個空格的句型；同一節課最近出過的句子不再出 */
-function genQ(){
+/* 出一題：先依錯題權重挑要考的標點，再找有這個空格的句型；blanks＝要挖幾個空格（第三階段 2 個）；同一節課最近出過的句子不再出 */
+function genQ(blanks){
+  blanks = blanks || 1;
   const keys = KEYS(), recent = B ? B.recent : [];
-  for (let t = 0; t < 80; t++){
-    const want = pickWeighted(keys, B && B.q ? B.q.ans : null) || pk(keys);
-    const toks = pk(Q_GEN)(), idx = toks.map((x,i) => typeof x === 'object' && x.b && x.m === want ? i : -1).filter(i => i >= 0);
-    if (!idx.length) continue;
-    const at = pk(idx), text = toks.map(x => typeof x === 'object' ? x.m : x).join('');
-    if (recent.includes(text + at) && t < 60) continue;
-    return {toks, at, ans:toks[at].m, text, key:text + at};
+  for (let t = 0; t < 120; t++){
+    const want = pickWeighted(keys, B && B.q ? B.q.ans[0] : null) || pk(keys);
+    const toks = pk(Q_GEN)(), ok = toks.map((x,i) => typeof x === 'object' && x.b && keys.includes(x.m) ? i : -1).filter(i => i >= 0);
+    if (!ok.some(i => toks[i].m === want) || ok.length < blanks) continue;
+    let at = [pk(ok.filter(i => toks[i].m === want))];
+    if (blanks === 2) at = at.concat(pk(ok.filter(i => i !== at[0]))).sort((x,y) => x - y);
+    const text = toks.map(x => typeof x === 'object' ? x.m : x).join(''), key = text + at.join(',');
+    if (recent.includes(key) && t < 90) continue;
+    return {toks, at, ans:at.map(i => toks[i].m).join(''), text, key};
   }
   return null;
 }
-const sentHTML = (q, mode) => q.toks.map((x,i) => typeof x !== 'object' ? H(x) : i !== q.at ? x.m
-  : mode === 'blank' ? '<span class="b-blank">　</span>' : `<span class="b-ans ${mode === 'no' ? 'no' : ''}">${q.ans}</span>`).join('');
+/* mode：blank＝空格；ok／no＝顯示答案；got＝已經打對的空格數（兩個空格時，先打對第一個） */
+const sentHTML = (q, mode, got) => q.toks.map((x,i) => { if (typeof x !== 'object') return H(x); const k = q.at.indexOf(i); if (k < 0) return x.m;
+  if (mode === 'blank') return k < (got || 0) ? `<span class="b-ans">${x.m}</span>` : '<span class="b-blank">　</span>';
+  return `<span class="b-ans ${mode === 'no' ? 'no' : ''}">${x.m}</span>`; }).join('');
 const BOSS_SVG = `<svg viewBox="0 0 160 170" aria-hidden="true"><ellipse cx="80" cy="164" rx="56" ry="6" fill="rgba(0,0,0,.3)"/>
   <path d="M22 120 Q6 112 10 96 Q24 104 34 108 Z M138 120 Q154 112 150 96 Q136 104 126 108 Z" fill="#6D28D9" stroke="#1B2836" stroke-width="4"/>
   <path d="M28 156 Q16 74 80 44 Q144 74 132 156 Z" fill="#7C3AED" stroke="#1B2836" stroke-width="5"/>
@@ -1652,81 +1666,117 @@ const BOSS_SVG = `<svg viewBox="0 0 160 170" aria-hidden="true"><ellipse cx="80"
   <path d="M62 123 L66 131 L70 124 M90 124 L94 131 L98 123" fill="none" stroke="#1B2836" stroke-width="3"/>
   <circle cx="80" cy="150" r="9" fill="#FDE68A" stroke="#1B2836" stroke-width="3"/><path d="M76 147 Q80 141 84 147 Q84 150 80 151 L80 153" fill="none" stroke="#1B2836" stroke-width="2.5"/></svg>`;
 $('#bPlayer').innerHTML = PLAYER_SVG; $('#bBoss').innerHTML = BOSS_SVG;
+const bPhase = () => BOSS.phases.findIndex(p => B.hp > p.until);
 function bossHud(){
-  hud([['第四關', '魔王戰', 't'], ['生命', `<span class="hearts">${Array.from({length:BOSS.lives},(_,i)=>`<span class="${i<B.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
-    ['魔王', `${B.hp}/${BOSS.hp}`], ['分數', B.score]]);
+  const pi = Math.max(0, bPhase());
+  hud([['第四關', BOSS.phases[pi].name, 't'], ['生命', `<span class="hearts">${Array.from({length:BOSS.lives},(_,i)=>`<span class="${i<B.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
+    ['魔王', `${B.hp}/${BOSS.hp}`], ['連擊', B.combo], ['分數', B.score]]);
   $('#bHp').style.width = (B.hp / BOSS.hp * 100) + '%';
-  $('#bStage').classList.toggle('rage', B.hp <= BOSS.rageAt);
+  $('#bStage').classList.toggle('p2', pi === 1); $('#bStage').classList.toggle('rage', pi === 2);
 }
 function bigText(id, t){ const b = $(id); b.textContent = t; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
 function startBoss(){
   stopAll();
-  B = {hp:BOSS.hp, lives:BOSS.lives, turn:0, score:0, atkN:0, atkOk:0, defN:0, defOk:0, weak:new Set(), recent:[], q:null, locked:true, over:false, raged:false, t0:0, t1:0};
+  B = {hp:BOSS.hp, lives:BOSS.lives, turn:0, score:0, combo:0, maxCombo:0, okN:0, allN:0, weak:new Set(), recent:[], q:null, locked:true, over:false, phaseShown:0, t0:0, t1:0, shots:[]};
   show('boss'); bossHud(); $('#bSent').innerHTML = ''; $('#bPhase').textContent = ''; $('#bNote').textContent = ''; $('#bChargeWrap').hidden = true; $('#bPanel').className = 'b-panel';
   P.boss.plays = (P.boss.plays || 0) + 1; save();
   const b = B;
-  countdown($('#bCover'), '第四關・魔王戰', `看句子，在空格填上對的標點。攻擊回合：填對才打得到魔王；防禦回合：魔王的火球飛過來之前填對才擋得住。填錯就落空！打 ${BOSS.hp} 下就能打敗魔王。`, () => { if (B === b) bossNext(); });
+  countdown($('#bCover'), '第四關・魔王戰', `看句子，在空格填上對的標點（按 Enter 送出）。填錯就落空！魔王有 ${BOSS.hp} 滴血、3 個階段，越打越兇；連續答對 ${BOSS.comboAt} 題會使出「連擊」，傷害加倍！`, () => { if (B === b) bossNext(); });
+}
+function addShot(n, big){
+  $('#bShots').innerHTML = ''; B.shots = [];
+  for (let i = 0; i < n; i++){ const f = document.createElement('div'); f.className = 'b-shot' + (big ? ' big' : ''); f.textContent = '🔥'; f.style.bottom = (n > 1 ? 26 + i * 18 : 34) + '%'; $('#bShots').appendChild(f); B.shots.push(f); }
 }
 function bossNext(){
   if (!B || B.over) return;
   if (B.hp <= 0) return bossEnd(true);
   if (B.lives <= 0) return bossEnd(false);
-  B.q = genQ(); if (!B.q) return bossEnd(false);
+  const pi = bPhase(), PH = BOSS.phases[pi], b = B;
+  if (pi > B.phaseShown){   /* 換階段：先跳出說明 */
+    B.phaseShown = pi; B.locked = true; bigText('#bBig', PH.banner); Sound.tone(220,.4,'sawtooth',0,.08); Sound.tone(180,.5,'sawtooth',.25,.08);
+    $('#bPhase').textContent = PH.tip; $('#bSent').innerHTML = ''; $('#bNote').textContent = ''; $('#bChargeWrap').hidden = true; $('#bShots').innerHTML = '';
+    bossHud(); return setTimeout(() => { if (B === b) bossNext(); }, 2600);
+  }
+  B.q = genQ(PH.mode === 'double' ? 2 : 1) || genQ(1); if (!B.q) return bossEnd(false);
   B.recent.push(B.q.key); if (B.recent.length > 20) B.recent.shift();
-  B.phase = B.turn % 2 === 0 ? 'atk' : 'def';
-  const def = B.phase === 'def', sec = B.hp <= BOSS.rageAt ? BOSS.rageSec : BOSS.defSec;
-  $('#bPanel').className = 'b-panel ' + B.phase;
-  $('#bPhase').textContent = def ? `🛡 魔王要攻擊了！在火球飛到之前填對標點，擋下來！` : '⚔ 你的回合：填對標點，發動攻擊！（不限時）';
-  $('#bSent').innerHTML = sentHTML(B.q, 'blank'); $('#bNote').className = 'b-note'; $('#bNote').textContent = '';
-  $('#bChargeWrap').hidden = !def; $('#bCharge').style.width = '0';
-  $('#bShots').innerHTML = '';
-  if (def){ const f = document.createElement('div'); f.className = 'b-shot'; f.textContent = '🔥'; $('#bShots').appendChild(f); B.shot = f; B.sec = sec; B.t0 = performance.now(); }
-  else { B.shot = null; B.t0 = 0; }
-  tinReset(); focusTin(); B.locked = false; B.t1 = performance.now();
+  B.got = 0;
+  /* 第一階段：攻擊、防禦輪流；第二階段：每一題都是火球＋反擊；第三階段：兩顆火球、一句兩個空格 */
+  B.act = PH.mode === 'alt' ? (B.turn % 2 === 0 ? 'atk' : 'def') : PH.mode;
+  B.sec = B.act === 'atk' ? PH.atkSec : PH.sec;
+  const fire = B.act !== 'atk';
+  $('#bPanel').className = 'b-panel ' + (B.act === 'atk' ? 'atk' : 'def');
+  $('#bPhase').textContent = B.act === 'atk' ? `⚔ 攻擊回合：魔王防禦打開前（${B.sec} 秒）填對標點！`
+    : B.act === 'def' ? '🛡 魔王丟火球了！在火球飛到之前填對標點，擋下來！'
+    : B.act === 'counter' ? '🛡⚔ 擋下火球就能反擊！填對標點＝防禦＋攻擊'
+    : '🔥🔥 兩顆火球！一句話有兩個空格，依順序打出兩個標點（可以一起打完再按 Enter）';
+  $('#bSent').innerHTML = sentHTML(B.q, 'blank', 0); $('#bNote').className = 'b-note'; $('#bNote').textContent = '';
+  $('#bChargeWrap').hidden = false; $('#bCharge').style.width = '0';
+  if (fire) addShot(B.act === 'double' ? 2 : 1, B.act !== 'def'); else $('#bShots').innerHTML = '';
+  tinReset(); focusTin(); B.locked = false; B.t0 = B.t1 = performance.now();
   cancelAnimationFrame(loop); loop = requestAnimationFrame(bossTick);
 }
-/* 防禦回合：火球從魔王慢慢飛向忍者（飛到就是時間到） */
 function bossTick(now){
   if (!B || B.over || screen !== 'boss') return;
-  if (!B.locked && paused == null && B.phase === 'def' && B.shot){
+  if (!B.locked && paused == null){
     const p = Math.min(1, (now - B.t0) / (B.sec * 1000));
-    B.shot.style.left = (80 - 62 * p) + '%'; $('#bCharge').style.width = (p * 100) + '%';
+    $('#bCharge').style.width = (p * 100) + '%';
+    B.shots.forEach(f => f.style.left = (80 - 62 * p) + '%');
     if (p >= 1) return bossResolve(false, true);
   }
   loop = requestAnimationFrame(bossTick);
 }
-function bossInput(v){ if (!B || B.locked) return; bossResolve(v === B.q.ans, false, v); }
+/* 兩個空格：先打對第一個也可以（送出後先填上，再打第二個）；打錯就落空 */
+function bossInput(v){
+  if (!B || B.locked) return;
+  const want = B.q.ans, have = want.slice(0, B.got);
+  const full = v.startsWith(have) ? v : have + v;
+  if (full === want) return bossResolve(true, false, v);
+  if (want.startsWith(full) && full.length > B.got){ B.got = full.length; $('#bSent').innerHTML = sentHTML(B.q, 'blank', B.got); tinReset(); Sound.key(); $('#bNote').className = 'b-note ok'; $('#bNote').textContent = '✓ 第一個對了！再打第二個'; return; }
+  bossResolve(false, false, v);
+}
+function bossHit(dmg){
+  B.hp = Math.max(0, B.hp - dmg); Sound.slash();
+  const st = document.createElement('div'); st.className = 'b-star'; st.textContent = dmg > 1 ? '✦✦' : '✦'; st.style.left = '18%'; st.style.bottom = '36%'; $('#bShots').appendChild(st);
+  requestAnimationFrame(() => { st.style.left = '80%'; st.style.bottom = '34%'; });
+  const pl = $('#bPlayer'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
+  setTimeout(() => { const bs = $('#bBoss'); bs.classList.remove('hit'); void bs.offsetWidth; bs.classList.add('hit'); }, 320);
+}
+function bossHurt(){
+  B.lives--; Sound.bad();
+  B.shots.forEach(f => { f.style.transition = 'left .25s linear'; f.style.left = '14%'; setTimeout(() => f.textContent = '💥', 250); });
+  const pl = $('#bPlayer'); setTimeout(() => { pl.classList.remove('hurt'); void pl.offsetWidth; pl.classList.add('hurt'); }, 250);
+  const f = document.createElement('div'); f.className = 'flash'; $('#bStage').appendChild(f); setTimeout(() => f.remove(), 450);
+}
 function bossResolve(ok, timeout, v){
-  B.locked = true; const q = B.q, def = B.phase === 'def', rt = (performance.now() - B.t1) / 1000;
-  tinReset(); learn(q.ans, ok ? (rt < 8 ? 'good' : 'ok') : 'bad', ok ? rt : null); if (!ok) B.weak.add(q.ans); save();
+  B.locked = true; const q = B.q, act = B.act, rt = (performance.now() - B.t1) / 1000;
+  tinReset(); B.allN++;
+  [...q.ans].forEach(c => learn(c, ok ? (rt < B.sec / 2 ? 'good' : 'ok') : 'bad', ok ? rt / q.ans.length : null)); if (!ok) [...q.ans].forEach(c => B.weak.add(c)); save();
   $('#bSent').innerHTML = sentHTML(q, ok ? 'ok' : 'no');
-  const nm = PUNC[q.ans] ? PUNC[q.ans].name : '';
+  const names = [...q.ans].map(c => `「${c}」（${PUNC[c] ? PUNC[c].name : ''}）`).join('、');
   const why = timeout ? '時間到了！' : /[,.;:?!'"]/.test(v || '') ? '打出來是半形符號！' : `你打的是「${v}」。`;
   $('#bNote').className = 'b-note ' + (ok ? 'ok' : 'no');
-  $('#bNote').textContent = ok ? `✓ 答對了！就是「${q.ans}」（${nm}）` : `${why}答案是「${q.ans}」（${nm}）`;
+  $('#bNote').textContent = ok ? `✓ 答對了！${names}` : `${why}答案是${names}`;
   $('#bChargeWrap').hidden = true;
-  if (def){
-    B.defN++;
-    if (ok){ B.defOk++; B.score += 100; Sound.good(); fx($('#bFx'), 'good', '擋住了！');
-      const sh = document.createElement('div'); sh.className = 'b-shield'; $('#bShots').appendChild(sh); if (B.shot) B.shot.textContent = '💥'; }
-    else { B.lives--; Sound.bad(); fx($('#bFx'), 'no', '防禦失敗！');
-      if (B.shot){ B.shot.style.transition = 'left .25s linear'; B.shot.style.left = '14%'; setTimeout(() => { if (B && B.shot) B.shot.textContent = '💥'; }, 250); }
-      const pl = $('#bPlayer'); setTimeout(() => { pl.classList.remove('hurt'); void pl.offsetWidth; pl.classList.add('hurt'); }, 250);
-      const f = document.createElement('div'); f.className = 'flash'; $('#bStage').appendChild(f); setTimeout(() => f.remove(), 450); }
+  let msg;
+  if (ok){
+    B.okN++; B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo); Sound.good();
+    const combo = B.combo % BOSS.comboAt === 0, dmg = act === 'def' ? 0 : (combo ? 2 : 1);
+    if (act !== 'atk'){ const sh = document.createElement('div'); sh.className = 'b-shield'; $('#bShots').appendChild(sh); B.shots.forEach(f => f.textContent = '💥'); }
+    if (dmg) bossHit(dmg);
+    B.score += 100 * (act === 'double' ? 2 : 1) + (combo ? 100 : 0);
+    msg = act === 'def' ? (combo ? '擋住了！（連擊在攻擊回合才有用）' : '擋住了！') : combo ? `💥 ${B.combo} 連擊！傷害加倍！` : act === 'atk' ? '命中！' : '擋下＋反擊！';
+    fx($('#bFx'), 'good', msg);
   } else {
-    B.atkN++;
-    const st = document.createElement('div'); st.className = 'b-star'; st.textContent = '✦'; st.style.left = '18%'; st.style.bottom = '36%'; $('#bShots').appendChild(st);
-    requestAnimationFrame(() => { st.style.left = ok ? '80%' : '92%'; st.style.bottom = ok ? '34%' : '70%'; });
-    const pl = $('#bPlayer'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
-    if (ok){ B.atkOk++; B.hp--; B.score += 100; Sound.slash();
-      setTimeout(() => { const bs = $('#bBoss'); bs.classList.remove('hit'); void bs.offsetWidth; bs.classList.add('hit'); fx($('#bFx'), 'good', '命中！'); }, 320); }
-    else { Sound.bad(); fx($('#bFx'), 'no', '攻擊落空！'); }
+    B.combo = 0;
+    if (act === 'atk'){ Sound.bad(); msg = '攻擊落空！';
+      const st = document.createElement('div'); st.className = 'b-star'; st.textContent = '✦'; st.style.left = '18%'; st.style.bottom = '36%'; $('#bShots').appendChild(st);
+      requestAnimationFrame(() => { st.style.left = '92%'; st.style.bottom = '72%'; }); }
+    else { bossHurt(); msg = act === 'def' ? '防禦失敗！' : '被火球打中了！'; }
+    fx($('#bFx'), 'no', msg);
   }
   bossHud();
   const b = B; B.turn++;
-  let wait = ok ? 1600 : 2600;   /* 答錯多停一下，讓學生看清楚正確答案 */
-  if (B.hp > 0 && B.hp <= BOSS.rageAt && !B.raged){ B.raged = true; setTimeout(() => { if (B === b) bigText('#bBig', '😡 魔王生氣了！火球變快了！'); }, 900); wait += 1300; }
-  setTimeout(() => { if (B === b) bossNext(); }, wait);
+  setTimeout(() => { if (B === b) bossNext(); }, ok ? 1500 : 2600);   /* 答錯多停一下，讓學生看清楚正確答案 */
 }
 function bossEnd(win){
   const b = B; b.over = true; cancelAnimationFrame(loop);
@@ -1740,12 +1790,12 @@ function bossEnd(win){
     if (win) R.cleared = true;
     save(); Sound[win ? 'win' : 'soft']();
     if (win) markAward();
-    const notes = [];
+    const notes = [], pi = BOSS.phases.findIndex(p => b.hp > p.until);
     if (win) notes.push(note(`🌈 打敗了標點大魔王！${gradeIndex() === 5 ? `成為「${PK.legend}」` : ''}`));
-    else notes.push(note(`魔王還剩 ${b.hp} 滴血！攻擊回合填對 ${b.hp} 次就能打敗它`, true));
+    else notes.push(note(`魔王還剩 ${b.hp} 滴血（打到${BOSS.phases[Math.max(0, pi)].name}）！連續答對 ${BOSS.comboAt} 題的「連擊」傷害加倍，可以更快打倒它`, true));
     showResult(`第四關・魔王戰${win ? '：勝利！' : ''}`, win ? {cls:'best', text:'🏆 勝利！'} : trendOf(score, prev, bestBefore, 100),
       `<div class="r-stars">${win ? '🌈' : '👹'}</div><div class="r-score">${score}<small>分</small></div>`,
-      [['攻擊命中', `${b.atkOk}/${b.atkN}`], ['防禦成功', `${b.defOk}/${b.defN}`], ['剩下生命', b.lives], ['最高分', R.best]], false,
+      [['答對', `${b.okN}/${b.allN}`], ['最多連擊', b.maxCombo], ['剩下生命', b.lives], ['魔王剩下', `${b.hp} 滴血`], ['最高分', R.best]], false,
       notes, b.weak, [], R.hist, h => h.win ? '🏆' : '', 1, () => startBoss(), '', null);
   }, win ? 1800 : 1200);
 }
