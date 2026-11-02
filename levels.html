@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>關卡安排・教師設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+.mode{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.mode label{display:flex;gap:10px;align-items:flex-start;border:3px solid var(--ink);border-radius:14px;padding:12px 14px;background:#fff;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.mode label:has(input:checked){background:var(--hl)}
+.mode input{width:22px;height:22px;margin-top:4px;accent-color:var(--ink);flex:none}
+.mode b{font-size:18px}
+.mode small{display:block;font-weight:700;color:var(--soft)}
+.stages{display:grid;gap:12px}
+.stages.off{opacity:.45;pointer-events:none}
+.st{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;border:3px solid var(--ink);border-radius:14px;padding:12px 14px;background:#fff}
+.st.on{background:#EAF8F0;border-color:var(--good)}
+.st input[type=checkbox]{width:26px;height:26px;accent-color:var(--good);margin-top:2px;grid-row:span 2;cursor:pointer}
+.st h3{font-size:20px;cursor:pointer}
+.st p{font-size:14px;font-weight:700;color:var(--soft)}
+.lvpick{grid-column:2;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;font-weight:900;font-size:15px}
+.lvpick button{font:700 15px 'Noto Sans TC',sans-serif;border:3px solid var(--ink);border-radius:999px;padding:2px 14px;background:#fff;cursor:pointer}
+.lvpick button[aria-pressed=true]{background:var(--ink);color:#fff}
+.lvpick button:disabled{opacity:.4;cursor:not-allowed}
+.lvnote{grid-column:2;font-size:13px;font-weight:700;color:var(--good)}
+.tip-block{border:3px dashed #F28C38;border-radius:12px;padding:8px 14px;background:#FFF4E5;font-size:15px}
+.tip-block ul{margin:4px 0 0;padding-left:1.2em;font-weight:700}
+.result{background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:900}
+.msg{font-weight:900;color:var(--bad)}
+.msg:empty{display:none}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="crumb"><a href="index.html">資訊課練習遊戲</a> ／ <a id="backCrumb" href="#">教師設定</a> ／ 關卡安排</p>
+    <div class="brand"><span class="tag">🎯</span><h1 id="h1">關卡安排</h1></div>
+    <p class="sub">決定學生這一次要練哪幾關。不用改的話，直接按「回到教師設定」就好。這裡只有關卡，沒有學生資料。</p>
+  </header>
+
+  <section class="card">
+    <h2>學生可以玩哪些關卡？</h2>
+    <div class="mode">
+      <label><input type="radio" name="mode" value="all"><span><b>全部關卡，依序解鎖</b><small>預設。從第一關開始，過關才打開下一關。</small></span></label>
+      <label><input type="radio" name="mode" value="pick"><span><b>只開放勾選的關卡</b><small>例：今天只練「標點忍者」；可以指定從哪一級開始。</small></span></label>
+    </div>
+    <div class="stages off" id="stages"></div>
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <section class="card">
+    <h2>學生會看到</h2>
+    <p class="result" id="result">—</p>
+    <aside class="tip-block"><b>📣 給老師（學生畫面不會出現這段）</b><ul>
+      <li>沒勾的關卡，學生的關卡選單上看不到。</li>
+      <li>勾選的關卡照原本的順序解鎖；中間沒勾的關卡不算解鎖條件（例：只勾第一關和第三關，第一關完成 3 次就打開第三關）。</li>
+      <li><b>從哪一級開始</b>：學生一進來就能玩這一級；<b>比它低的級數也打開</b>（卡關的學生可以退回去練），<b>比它高的照常逐級解鎖</b>（程度好的學生還有下一個目標）。</li>
+      <li>獎狀只看這次有開的關卡。</li>
+    </ul></aside>
+  </section>
+
+  <div class="acts">
+    <button class="btn primary" type="button" id="done">✓ 完成，回到教師設定</button>
+    <button class="btn" type="button" id="cancel">取消（不改），回到教師設定</button>
+  </div>
+  <nav class="footnav"><a class="btn" id="backNav" href="#">⬅ 回上頁</a><a class="btn" href="index.html">🏠 回目錄</a></nav>
+</div>
+<script src="levels-data.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const KIND = (new URLSearchParams(location.hash.slice(1)).get('kind')) || 'en';
+const K = LEVELS[KIND] || LEVELS.en;
+const SKEY = 'lvsel_' + KIND;
+let saved = ''; try{ saved = sessionStorage.getItem(SKEY) || ''; }catch(e){}
+const cur = lvParse(KIND, saved);
+/* 目前的選擇：on＝有勾；lv＝起始級 */
+const sel = {}; K.stages.forEach(st => sel[st.id] = {on: cur ? !!cur[st.id] : true, lv: cur && typeof cur[st.id] === 'string' ? cur[st.id] : (st.lv ? st.lv[0][0] : null)});
+document.title = `關卡安排・${K.app}`; $('#h1').textContent = `關卡安排・${K.app}`;
+[$('#backCrumb'), $('#backNav')].forEach(a => a.href = K.setup);
+$('#backCrumb').textContent = `${K.app}・教師設定`;
+document.querySelector(`input[name=mode][value=${cur ? 'pick' : 'all'}]`).checked = true;
+const mode = () => document.querySelector('input[name=mode]:checked').value;
+function draw(){
+  const pick = mode() === 'pick';
+  $('#stages').classList.toggle('off', !pick);
+  $('#stages').innerHTML = K.stages.map(st => { const s = sel[st.id], on = pick ? s.on : true;
+    return `<div class="st ${on ? 'on' : ''}"><input type="checkbox" data-on="${st.id}" ${on ? 'checked' : ''} aria-label="${st.name}"><h3 data-tg="${st.id}">${st.name}</h3><p>${st.desc}</p>
+      ${st.lv ? `<div class="lvpick"><span>從哪一級開始：</span>${st.lv.map(([id, nm]) => `<button type="button" data-st="${st.id}" data-lv="${id}" aria-pressed="${(pick ? s.lv : st.lv[0][0]) === id}" ${on ? '' : 'disabled'}>${nm}</button>`).join('')}</div>
+      ${pick && on && s.lv !== st.lv[0][0] ? `<p class="lvnote">一進來就能玩「${st.lv.find(l => l[0] === s.lv)[1]}」；比它低的也打開，比它高的過關再打開。</p>` : ''}` : ''}</div>`; }).join('');
+  const s = value();
+  $('#result').textContent = lvText(KIND, s);
+  $('#msg').textContent = pick && !s ? '至少要勾一個關卡' : '';
+  $('#done').disabled = pick && !s;
+}
+/* 選完的結果（文字）；全部依序＝'' */
+function value(){
+  if (mode() !== 'pick') return '';
+  const o = {}; K.stages.forEach(st => { if (sel[st.id].on) o[st.id] = st.lv ? sel[st.id].lv : true; });
+  const all = K.stages.every(st => sel[st.id].on && (!st.lv || sel[st.id].lv === st.lv[0][0]));
+  if (all) return '';   /* 全部勾、都從最低一級開始＝和預設一樣 */
+  return lvString(KIND, o);
+}
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', draw));
+$('#stages').addEventListener('click', e => {
+  const c = e.target.closest('[data-on]'), t = e.target.closest('[data-tg]'), b = e.target.closest('[data-lv]');
+  if (c){ sel[c.dataset.on].on = c.checked; draw(); }
+  else if (t){ sel[t.dataset.tg].on = !sel[t.dataset.tg].on; draw(); }
+  else if (b && !b.disabled){ sel[b.dataset.st].lv = b.dataset.lv; draw(); }
+});
+$('#done').onclick = () => { try{ sessionStorage.setItem(SKEY, value()); }catch(e){} location.href = K.setup; };
+$('#cancel').onclick = () => { location.href = K.setup; };
+draw();
+</script>
+</body>
+</html>
