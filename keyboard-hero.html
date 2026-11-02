@@ -422,6 +422,12 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .cert.g-gold .cert-title{color:#A86A00;text-shadow:2px 2px 0 #FFF2B8}
 .cert.g-rainbow .cert-in{border:8px solid transparent;background:linear-gradient(160deg,#FFFDF4,#FFF0FB) padding-box,linear-gradient(90deg,#E5484D,#F5B700,#2BB673,#3A9FEF,#9466EE) border-box}
 .cert.g-rainbow .cert-grade{background:linear-gradient(90deg,#FFD1D3,#FFF1B8,#D2F5E1,#D6EBFF,#E9DEFF)}
+.cert.g-supreme{background:radial-gradient(circle at 50% 0,#FFF6CC,#FFFDF4 60%);box-shadow:0 0 0 4px #F5B700,0 0 30px 8px rgba(245,183,0,.6),8px 8px 0 var(--ink)}
+.cert.g-supreme .cert-in{border:10px solid transparent;background:linear-gradient(160deg,#FFFBEA,#FFE8A3) padding-box,linear-gradient(90deg,#E5484D,#F5B700,#2BB673,#3A9FEF,#9466EE,#E5484D) border-box;background-size:100% 100%,300% 100%;animation:supreme 4s linear infinite}
+@keyframes supreme{to{background-position:0 0,300% 0}}
+.cert.g-supreme .cert-grade{background:linear-gradient(#FFE27A,#F5B700);box-shadow:0 0 12px #F5B700}
+.cert.g-supreme .cert-title{background:linear-gradient(90deg,#A86A00,#D12F35,#6B3FC7,#A86A00);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.confetti.gold{background:#F5B700!important;box-shadow:0 0 6px #FFE27A}
 .cert.g-rainbow .cert-title{background:linear-gradient(90deg,#D12F35,#C98A00,#15894B,#1F6FC2,#6B3FC7);-webkit-background-clip:text;background-clip:text;color:transparent}
 .award-btn{font:900 17px var(--f-body);background:linear-gradient(#FFE27A,#F5B700);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);padding:4px 14px;cursor:pointer;animation:awdpulse 1.6s infinite}
 @keyframes awdpulse{50%{transform:scale(1.06)}}
@@ -608,7 +614,7 @@ const PACKS = {
     tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵，再按 Enter 送出）</small>',
     l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1～4 個符號・連對升階',
     ninjaName:'標點忍者', enemyHint:'敵人頭上有標點符號，在下面的打字欄位打出來就能擊退它',
-    titles:['標點見習生','標點下忍','標點中忍','標點上忍'], perfect:'完美標點上忍', legend:'標點傳說忍者',
+    titles:['標點見習生','標點下忍','標點中忍','標點上忍'], perfect:'完美標點上忍', legend:'標點傳說忍者', supreme:'完美標點傳說忍者',
   },
   key:{
     app:'重要按鍵練習', tag:'Esc', badge:'重要按鍵', unit:'鍵', store:'kbkey1_', setup:'keyboard.html', setupName:'重要按鍵練習・教師設定',
@@ -690,11 +696,12 @@ const TITLES = PK.titles;
    特優＝完美稱號＋金色獎狀＋彩帶：三級都通關、第一關與第二關都 5 顆星
    金＝第三關最高一級通關（上忍）；銀＝第二級通關、最高一級還沒過；銅＝第一級通關；見習＝第一關完成 3 次 */
 const GRADES = [{id:'blue', name:'見習獎'}, {id:'bronze', name:'銅獎'}, {id:'silver', name:'銀獎'}, {id:'gold', name:'金獎'}, {id:'gold', name:'特優・金獎', ribbon:true},
-  {id:'rainbow', name:'傳說獎', ribbon:true}];   /* 傳說獎＝標點：第四關打敗標點大魔王（老師 2026-11-02） */
+  {id:'rainbow', name:'傳說獎', ribbon:true},   /* 傳說獎＝標點：第四關打敗標點大魔王（老師 2026-11-02） */
+  {id:'supreme', name:'全程制霸獎', ribbon:true}];   /* 全程制霸＝標點：打敗魔王＋第一關、第二關都 5 顆星＋忍者三級都通關（全程解鎖，老師 2026-11-02） */
 const isPerfect = () => titleIndex() === 3 && NINJA_ORDER.every(id => P.ninja[id].cleared) && P.l1.stars >= 5 && (KIND === 'key' || P.l2.stars >= 5);
 const bossOpen = () => KIND === 'punc' && !!P && (P.unlock || P.ninja.master.cleared);
-const gradeIndex = () => titleIndex() < 0 ? -1 : (KIND === 'punc' && P.boss && P.boss.cleared && titleIndex() === 3) ? 5 : isPerfect() ? 4 : titleIndex();
-const gradeTitle = gi => gi === 5 ? PK.legend : gi === 4 ? PK.perfect : TITLES[Math.max(0, Math.min(gi, 3))];
+const gradeIndex = () => titleIndex() < 0 ? -1 : (KIND === 'punc' && P.boss && P.boss.cleared && titleIndex() === 3) ? (isPerfect() ? 6 : 5) : isPerfect() ? 4 : titleIndex();
+const gradeTitle = gi => gi === 6 ? PK.supreme : gi === 5 ? PK.legend : gi === 4 ? PK.perfect : TITLES[Math.max(0, Math.min(gi, 3))];
 const TITLE_RULE = ['第一關完成 3 次'].concat(['novice','brave','master'].map(id => `${PK.ninjaName}「${NINJA[id].name}」通關`));
 const AWARD_LINE = ['認真完成第一關 3 次'].concat(['novice','brave','master'].map(id => `擊退${PK.ninjaName}「${NINJA[id].name}」的 ${NINJA[id].goal} 個${FOE}`));
 const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
@@ -951,7 +958,8 @@ function renderHome(){
   const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${ti<0 ? '還沒有' : gradeTitle(gi)}</b>${awd}
     <span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>
     <span class="tnote" style="width:100%">${ti < 3 ? `下一個：${TITLE_RULE[ti+1]} → 「${TITLES[ti+1]}」（${GRADES[ti+1].name}）`
-      : gi === 5 ? `已經是「${PK.legend}」！傳說獎`
+      : gi === 6 ? `已經是「${PK.supreme}」！全程制霸獎`
+      : gi === 5 ? `已經是「${PK.legend}」！最後的挑戰：第一關、第二關都拿 5 顆星 → 「${PK.supreme}」（全程制霸獎）`
       : [isPerfect() ? `已經是「${PK.perfect}」！特優・金獎` : `${KIND === 'key' ? '第一關拿 5 顆星' : '第一關、第二關都拿 5 顆星'}，${PK.ninjaName}三級都通關 → 「${PK.perfect}」（特優・金獎＋彩帶）`, legendNote].filter(Boolean).join('；')}</span></div>`;
   $('#entries').innerHTML = tb + c1 + c2 + c3 + c4;
   if ($('#awardBtn')) $('#awardBtn').onclick = () => showAward(false);
@@ -1120,6 +1128,7 @@ function drillEnd(){
   const tierWas = P.l2.tierBest || 0;
   if (d.br) P.l2.tierBest = Math.max(tierWas, d.tierMax + 1);
   save(); stars ? Sound.win() : Sound.soft();
+  if (gradeIndex() >= 4) markAward();   /* 星星拿滿而升到最高等第（全程達成）也算破關，回關卡選單時跳出 */
   const trend = trendOf(score, prev, bestBefore, 5);
   const notes = [];
   if (d.lv===1 && !l2Was && l2Open()) notes.push(note(`「${L2.name}」打開了！`));
@@ -1901,10 +1910,10 @@ function showAward(preview){
     el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-empty">今天還差一點點！<br>把第一關完成 ${L1.plays} 次，就能成為「${TITLES[0]}」。</p>`;
   } else {
     const gi = Math.max(0, gradeIndex()), G = GRADES[gi], t = gradeTitle(gi), S = SETS[SET];
-    const line = gi === 5 ? `${PK.ninjaName}三級全部通關，還在第四關打敗了「標點大魔王」` : gi === 4 ? `${KIND === 'key' ? '第一關拿到 5 顆星' : '第一關、第二關都拿到 5 顆星'}，${PK.ninjaName}三級全部通關` : AWARD_LINE[Math.max(0,ti)];
+    const line = gi === 6 ? `每一關的星星都拿滿，${PK.ninjaName}三級全部通關，還打敗了「標點大魔王」，全程制霸` : gi === 5 ? `${PK.ninjaName}三級全部通關，還在第四關打敗了「標點大魔王」` : gi === 4 ? `${KIND === 'key' ? '第一關拿到 5 顆星' : '第一關、第二關都拿到 5 顆星'}，${PK.ninjaName}三級全部通關` : AWARD_LINE[Math.max(0,ti)];
     const nin = NINJA_ORDER.filter(id => P.ninja[id].best || P.ninja[id].cleared).map(id => `<div>${P.ninja[id].cleared ? '🏆 ' : ''}${PK.ninjaName}${NINJA[id].name}・最高 ${P.ninja[id].best} 分</div>`).join('');
     el.innerHTML = `<p class="cert-kicker">資訊課・${PK.app}</p><p class="cert-sub">獎　狀</p>
-      <p class="cert-grade">${gi === 5 ? '🌈' : gi === 4 ? '🏆' : gi === 3 ? '🥇' : gi === 2 ? '🥈' : gi === 1 ? '🥉' : '🎖'} ${G.name}</p>
+      <p class="cert-grade">${gi === 6 ? '👑' : gi === 5 ? '🌈' : gi === 4 ? '🏆' : gi === 3 ? '🥇' : gi === 2 ? '🥈' : gi === 1 ? '🥉' : '🎖'} ${G.name}</p>
       <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(line)}，<br>特頒此狀，恭喜成為</p>
       <h2 class="cert-title">${t}</h2>
       <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div>${KIND === 'key' ? '' : `<div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>`}${nin}${KIND === 'punc' && P.boss && (P.boss.best || P.boss.cleared) ? `<div>${P.boss.cleared ? '🌈 ' : ''}第四關魔王戰・最高 ${P.boss.best} 分</div>` : ''}</div>
@@ -1915,14 +1924,14 @@ function showAward(preview){
   cert.querySelectorAll('.confetti').forEach(x => x.remove());
   if (gi2 >= 4){   /* 彩帶動畫 */
     const cols = ['#E5484D','#F5B700','#3A9FEF','#2BB673','#9466EE','#FF8A3D'];
-    for (let i = 0; i < 46; i++){ const c = document.createElement('i'); c.className = 'confetti';
+    for (let i = 0; i < (gi2 === 6 ? 90 : 46); i++){ const c = document.createElement('i'); c.className = 'confetti' + (gi2 === 6 && i % 3 === 0 ? ' gold' : '');
       c.style.left = (Math.random()*100) + '%'; c.style.background = cols[i % cols.length];
       c.style.animationDelay = (Math.random()*1.6) + 's'; c.style.animationDuration = (2.2 + Math.random()*1.8) + 's';
       c.style.transform = `rotate(${Math.random()*360}deg)`; cert.appendChild(c); }
     [523,659,784,1047,1319,1568].forEach((f,i) => Sound.tone(f,.28,'triangle',i*.1,.12));
   }
   if (!preview && gi2 >= 0 && !DEMO && gi2 > (P.awardSeen == null ? -1 : P.awardSeen)){ P.awardSeen = gi2; save(); }
-  $('#certL4').hidden = !(bossOpen() && !(P.boss && P.boss.cleared && gi2 === 5) && !preview);
+  $('#certL4').hidden = !(bossOpen() && !(P.boss && P.boss.cleared) && !preview);
   $('#certWrap').hidden = false; Sound.win();
 }
 /* 領取獎狀的按鈕：到了老師設定的時間（學生電腦的時鐘）才出現；老師示範時一直出現 */
