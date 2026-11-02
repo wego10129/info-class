@@ -427,6 +427,8 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 @keyframes supreme{to{background-position:0 0,300% 0}}
 .cert.g-supreme .cert-grade{background:linear-gradient(#FFE27A,#F5B700);box-shadow:0 0 12px #F5B700}
 .cert.g-supreme .cert-title{background:linear-gradient(90deg,#A86A00,#D12F35,#6B3FC7,#A86A00);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.cert-hidden{display:inline-block;margin:2px 0 4px;font-weight:900;font-size:15px;color:#fff;background:linear-gradient(90deg,#1F6FC2,#6B3FC7);border:2px solid var(--ink);border-radius:999px;padding:2px 14px;box-shadow:0 0 10px rgba(107,63,199,.6)}
+.r-crown.flawless{background:linear-gradient(90deg,#DCEBFF,#E9DEFF)}
 .confetti.gold{background:#F5B700!important;box-shadow:0 0 6px #FFE27A}
 .cert.g-rainbow .cert-title{background:linear-gradient(90deg,#D12F35,#C98A00,#15894B,#1F6FC2,#6B3FC7);-webkit-background-clip:text;background-clip:text;color:transparent}
 .award-btn{font:900 17px var(--f-body);background:linear-gradient(#FFE27A,#F5B700);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);padding:4px 14px;cursor:pointer;animation:awdpulse 1.6s infinite}
@@ -500,7 +502,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
         <div class="chk-list" id="chkList"></div>
         <input id="chkIn" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="試打格子">
         <p class="thint" id="chkMsg"></p>
-        <div class="r-btns"><button class="btn primary" type="button" id="chkGo" disabled>開始練習！</button><button class="btn" type="button" id="chkSkip" hidden>跳過（老師示範）</button></div>
+        <div class="r-btns"><button class="btn primary" type="button" id="chkGo" disabled>開始練習！</button><button class="btn" type="button" id="chkFix">✏️ 修正班級姓名</button><button class="btn" type="button" id="chkSkip" hidden>跳過（老師示範）</button></div>
       </div>
       <nav class="footnav"><a class="btn sm navout" href="typing.html">⬅ 回上頁</a><a class="btn sm navout" href="index.html">🏠 回目錄</a></nav>
     </section>
@@ -781,7 +783,9 @@ $('#signForm').addEventListener('submit', e => {
 $('#sNameBox').hidden = !CFG.nameOn;
 function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name ? WHO.name : ''; $('#sPrev').textContent = WHO ? parseCode(WHO.code).text || '' : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(()=>$('#sCode').focus(), 50); }
 function renderWho(){ const w = $('#who'); w.hidden = !WHO; if (WHO) w.textContent = WHO.text; }
-$('#who').onclick = () => { if (screen==='home' || screen==='sets') openSignin(); };
+$('#who').onclick = () => { if (screen==='home' || screen==='sets' || screen==='check') openSignin(); };
+/* 環境檢測畫面的「修正班級姓名」（老師 2026-11-02：學生太快按 Enter，來不及改或補打名字） */
+$('#chkFix').onclick = () => openSignin();
 
 /* ---------- 簽到、輸入法檢測、正在練的範圍（老師 2026-10-30）：關掉再打開時接著練，不用重新簽到、重新檢查
    存在這台電腦的瀏覽器（和練習紀錄一起），老師按「清除這台電腦的紀錄」一起清掉；示範模式不存 ---------- */
@@ -951,7 +955,7 @@ function renderHome(){
     : card(3, 'var(--c-ninja)', ['忍'], `第三關・${PK.ninjaName}`, nBtns, anyN ? '' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`);
   const bo = bossOpen(), BR = P.boss;
   const c4 = KIND !== 'punc' ? '' : card(4, '#5B2A86', ['👹'], '第四關・魔王戰', `<button class="diff" type="button" data-boss="1" ${bo?'':'disabled'}><span>句子填空・打敗標點大魔王<small>${bo ? `看句子填對標點才打得到魔王、擋得住火球；填錯就落空・魔王 ${BOSS.hp} 滴血、3 個階段・${BOSS.lives} 條命` : '標點忍者「大師」通關就打開'}</small></span>
-    <span class="lv-r">${bo ? `<span class="lv-best">${BR.cleared ? '🏆 打敗魔王！' : ''}</span><span class="lv-best">${BR.best ? `最高 ${BR.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`, bo ? '' : '標點忍者「大師」通關就打開');
+    <span class="lv-r">${bo ? `<span class="lv-best">${BR.flawless ? '🛡 無傷擊敗！' : BR.cleared ? '🏆 打敗魔王！' : ''}</span><span class="lv-best">${BR.best ? `最高 ${BR.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`, bo ? '' : '標點忍者「大師」通關就打開');
   const ti = titleIndex(), gi = gradeIndex();
   const awd = awardOpen() ? `<button class="award-btn" type="button" id="awardBtn">🏆 領取獎狀</button>` : '';
   const legendNote = KIND === 'punc' && !(BR && BR.cleared) ? `第四關打敗「標點大魔王」→ 「${PK.legend}」（傳說獎）` : '';
@@ -1797,13 +1801,19 @@ function bossEnd(win){
     R.hist.push({score, win, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
     if (score > (R.best || 0)) R.best = score;
     if (win) R.cleared = true;
+    /* 隱藏成就（老師 2026-11-02）：一條命都沒少就打敗魔王＝「無傷擊敗魔王」；學生畫面事先不說，第一次達成時回關卡選單跳出獎狀 */
+    const flawless = win && b.lives === BOSS.lives, firstFlawless = flawless && !R.flawless;
+    if (flawless) R.flawless = true;
     save(); Sound[win ? 'win' : 'soft']();
     if (win) markAward();
+    if (firstFlawless && !DEMO) PENDING_AWARD = true;
     const notes = [], pi = BOSS.phases.findIndex(p => b.hp > p.until);
-    if (win) notes.push(note(`🌈 打敗了標點大魔王！${gradeIndex() === 5 ? `成為「${PK.legend}」` : ''}`));
+    if (win) notes.push(note(`🌈 打敗了標點大魔王！${gradeIndex() >= 5 ? `成為「${gradeTitle(gradeIndex())}」` : ''}`));
+    if (firstFlawless) notes.push(note('🛡 隱藏成就解鎖：無傷擊敗魔王！一條命都沒少！'));
+    else if (flawless) notes.push(note('🛡 又一次無傷擊敗魔王！'));
     else notes.push(note(`魔王還剩 ${b.hp} 滴血（打到${BOSS.phases[Math.max(0, pi)].name}）！連續答對 ${BOSS.comboAt} 題的「連擊」傷害加倍，可以更快打倒它`, true));
     showResult(`第四關・魔王戰${win ? '：勝利！' : ''}`, win ? {cls:'best', text:'🏆 勝利！'} : trendOf(score, prev, bestBefore, 100),
-      `<div class="r-stars">${win ? '🌈' : '👹'}</div><div class="r-score">${score}<small>分</small></div>`,
+      `<div class="r-stars">${win ? '🌈' : '👹'}</div><div class="r-score">${score}<small>分</small></div>${flawless ? '<div class="r-crown flawless"><i>🛡</i>隱藏成就・無傷擊敗魔王</div>' : ''}`,
       [['答對', `${b.okN}/${b.allN}`], ['最多連擊', b.maxCombo], ['剩下生命', b.lives], ['魔王剩下', `${b.hp} 滴血`], ['最高分', R.best]], false,
       notes, b.weak, [], R.hist, h => h.win ? '🏆' : '', 1, () => startBoss(), '', null);
   }, win ? 1800 : 1200);
@@ -1916,7 +1926,7 @@ function showAward(preview){
       <p class="cert-grade">${gi === 6 ? '👑' : gi === 5 ? '🌈' : gi === 4 ? '🏆' : gi === 3 ? '🥇' : gi === 2 ? '🥈' : gi === 1 ? '🥉' : '🎖'} ${G.name}</p>
       <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(line)}，<br>特頒此狀，恭喜成為</p>
       <h2 class="cert-title">${t}</h2>
-      <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div>${KIND === 'key' ? '' : `<div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>`}${nin}${KIND === 'punc' && P.boss && (P.boss.best || P.boss.cleared) ? `<div>${P.boss.cleared ? '🌈 ' : ''}第四關魔王戰・最高 ${P.boss.best} 分</div>` : ''}</div>
+      <div class="cert-scores"><div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div>${KIND === 'key' ? '' : `<div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>`}${nin}${KIND === 'punc' && P.boss && (P.boss.best || P.boss.cleared) ? `<div>${P.boss.cleared ? '🌈 ' : ''}第四關魔王戰・最高 ${P.boss.best} 分</div>` : ''}</div>${KIND === 'punc' && P.boss && P.boss.flawless ? '<p class="cert-hidden">🛡 隱藏成就・無傷擊敗魔王</p>' : ''}
       <p class="cert-date">${todayStr()}${preview && ti < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
   }
   const gi2 = ti < 0 && !preview ? -1 : Math.max(0, gradeIndex()), cert = document.querySelector('.cert');
@@ -1980,7 +1990,7 @@ function chkDraw(){
 function chkStart(){
   chkI = 0; chkComp = false; const i = $('#chkIn'); i.value = ''; i.className = 'tin'; i.disabled = false; compLine(i, false);
   $('#chkMsg').className = 'thint'; $('#chkMsg').textContent = '先點一下格子，再打第一個符號';
-  $('#chkSkip').hidden = !DEMO; chkDraw(); setTimeout(() => { if (screen==='check' && $('#signWrap').hidden) i.focus(); }, 60);
+  $('#chkSkip').hidden = !DEMO; $('#chkFix').hidden = DEMO; chkDraw(); setTimeout(() => { if (screen==='check' && $('#signWrap').hidden) i.focus(); }, 60);
 }
 function chkSay(kind, t){ const m = $('#chkMsg'), i = $('#chkIn'); m.className = 'thint' + (kind==='bad' ? ' bad' : kind==='warn' ? ' warn' : ''); m.textContent = t; i.className = 'tin' + (chkComp ? ' comp' : '') + (kind==='bad' ? ' bad' : kind==='warn' ? ' ime' : ''); }
 function chkTest(){
