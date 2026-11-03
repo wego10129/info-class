@@ -6,8 +6,8 @@
 window.LEVELS = {
   en: {app:'英文打字', setup:'typing-setup.html', stages:[
     {id:'l1', name:'第一關・單一字母', desc:'一次一個字母，不限時、打對為止'},
-    {id:'l2', name:'第二關・字母組合', desc:'2～4 個字母的組合，有星星與皇冠'},
-    {id:'n', name:'第三關・打字忍者', desc:'敵人頭上有字母，打出來就擊退', lv:[['novice','新手'],['brave','勇者'],['master','大師']]},
+    {id:'l2', name:'第二關・字母組合', desc:'三個小關：2 個 → 3 個 → 4～5 個字母，有星星與皇冠'},
+    {id:'n', name:'第三關・字母流星雨／打字忍者', desc:'依教師設定：流星（或敵人）上有字母，打出來就擊退', lv:[['novice','新手'],['brave','勇者'],['master','大師']]},
     {id:'race', name:'第四關・影子賽車', desc:'打對字母車子往前衝，和自己的最佳紀錄（影子車）比賽', lv:[['novice','新手盃'],['brave','勇者盃'],['master','大師盃']]}]},
   punc: {app:'標點符號大挑戰', setup:'punct-setup.html', stages:[
     {id:'l1', name:'第一關・單一符號', desc:'一次一個標點，不限時、打對為止'},

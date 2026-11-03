@@ -78,7 +78,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
   <nav class="flow" aria-label="設定流程">
     <a href="#s1" id="f1"><b>1</b>選字母<small>至少 2 個</small></a><span class="arr">→</span>
     <a href="#s2" id="f2"><b>2</b>練習目標<small>當作網頁名稱</small></a><span class="arr">→</span>
-    <a href="#s3" id="f3"><b>3</b>其他設定<small>關卡、領取獎狀時間、班級座號、姓名</small></a><span class="arr">→</span>
+    <a href="#s3" id="f3"><b>3</b>其他設定<small>第三關玩法、關卡、領取獎狀時間、班級座號、姓名</small></a><span class="arr">→</span>
     <a href="#s4" id="f4"><b>4</b>預覽<small>看學生畫面</small></a><span class="arr">→</span>
     <a href="#s5" id="f5"><b>5</b>發給學生<small>連結或捷徑檔</small></a>
   </nav>
@@ -124,6 +124,10 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
     <aside class="tip-block" id="nameTip" hidden><b>📣 給老師（學生畫面不會出現這段）</b><ul><li>中文或英文名字都可以，不限定輸入法。</li><li>名字可以空白：不會打的學生，口頭提醒他直接按 Enter 就能進入，獎狀會改印座號。</li></ul></aside>
     <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，點了依目前的進度發獎狀，可以列印。</li><li>在這個時間之前就破完最後一關的最高一級，回到關卡選單時會自動跳出獎狀（選「再玩一次」就不會跳出）；之後拿到更高的獎狀，也會再跳出一次。</li><li>獎狀依「現在的紀錄」產生，之後再練習，下次領取的獎狀也會跟著更新。</li></ul></aside>
+    <p class="field" style="margin:14px 0 4px"><b>第三關的玩法</b></p>
+    <label class="check-opt"><input type="radio" name="l3" value="meteor" checked><span><b>☄ 字母流星雨（三年級建議）</b><small>流星從天上掉下來，在掉到地上以前打出字母。畫面、稱號、獎狀都不會出現忍者。</small></span></label>
+    <label class="check-opt"><input type="radio" name="l3" value="ninja"><span><b>🥷 打字忍者（四年級以上）</b><small>敵人從右邊走過來，打出頭上的字母擊退它。稱號是見習忍者、下忍、中忍、上忍。</small></span></label>
+    <p class="note">兩種玩法的規則、速度、紀錄都一樣，只有外觀和稱號不同。</p>
     <div class="lvrow"><span class="lvl">🎯 關卡安排：</span><span id="lvNow"></span><a class="btn" id="lvGo" href="levels.html#kind=en">指定關卡（另開一頁）</a></div>
     <p class="note">想讓學生只練某一關（例：只練第三關），或從某一級開始，按「指定關卡」。</p>
     <p class="msg err" id="msg3"></p>
@@ -135,6 +139,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
       <dt>練習目標</dt><dd id="sumGoal">—</dd>
       <dt>字母</dt><dd id="sumKeys">—</dd>
       <dt>關卡</dt><dd id="sumLv">—</dd>
+      <dt>第三關</dt><dd id="sumL3">—</dd>
       <dt>領取獎狀</dt><dd id="sumAward">—</dd>
       <dt>班級座號</dt><dd id="sumCls">—</dd>
       <dt>學生姓名</dt><dd id="sumName">—</dd>
@@ -191,7 +196,7 @@ function normTime(v){
 const numIn = (id, lo, hi, d) => { const n = parseInt($('#'+id).value, 10); return n >= lo && n <= hi ? n : null; };
 function state(){
   const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value);
-  return {keys:keysNow(), goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && c && s && !!awd};
+  return {keys:keysNow(), goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, l3: (document.querySelector('[name=l3]:checked') || {}).value === 'ninja' ? 'ninja' : 'meteor', ok: keysNow().length >= 2 && c && s && !!awd};
 }
 function params(st, demo){
   const p = new URLSearchParams();
@@ -202,6 +207,7 @@ function params(st, demo){
   if (st.c !== 20) p.set('classes', st.c);
   if (st.s !== 40) p.set('seats', st.s);
   if (st.nm) p.set('nm', '1');
+  if (st.l3 === 'ninja') p.set('l3', 'ninja');   /* 第三關的玩法：預設流星雨；四年級以上選打字忍者（老師 2026-11-03） */
   if (demo) p.set('demo', '1');
   return p.toString();
 }
@@ -220,6 +226,7 @@ function render(){
   $('#msg3').textContent = errs.filter(e => !e.startsWith('第 1')).join('；');
   $('#sumGoal').textContent = st.goal || '老師指定（沒有填目標）';
   $('#sumKeys').textContent = k.length ? k.join(' ').toUpperCase() : '還沒選';
+  $('#sumL3').textContent = st.l3 === 'ninja' ? '打字忍者（四年級以上）' : '字母流星雨（三年級）';
   $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
   $('#sumAward').textContent = st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
@@ -237,6 +244,7 @@ function syncPresets(){ document.querySelectorAll('[data-p]').forEach(b => { con
 ['goal','classes','seats','awardAt'].forEach(id => $('#'+id).addEventListener('input', render));
 $('#awardAt').addEventListener('blur', () => { const t = normTime($('#awardAt').value); if (t) $('#awardAt').value = t; render(); });
 $('#nameOn').addEventListener('change', render);
+document.querySelectorAll('[name=l3]').forEach(r => r.addEventListener('change', render));
 $('#nameOn').addEventListener('change', () => { $('#nameTip').hidden = !$('#nameOn').checked; });
 ['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
 document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));
@@ -264,11 +272,12 @@ $('#shortcut').onclick = () => {
 $('#open').onclick = () => window.open(linkOf(state()), '_blank');
 $('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
 /* 去「關卡安排」頁再回來時，表單照原樣（只存在這個分頁，關掉就清掉） */
-function saveForm(){ try{ sessionStorage.setItem('setup_' + KIND_, JSON.stringify({keys:[...picked], goal:$('#goal').value, awd:$('#awardAt').value, c:$('#classes').value, s:$('#seats').value, nm:$('#nameOn').checked})); }catch(e){} }
+function saveForm(){ try{ sessionStorage.setItem('setup_' + KIND_, JSON.stringify({keys:[...picked], goal:$('#goal').value, awd:$('#awardAt').value, c:$('#classes').value, s:$('#seats').value, nm:$('#nameOn').checked, l3:state().l3})); }catch(e){} }
 (function(){ let f = null; try{ f = JSON.parse(sessionStorage.getItem('setup_' + KIND_) || 'null'); }catch(e){}
   if (!f) return; picked.clear(); (f.keys || []).forEach(c => { if (ORDER.includes(c)) picked.add(c); });
   $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40';
-  $('#nameOn').checked = !!f.nm; $('#nameTip').hidden = !f.nm; })();
+  $('#nameOn').checked = !!f.nm; $('#nameTip').hidden = !f.nm;
+  if (f.l3 === 'ninja') document.querySelector('[name=l3][value=ninja]').checked = true; })();
 render();
 </script>
 </body>
