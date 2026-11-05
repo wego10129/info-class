@@ -46,7 +46,7 @@
   <section class="card">
     <h2>學生可以玩哪些關卡？</h2>
     <div class="mode">
-      <label><input type="radio" name="mode" value="all"><span><b>全部關卡，依序解鎖</b><small>預設。從第一關開始，過關才打開下一關。</small></span></label>
+      <label><input type="radio" name="mode" value="all"><span><b>預設的關卡，依序解鎖</b><small id="defNote">從第一關開始，過關才打開下一關。</small></span></label>
       <label><input type="radio" name="mode" value="pick"><span><b>只開放勾選的關卡</b><small>例：今天只練「標點忍者」；可以指定從哪一級開始。</small></span></label>
     </div>
     <div class="stages off" id="stages"></div>
@@ -58,6 +58,7 @@
     <p class="result" id="result">—</p>
     <aside class="tip-block"><b>📣 給老師（學生畫面不會出現這段）</b><ul>
       <li>沒勾的關卡，學生的關卡選單上看不到。</li>
+      <li><b>關卡編號自動排</b>：學生看到的「第幾關」依有勾的關卡重新算（例：英文只勾第一關和打字忍者，打字忍者就是第二關）。</li>
       <li>勾選的關卡照原本的順序解鎖；中間沒勾的關卡不算解鎖條件（例：只勾第一關和第三關，第一關完成 3 次就打開第三關）。</li>
       <li><b>從哪一級開始</b>：學生一進來就能玩這一級；<b>比它低的級數也打開</b>（卡關的學生可以退回去練），<b>比它高的照常逐級解鎖</b>（程度好的學生還有下一個目標）。</li>
       <li>獎狀只看這次有開的關卡。</li>
@@ -79,7 +80,7 @@ const SKEY = 'lvsel_' + KIND;
 let saved = ''; try{ saved = sessionStorage.getItem(SKEY) || ''; }catch(e){}
 const cur = lvParse(KIND, saved);
 /* 目前的選擇：on＝有勾；lv＝起始級 */
-const sel = {}; K.stages.forEach(st => sel[st.id] = {on: cur ? !!cur[st.id] : true, lv: cur && typeof cur[st.id] === 'string' ? cur[st.id] : (st.lv ? st.lv[0][0] : null)});
+const sel = {}; K.stages.forEach(st => sel[st.id] = {on: cur ? !!cur[st.id] : st.def !== false, lv: cur && typeof cur[st.id] === 'string' ? cur[st.id] : (st.lv ? st.lv[0][0] : null)});
 document.title = `關卡安排・${K.app}`; $('#h1').textContent = `關卡安排・${K.app}`;
 [$('#backCrumb'), $('#backNav')].forEach(a => a.href = K.setup);
 $('#backCrumb').textContent = `${K.app}・教師設定`;
@@ -88,8 +89,9 @@ const mode = () => document.querySelector('input[name=mode]:checked').value;
 function draw(){
   const pick = mode() === 'pick';
   $('#stages').classList.toggle('off', !pick);
-  $('#stages').innerHTML = K.stages.map(st => { const s = sel[st.id], on = pick ? s.on : true;
-    return `<div class="st ${on ? 'on' : ''}"><input type="checkbox" data-on="${st.id}" ${on ? 'checked' : ''} aria-label="${st.name}"><h3 data-tg="${st.id}">${st.name}</h3><p>${st.desc}</p>
+  const no = lvNumbers(KIND, pick ? value() : '');
+  $('#stages').innerHTML = K.stages.map(st => { const s = sel[st.id], on = pick ? s.on : st.def !== false;
+    return `<div class="st ${on ? 'on' : ''}"><input type="checkbox" data-on="${st.id}" ${on ? 'checked' : ''} aria-label="${st.name}"><h3 data-tg="${st.id}">${on && no[st.id] ? no[st.id] + '・' : ''}${st.name}</h3><p>${st.desc}</p>
       ${st.lv ? `<div class="lvpick"><span>從哪一級開始：</span>${st.lv.map(([id, nm]) => `<button type="button" data-st="${st.id}" data-lv="${id}" aria-pressed="${(pick ? s.lv : st.lv[0][0]) === id}" ${on ? '' : 'disabled'}>${nm}</button>`).join('')}</div>
       ${pick && on && s.lv !== st.lv[0][0] ? `<p class="lvnote">一進來就能玩「${st.lv.find(l => l[0] === s.lv)[1]}」；比它低的也打開，比它高的過關再打開。</p>` : ''}` : ''}</div>`; }).join('');
   const s = value();
@@ -101,10 +103,13 @@ function draw(){
 function value(){
   if (mode() !== 'pick') return '';
   const o = {}; K.stages.forEach(st => { if (sel[st.id].on) o[st.id] = st.lv ? sel[st.id].lv : true; });
-  const all = K.stages.every(st => sel[st.id].on && (!st.lv || sel[st.id].lv === st.lv[0][0]));
-  if (all) return '';   /* 全部勾、都從最低一級開始＝和預設一樣 */
+  const all = K.stages.every(st => sel[st.id].on === (st.def !== false) && (!sel[st.id].on || !st.lv || sel[st.id].lv === st.lv[0][0]));
+  if (all) return '';   /* 和預設一樣（預設的關卡都勾、預設不開的都沒勾、都從最低一級開始） */
   return lvString(KIND, o);
 }
+/* 預設不開的關卡（例：英文的打字忍者）寫在「預設」選項下面 */
+const offDef = K.stages.filter(st => st.def === false).map(st => st.name);
+if (offDef.length) $('#defNote').textContent = `從第一關開始，過關才打開下一關。「${offDef.join('、')}」預設不開，要選「只開放勾選的關卡」再勾選。`;
 document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', draw));
 $('#stages').addEventListener('click', e => {
   const c = e.target.closest('[data-on]'), t = e.target.closest('[data-tg]'), b = e.target.closest('[data-lv]');
