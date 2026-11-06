@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>重要語詞訓練</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+/* 重要語詞訓練（2026-11-06）：用注音輸入法打出國字數字、學校地址、台灣縣市 */
+[hidden]{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.who{font-weight:900;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 14px;cursor:pointer;font-size:15px}
+.demo-bar{background:#FFF4E5;border:3px dashed #F28C38;border-radius:12px;padding:6px 12px;font-weight:900;font-size:14px}
+.entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.entry{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.entry .band{height:14px;border-bottom:3px solid var(--ink)}
+.entry .in{padding:12px 16px 16px;display:grid;gap:10px}
+.entry h2{font-size:24px;display:flex;align-items:center;gap:10px}
+.entry h2 .ic{font:900 22px 'LXGW WenKai TC',sans-serif;width:40px;height:40px;border:3px solid var(--ink);border-radius:10px;display:grid;place-items:center;background:var(--hl)}
+.entry .peek{font-size:14px;color:var(--soft);font-weight:700}
+.lvbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;font:900 18px 'Noto Sans TC',sans-serif;padding:8px 14px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:3px 3px 0 var(--ink);cursor:pointer;color:var(--ink)}
+.lvbtn small{display:block;font-size:13px;font-weight:700;color:var(--soft)}
+.lvbtn:hover{background:var(--wash)}
+.lvbtn:disabled{opacity:.5;cursor:not-allowed}
+.lvbtn > span:first-child{flex:1;min-width:0}
+.lvbtn .st{font-size:14px;letter-spacing:-1px;color:#F5B700;white-space:nowrap;flex:none}
+.lvbtn .st .off{color:var(--dim)}
+.award-btn{font:900 17px 'Noto Sans TC',sans-serif;background:linear-gradient(#FFE27A,#F5B700);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);padding:4px 14px;cursor:pointer}
+
+/* 練習畫面 */
+.play{display:grid;gap:14px}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.hud span{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:0 12px;font-weight:900;font-size:15px}
+.board{background:#FFFDF4;border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:18px 16px 14px;display:grid;gap:10px;justify-items:center;text-align:center;position:relative}
+.board .lbl{font-weight:900;color:var(--soft)}
+.target{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;font:700 clamp(40px,9vw,72px)/1.2 'LXGW WenKai TC','Noto Sans TC',sans-serif;letter-spacing:.04em}
+.target .ch{display:grid;justify-items:center;min-width:1em}
+.target .zy{font:700 clamp(14px,2.4vw,18px) 'Noto Sans TC',sans-serif;color:var(--c1);min-height:1.3em;letter-spacing:0;visibility:hidden}
+.board.zyon .target .zy{visibility:visible}
+.target .ch.bad{color:var(--bad);background:#FDEDEE;border-radius:10px;box-shadow:inset 0 -4px 0 var(--bad)}
+.timer{width:100%;height:12px;border:2px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--good);width:100%;transition:background .3s}
+.timer i.mid{background:#F5B700}.timer i.low{background:var(--bad)}
+.typebox{display:grid;gap:6px}
+.typebox label{font-weight:900}
+.typebox label small{font-weight:700;color:var(--soft)}
+.tin{font:700 clamp(26px,5vw,36px) 'Noto Sans TC',sans-serif;border:4px solid var(--ink);border-radius:14px;padding:6px 14px;background:#fff;width:100%}
+.tin:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 5px rgba(58,159,239,.25)}
+.tin.composing{border-color:#F28C38}
+.tin.ok{border-color:var(--good);background:#EAF8F0}
+.tin.bad{border-color:var(--bad);background:#FDEDEE}
+.thint{font-weight:900;min-height:1.6em}
+.thint.ok{color:var(--good)}.thint.bad{color:var(--bad)}
+.diff{display:flex;flex-wrap:wrap;gap:2px;font:700 26px 'Noto Sans TC',sans-serif;justify-content:center}
+.diff span{padding:0 3px;border-radius:6px}
+.diff .x{background:#FDEDEE;color:var(--bad);outline:2px solid var(--bad)}
+.notes{margin:0;padding-left:1.2em;font-weight:700;color:var(--bad);text-align:left}
+.how{font-size:14px;color:var(--soft);font-weight:700;text-align:left;width:100%}
+.how ol{margin:4px 0 0;padding-left:1.3em}
+.fx{position:absolute;right:14px;top:10px;font:900 26px 'LXGW WenKai TC',sans-serif;color:var(--good)}
+
+/* 結算、簽到、獎狀 */
+.result{text-align:center;justify-items:center}
+.result .big{font:900 28px 'LXGW WenKai TC',sans-serif}
+.stars{font-size:44px;letter-spacing:6px;color:#F5B700}.stars .off{color:var(--dim)}
+.misslist{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.misslist span{background:#FDEDEE;border:2px solid var(--bad);border-radius:10px;padding:0 10px;font-weight:900}
+.modal-wrap{position:fixed;inset:0;z-index:40;background:rgba(27,40,54,.6);display:grid;place-items:center;padding:16px;overflow:auto}
+.signin{width:min(480px,100%)}
+.signin h2{font-size:30px}
+.field{display:grid;gap:4px;font-weight:900}
+.field small{font-weight:700;color:var(--soft);font-size:13px}
+.signin .code{font:600 40px 'Fredoka',sans-serif;letter-spacing:.3em;text-align:center;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;width:100%}
+.signin .nm{font:700 28px 'Noto Sans TC',sans-serif;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;width:100%}
+.signin .hint{font-size:15px;color:var(--soft);font-weight:700}
+.signin .preview{font:900 24px 'LXGW WenKai TC',sans-serif;min-height:1.5em;text-align:center}
+.signin .preview.err{color:var(--bad);font:900 16px 'Noto Sans TC',sans-serif}
+.cert{width:min(720px,100%);background:#FFFDF4;border:4px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:14px}
+.cert-in{border:8px double #D4A017;border-radius:10px;padding:18px 22px 24px;text-align:center;display:grid;gap:6px}
+.cert-in h2{font-size:clamp(38px,7vw,56px);letter-spacing:.12em;color:#A86A00}
+.cert-grade{justify-self:center;font-weight:900;font-size:20px;border:3px solid var(--ink);border-radius:999px;padding:2px 16px;background:linear-gradient(#FFE27A,#F5B700)}
+.cert-body{font-size:19px;line-height:2;font-weight:700}
+.cert-list{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.cert-list div{border:2px solid var(--ink);border-radius:12px;padding:2px 12px;background:#fff;font-weight:900;font-size:14px}
+.cert-date{color:var(--soft);font-weight:700}
+@media print{ body{background:#fff;padding:0} .wrap{display:none} .modal-wrap{position:static;background:none} .cert{box-shadow:none;border:none} .cert .row{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div>
+      <p class="crumb" id="crumb"><a href="index.html">資訊課練習遊戲</a> ／ <a href="typing.html">中英文打字修練</a> ／ 重要語詞訓練</p>
+      <div class="brand"><span class="tag">語詞</span><h1 id="title">重要語詞訓練</h1></div>
+    </div>
+    <button class="who" type="button" id="who" hidden></button>
+  </header>
+  <div class="demo-bar" id="demoBar" hidden>🔓 老師示範：全部關卡打開，不存紀錄。</div>
+
+  <section id="home" hidden>
+    <div class="card" style="margin-bottom:18px">
+      <p><b>用注音輸入法打出題目。</b>選完字按 <b>Enter</b>；整個詞打對了也會自動送出。</p>
+      <p class="note">先看螢幕右下角是「中」（是「英」就按一下 Shift）。打錯了可以按 Backspace 改，再按 Enter。</p>
+      <div class="row" id="awardRow" hidden><button class="award-btn" type="button" id="awardBtn">🏆 領取獎狀</button></div>
+    </div>
+    <div class="entries" id="entries"></div>
+    <nav class="footnav"><button class="btn" type="button" id="fixWho">✏️ 修正班級姓名</button><a class="btn" id="backLink" href="typing.html">⬅ 回上頁</a></nav>
+  </section>
+
+  <section id="play" class="play" hidden>
+    <div class="hud" id="hud"></div>
+    <div class="board" id="board">
+      <span class="fx" id="fx"></span>
+      <p class="lbl" id="lbl">打出這個語詞</p>
+      <div class="target" id="target"></div>
+      <div class="timer" id="timerWrap" hidden><i id="timerBar"></i></div>
+      <div class="row" id="hintRow"><button class="btn" type="button" id="zyBtn">💡 看注音</button><button class="btn" type="button" id="quit">⏹ 結束這一關</button></div>
+    </div>
+    <div class="typebox">
+      <label for="tin">在這裡打字 <small>（注音輸入法；選完字按 Enter）</small></label>
+      <input id="tin" class="tin" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <p class="thint" id="thint"></p>
+      <div id="out"></div>
+    </div>
+  </section>
+
+  <section id="result" hidden><div class="card result" id="resultBox"></div></section>
+</div>
+
+<div id="signWrap" class="modal-wrap" hidden><form class="card signin" id="signForm" autocomplete="off">
+  <h2>👋 輸入班級座號</h2>
+  <p class="hint">年級 1 碼＋班級 2 碼＋座號 2 碼。例：三年一班 1 號 → <b>30101</b></p>
+  <input id="sCode" class="code" inputmode="numeric" maxlength="5" aria-label="班級座號碼">
+  <p class="preview" id="sPrev"></p>
+  <label class="field" id="sNameBox" hidden>你的名字 <small>例：王小明（可以空白）</small>
+    <input id="sName" class="nm" maxlength="20" aria-label="姓名"></label>
+  <button class="btn primary" type="submit" style="font-size:22px;justify-self:center">開始！</button>
+</form></div>
+
+<div id="certWrap" class="modal-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
+  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certClose">回關卡選單</button></div></div></div>
+
+<script src="words-data.js"></script>
+<script>
+/* =====================================================================
+   重要語詞訓練（2026-11-06）
+   網址參數（教師設定頁 words-setup.html 產生，放在 # 後面）：
+   sets＝題庫（num,big,city,addr）、addr＝學校地址的題目（用 | 分開）、tw=1＝「台」「臺」都算對、
+   goal＝練習目標（網頁名稱）、end＝領取獎狀的時間、classes/seats＝班級座號範圍、nm=1＝可以輸入名字、demo＝老師示範
+   每個題庫兩關：第一關「看字打字」（不限時、打對為止、可以看注音）→ 第二關「限時挑戰」（星星）
+   紀錄存在這台電腦的瀏覽器（localStorage），名字不儲存
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const H = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { for (let i = a.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const Q = new URLSearchParams(location.hash.replace(/^#/, ''));
+const DEMO = Q.has('demo');
+const TW = Q.get('tw') !== '0';   /* 預設「台」「臺」都算對 */
+const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end') || '') ? Q.get('end') : '',
+  classes: Math.min(30, Math.max(1, +Q.get('classes') || 20)), seats: Math.min(60, Math.max(1, +Q.get('seats') || 40)), nameOn: Q.get('nm') === '1'};
+const GOAL = (Q.get('goal') || '').trim().slice(0, 20);
+/* 學校地址：老師在設定頁輸入；網址裡沒有就不出現 */
+WBANK.addr.items = (Q.get('addr') || '').split('|').map(s => s.trim().slice(0, 30)).filter(s => s.length >= 1).slice(0, 12);
+let SETS = (Q.get('sets') || 'num,city').split(',').filter(k => WBANK[k] && WBANK[k].items.length);
+if (!SETS.length) SETS = ['num','city'];
+SETS = WORDER.filter(k => SETS.includes(k));
+const FROM_SETUP = Q.has('sets');
+if (GOAL){ $('#title').textContent = GOAL; document.title = GOAL + '・重要語詞訓練'; }
+if (FROM_SETUP){ $('#crumb').hidden = true; $('#backLink').hidden = true; }
+$('#demoBar').hidden = !DEMO;
+
+/* ---------- 比對：去掉空白；全形數字當半形；勾了「台臺都算對」時台＝臺 ---------- */
+const norm = s => { s = String(s).replace(/\s+/g, '').replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)); return TW ? s.replace(/台/g, '臺') : s; };
+
+/* ---------- 紀錄 ---------- */
+const STORE = 'words1_';
+const store = {get(k, d){ try{ const v = localStorage.getItem(STORE + k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ if (DEMO) return; try{ localStorage.setItem(STORE + k, JSON.stringify(v)); }catch(e){} }};
+/* 地址題目不同（不同學校）分開記 */
+const recKey = k => k === 'addr' ? 'addr_' + WBANK.addr.items.join('|').slice(0, 60) : k;
+const fresh = () => ({l1:{plays:0}, l2:{plays:0, best:0, stars:0}, miss:{}});
+const REC = {}; SETS.forEach(k => REC[k] = Object.assign(fresh(), store.get(recKey(k), {})));
+const save = k => store.set(recKey(k), REC[k]);
+const STAR_AT = [60,70,80,90,95];
+const starsOf = s => STAR_AT.filter(t => s >= t).length;
+const starStr = n => Array.from({length:5}, (_,i) => `<span class="${i<n?'':'off'}">★</span>`).join('');
+
+/* ---------- 班級座號碼：5 位數＝年級 1 碼＋班級 2 碼＋座號 2 碼（和其他練習相同） ---------- */
+const CN = ['','一','二','三','四','五','六','七','八','九','十'];
+const cnNum = n => n <= 10 ? CN[n] : n < 20 ? '十' + CN[n-10] : CN[Math.floor(n/10)] + '十' + (n%10 ? CN[n%10] : '');
+function parseCode(s){
+  if (!/^\d{5}$/.test(s)) return {err: s.length ? `要打 5 個數字（現在 ${s.length} 個）` : ''};
+  const g = +s[0], c = +s.slice(1,3), n = +s.slice(3,5);
+  if (g < 1 || g > 6) return {err:'第 1 個數字是年級，要是 1～6'};
+  if (c < 1 || c > CFG.classes) return {err:`第 2、3 個數字是班級，要是 01～${String(CFG.classes).padStart(2,'0')}`};
+  if (n < 1 || n > CFG.seats) return {err:`最後 2 個數字是座號，要是 01～${String(CFG.seats).padStart(2,'0')}`};
+  return {code:s, cls:`${CN[g]}年${cnNum(c)}班`, seat:n, text:`${CN[g]}年${cnNum(c)}班 ${n} 號`};
+}
+let WHO = null;
+$('#sNameBox').hidden = !CFG.nameOn;
+$('#sCode').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+  const r = parseCode(e.target.value), p = $('#sPrev'); p.className = 'preview' + (r.err ? ' err' : ''); p.textContent = r.err || r.text;
+});
+$('#signForm').addEventListener('submit', e => {
+  e.preventDefault(); const r = parseCode($('#sCode').value);
+  if (r.err !== undefined){ $('#sPrev').className = 'preview err'; $('#sPrev').textContent = r.err || '請輸入 5 個數字'; return; }
+  const nm = CFG.nameOn ? $('#sName').value.trim().replace(/\s+/g, ' ').slice(0, 20) : '';
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }
+  WHO = r; $('#signWrap').hidden = true; renderWho();
+  store.set('sess', {code:r.code});   /* 只存班級座號碼，名字不儲存 */
+  goHome();
+});
+function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name || ''; $('#sPrev').textContent = WHO ? WHO.text : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(() => $('#sCode').focus(), 50); }
+function renderWho(){ $('#who').hidden = !WHO; if (WHO) $('#who').textContent = WHO.text; }
+$('#who').onclick = () => { if (!$('#home').hidden) openSignin(); };
+$('#fixWho').onclick = openSignin;
+
+/* ---------- 畫面 ---------- */
+function show(id){ ['home','play','result'].forEach(s => $('#' + s).hidden = s !== id); window.scrollTo(0, 0); }
+const l2Open = k => DEMO || REC[k].l1.plays > 0;
+const nowMin = () => { const d = new Date(); return d.getHours()*60 + d.getMinutes(); };
+const awardTime = () => { if (!CFG.end) return true; const [h, m] = CFG.end.split(':').map(Number); return nowMin() >= h*60 + m; };
+function goHome(){
+  stopTimer(); show('home');
+  $('#entries').innerHTML = SETS.map(k => { const B = WBANK[k], R = REC[k], o2 = l2Open(k);
+    return `<div class="entry"><span class="band" style="background:${B.color}"></span><div class="in">
+      <h2><span class="ic">${H(B.icon)}</span>${H(B.name)}</h2>
+      <p class="peek">${B.items.slice(0, 6).map(H).join('、')}${B.items.length > 6 ? '…' : ''}（共 ${B.items.length} 個）</p>
+      <button class="lvbtn" type="button" data-k="${k}" data-l="1"><span>第一關　看字打字<small>不限時，打對為止；可以看注音${R.l1.plays ? `・已完成 ${R.l1.plays} 次` : ''}</small></span><span>▶</span></button>
+      <button class="lvbtn" type="button" data-k="${k}" data-l="2" ${o2 ? '' : 'disabled'}><span>第二關　限時挑戰<small>${o2 ? `越快越好，拿星星${R.l2.plays ? `・最佳 ${R.l2.best} 分` : ''}` : '第一關完成 1 次就打開'}</small></span><span class="st">${starStr(R.l2.stars)}</span></button>
+    </div></div>`; }).join('');
+  document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => start(b.dataset.k, +b.dataset.l));
+  $('#awardRow').hidden = !(DEMO || (awardTime() && gradeOf() >= 0));
+}
+
+/* ---------- 出題：比較常錯的語詞先出、出得多 ---------- */
+const NQ = 10;
+function makeQueue(k){
+  const items = WBANK[k].items, R = REC[k], n = Math.min(NQ, items.length);
+  const weak = shuffle(items.filter(w => (R.miss[w] || 0) > 0)).sort((a, b) => R.miss[b] - R.miss[a]).slice(0, Math.ceil(n / 2));
+  const rest = shuffle(items.filter(w => !weak.includes(w)));
+  return shuffle(weak.concat(rest).slice(0, n));
+}
+/* 第二關的秒數：良＝2＋每個字 1.5 秒；時限＝6＋每個字 3 秒 */
+const goodSec = w => 2 + 1.5 * [...w].length, limitSec = w => 6 + 3 * [...w].length;
+
+let G = null, raf = 0;
+function start(k, lv){
+  G = {k, lv, q: makeQueue(k), i: 0, pts: 0, first: 0, miss: []};
+  show('play'); next();
+}
+function next(){
+  stopTimer();
+  if (G.i >= G.q.length) return finish();
+  const w = G.q[G.i];
+  Object.assign(G, {w, tries: 0, t0: performance.now(), done: false});
+  const B = WBANK[G.k];
+  $('#hud').innerHTML = `<span>${H(B.name)}</span><span>${G.lv === 1 ? '第一關　看字打字' : '第二關　限時挑戰'}</span><span>第 ${G.i+1} / ${G.q.length} 題</span>${G.lv === 2 ? `<span>${G.pts} 分</span>` : ''}`;
+  $('#target').innerHTML = [...w].map(c => `<span class="ch">${H(c)}<span class="zy">${H(ZY[c] || ZY[c === '台' ? '臺' : c] || '')}</span></span>`).join('');
+  const hasZy = [...w].some(c => ZY[c]);
+  $('#board').classList.remove('zyon');
+  $('#zyBtn').hidden = G.lv !== 1 || !hasZy;
+  $('#timerWrap').hidden = G.lv !== 2;
+  $('#lbl').textContent = G.lv === 1 ? '打出這個語詞（不限時）' : `打出這個語詞（${limitSec(w)} 秒內）`;
+  $('#fx').textContent = ''; $('#out').innerHTML = ''; tint('', '');
+  const tin = $('#tin'); tin.value = ''; tin.disabled = false; tin.className = 'tin'; tin.focus();
+  if (G.lv === 2) tick();
+}
+function tick(){
+  const t = (performance.now() - G.t0) / 1000, lim = limitSec(G.w), left = Math.max(0, 1 - t / lim), bar = $('#timerBar');
+  bar.style.width = (left * 100) + '%'; bar.className = left < .25 ? 'low' : left < .5 ? 'mid' : '';
+  if (t >= lim){ timeout(); return; }
+  raf = requestAnimationFrame(tick);
+}
+function stopTimer(){ cancelAnimationFrame(raf); raf = 0; }
+function tint(cls, msg){ const h = $('#thint'); h.className = 'thint ' + cls; h.textContent = msg; }
+
+/* ---------- 打字：注音選字中不判斷；打對自動送出，Enter 檢查 ---------- */
+let composing = false;
+const tin = $('#tin');
+tin.addEventListener('compositionstart', () => { composing = true; tin.classList.add('composing'); });
+tin.addEventListener('compositionend', () => { composing = false; tin.classList.remove('composing'); setTimeout(auto, 0); });
+tin.addEventListener('input', () => { if (!composing) auto(); });
+tin.addEventListener('keydown', e => { if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return; e.preventDefault(); if (G && !G.done) check(); });
+function auto(){ if (G && !G.done && tin.value && norm(tin.value) === norm(G.w)) ok(); }
+function check(){
+  if (!tin.value.trim()){ tint('bad', '還沒打字喔！'); return; }
+  if (norm(tin.value) === norm(G.w)) return ok();
+  G.tries++; tin.classList.add('bad'); setTimeout(() => tin.classList.remove('bad'), 400);
+  const a = [...norm(G.w)], b = [...norm(tin.value)], n = Math.max(a.length, b.length), bad = [];
+  for (let i = 0; i < n; i++) if (a[i] !== b[i]) bad.push(i);
+  $('#out').innerHTML = `<div class="diff">${[...tin.value.replace(/\s+/g, '')].map((c, i) => `<span class="${bad.includes(i) ? 'x' : ''}">${H(c)}</span>`).join('')}</div>`
+    + `<ul class="notes">${bad.slice(0, 2).map(i => `<li>${H(explain(a[i], b[i], i + 1))}</li>`).join('')}</ul>`;
+  document.querySelectorAll('#target .ch').forEach((el, i) => el.classList.toggle('bad', bad.includes(i)));
+  tint('bad', G.lv === 1 ? '有地方不一樣，改好再按 Enter。' : '有地方不一樣，快改！');
+  if (G.lv === 1 && G.tries >= 2) $('#board').classList.add('zyon');   /* 第一關錯兩次，自動顯示注音 */
+}
+function explain(want, got, pos){
+  if (got === undefined) return `第 ${pos} 個字少打了「${want}」`;
+  if (want === undefined) return `第 ${pos} 個字多打了「${got}」`;
+  if (want === '臺' && got === '台') return `第 ${pos} 個字要選「臺」：打ㄊㄞˊ以後，按 ↓ 找「臺」`;
+  if (/\d/.test(want) && /[一二三四五六七八九十〇零]/.test(got)) return `第 ${pos} 個字是阿拉伯數字「${want}」，不是國字`;
+  if (/[一二三四五六七八九十零壹貳參肆伍陸柒捌玖拾]/.test(want) && /\d/.test(got)) return `第 ${pos} 個字要打國字「${want}」，不是阿拉伯數字`;
+  return `第 ${pos} 個字應該是「${want}」，你打了「${got}」${ZY[want] ? `（可能選到同音字，「${want}」的注音是 ${ZY[want]}）` : '（可能選到同音字，按 ↓ 換字）'}`;
+}
+function ok(){
+  G.done = true; stopTimer();
+  const t = (performance.now() - G.t0) / 1000, R = REC[G.k];
+  tin.classList.add('ok'); tin.disabled = true;
+  document.querySelectorAll('#target .ch').forEach(el => el.classList.remove('bad'));
+  let p = 0;
+  if (G.tries === 0){ G.first++; if (R.miss[G.w]) R.miss[G.w] = Math.max(0, R.miss[G.w] - 1); }
+  else { R.miss[G.w] = Math.min(5, (R.miss[G.w] || 0) + 1); G.miss.push(G.w); }
+  if (G.lv === 2) p = G.tries ? 40 : t <= goodSec(G.w) ? 100 : 70;
+  G.pts += p;
+  $('#fx').textContent = G.lv === 2 ? (p === 100 ? '優 +100' : p === 70 ? '良 +70' : '可 +40') : G.tries ? '對了！' : '一次就對！';
+  tint('ok', G.tries ? '改對了！記住這個字。' : '答對了！');
+  $('#out').innerHTML = '';
+  G.i++; setTimeout(next, 800);
+}
+function timeout(){
+  G.done = true; stopTimer(); const R = REC[G.k];
+  R.miss[G.w] = Math.min(5, (R.miss[G.w] || 0) + 1); G.miss.push(G.w);
+  tin.disabled = true; $('#board').classList.add('zyon');
+  tint('bad', `時間到！答案是「${G.w}」`);
+  G.i++; setTimeout(next, 1800);
+}
+$('#zyBtn').onclick = () => { $('#board').classList.toggle('zyon'); tin.focus(); };
+$('#quit').onclick = () => { stopTimer(); G = null; goHome(); };
+
+/* ---------- 結算 ---------- */
+function finish(){
+  const R = REC[G.k], n = G.q.length, B = WBANK[G.k];
+  let head, extra = '';
+  if (G.lv === 1){
+    R.l1.plays++;
+    head = `<p class="big">第一關完成！</p><p style="font-size:20px">一次就打對 <b>${G.first}</b> / ${n} 題</p>`;
+    if (R.l1.plays === 1 || DEMO) extra = `<p class="note" style="color:var(--good)">第二關「限時挑戰」打開了！</p>`;
+  } else {
+    R.l2.plays++;
+    const sc = Math.round(G.pts / n), st = starsOf(sc), better = sc > R.l2.best;
+    R.l2.best = Math.max(R.l2.best, sc); R.l2.stars = Math.max(R.l2.stars, st);
+    head = `<p class="big">限時挑戰完成！</p><div class="stars">${starStr(st)}</div><p style="font-size:20px">${sc} 分${better && R.l2.plays > 1 ? '・新紀錄！' : ''}</p>
+      <p class="note">60 分 1 顆星、70 分 2 顆、80 分 3 顆、90 分 4 顆、95 分 5 顆</p>`;
+  }
+  save(G.k);
+  const miss = [...new Set(G.miss)];
+  $('#resultBox').innerHTML = `${head}${extra}
+    ${miss.length ? `<p><b>要再練練的語詞：</b></p><div class="misslist">${miss.map(w => `<span>${H(w)}</span>`).join('')}</div>` : '<p style="font-weight:900;color:var(--good)">全部一次就打對，太厲害了！</p>'}
+    <div class="row" style="justify-content:center"><button class="btn primary" type="button" id="again">再玩一次</button>
+    ${G.lv === 1 ? `<button class="btn" type="button" id="toL2">去第二關 →</button>` : ''}<button class="btn" type="button" id="toHome">回關卡選單</button></div>`;
+  const k = G.k, lv = G.lv;
+  $('#again').onclick = () => start(k, lv);
+  if ($('#toL2')) $('#toL2').onclick = () => start(k, 2);
+  $('#toHome').onclick = goHome;
+  show('result');
+}
+
+/* ---------- 獎狀：看每個題庫第二關最好的星星（取平均） ---------- */
+const GRADES = ['見習獎','銅獎','銀獎','金獎'];
+function gradeOf(){
+  if (!SETS.some(k => REC[k].l1.plays)) return -1;
+  const avg = SETS.reduce((s, k) => s + REC[k].l2.stars, 0) / SETS.length;
+  return avg >= 5 ? 3 : avg >= 4 ? 2 : avg >= 3 ? 1 : 0;
+}
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`; };
+$('#awardBtn').onclick = () => {
+  const g = Math.max(0, gradeOf());
+  $('#certIn').innerHTML = `<p class="note" style="letter-spacing:.3em">重要語詞訓練</p><h2>獎　狀</h2><span class="cert-grade">${GRADES[g]}</span>
+    <p class="cert-body"><b>${H(WHO ? WHO.text : '（班級座號）')}</b><br>認真練習「${H(GOAL || SETS.map(k => WBANK[k].name).join('、'))}」，<br>學會用注音輸入法打出重要的語詞，特頒此狀，以資鼓勵。</p>
+    <div class="cert-list">${SETS.map(k => `<div>${H(WBANK[k].name)}　${REC[k].l2.plays ? '★'.repeat(REC[k].l2.stars) || '挑戰過' : '第一關完成'}</div>`).join('')}</div>
+    <p class="cert-date">${todayStr()}</p>`;
+  $('#certWrap').hidden = false;
+};
+$('#certPrint').onclick = () => window.print();
+$('#certClose').onclick = () => { $('#certWrap').hidden = true; };
+
+/* ---------- 開始：接著上次的班級座號（同一台電腦）；示範模式不用簽到 ---------- */
+(function(){
+  if (DEMO){ WHO = {code:'', text:'老師示範'}; renderWho(); goHome(); return; }
+  const s = store.get('sess', null), r = s ? parseCode(s.code || '') : null;
+  if (r && r.err === undefined && !CFG.nameOn){ WHO = r; renderWho(); goHome(); return; }
+  goHome(); openSignin();
+})();
+</script>
+</body>
+</html>
