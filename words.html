@@ -148,7 +148,7 @@
 /* =====================================================================
    重要語詞訓練（2026-11-06）
    網址參數（教師設定頁 words-setup.html 產生，放在 # 後面）：
-   sets＝題庫（num,big,city,addr）、addr＝學校地址的題目（用 | 分開）、tw=1＝「台」「臺」都算對、
+   sets＝題庫（num,big,city,addr）、addr＝學校地址的題目（用 | 分開）、tw＝舊連結用（現在一律要打「臺」，有沒有 tw 都一樣）、
    goal＝練習目標（網頁名稱）、end＝領取獎狀的時間、classes/seats＝班級座號範圍、nm=1＝可以輸入名字、demo＝老師示範
    每個題庫兩關：第一關「看字打字」（不限時、打對為止、可以看注音）→ 第二關「限時挑戰」（星星）
    紀錄存在這台電腦的瀏覽器（localStorage），名字不儲存
@@ -158,7 +158,6 @@ const H = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&
 const shuffle = a => { for (let i = a.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
 const Q = new URLSearchParams(location.hash.replace(/^#/, ''));
 const DEMO = Q.has('demo');
-const TW = Q.get('tw') !== '0';   /* 預設「台」「臺」都算對 */
 const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end') || '') ? Q.get('end') : '',
   classes: Math.min(30, Math.max(1, +Q.get('classes') || 20)), seats: Math.min(60, Math.max(1, +Q.get('seats') || 40)), nameOn: Q.get('nm') === '1'};
 const GOAL = (Q.get('goal') || '').trim().slice(0, 20);
@@ -172,8 +171,8 @@ if (GOAL){ $('#title').textContent = GOAL; document.title = GOAL + '・重要語
 if (FROM_SETUP){ $('#crumb').hidden = true; $('#backLink').hidden = true; }
 $('#demoBar').hidden = !DEMO;
 
-/* ---------- 比對：去掉空白；全形數字當半形；勾了「台臺都算對」時台＝臺 ---------- */
-const norm = s => { s = String(s).replace(/\s+/g, '').replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)); return TW ? s.replace(/台/g, '臺') : s; };
+/* ---------- 比對：去掉空白；全形數字當半形；「台」「臺」分開算，一律要打正式寫法「臺」（老師 2026-11-08） ---------- */
+const norm = s => { s = String(s).replace(/\s+/g, '').replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)); return s; };
 
 /* ---------- 紀錄 ---------- */
 const STORE = 'words1_';

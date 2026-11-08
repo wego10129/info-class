@@ -139,7 +139,7 @@ textarea.items:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 4px rg
         <div class="more"><div class="chips" id="cityChips"></div></div>
       </div>
     </div>
-    <label class="check-opt"><input type="checkbox" id="tw" checked><span><b>「台」「臺」都算對</b><small>題目用正式寫法「臺」。勾選時學生打「台」也算對；不勾就要選到「臺」。</small></span></label>
+    <p class="note">縣市、地址一律用正式寫法「臺」：學生要選到「臺」才算對（老師 2026-11-08）。</p>
   </section>
 
   <section class="card step" id="s2">
@@ -177,7 +177,7 @@ textarea.items:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 4px rg
     <dl class="sum">
       <dt>練習目標</dt><dd id="sumGoal">—</dd>
       <dt>題庫</dt><dd id="sumSets">—</dd>
-      <dt>台／臺</dt><dd id="sumTw">—</dd>
+      <dt>台／臺</dt><dd>一定要打「臺」</dd>
       <dt>關卡</dt><dd>每個題庫：第一關 看字打字 → 第二關 限時挑戰</dd>
       <dt>領取獎狀</dt><dd id="sumAward">—</dd>
       <dt>班級座號</dt><dd id="sumCls">—</dd>
@@ -244,14 +244,13 @@ function sets(){
 function state(){
   const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value), st = sets();
   const addrBad = $('#useAddr').checked && !addrItems().length, numBad = $('#useNum').checked && !$('#numSmall').checked && !$('#numBig').checked;
-  return {sets:st, goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, tw:$('#tw').checked, addrBad, numBad,
+  return {sets:st, goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, addrBad, numBad,
     ok: st.length >= 1 && !addrBad && !numBad && c && s && !!awd};
 }
 function params(st, demo){
   const p = new URLSearchParams();
   p.set('sets', st.sets.join(','));
   if (st.sets.includes('addr')) p.set('addr', addrItems().join('|'));
-  if (!st.tw) p.set('tw', '0');
   if (st.goal) p.set('goal', st.goal);
   p.set('end', st.awd);
   if (st.c !== 20) p.set('classes', st.c);
@@ -277,7 +276,6 @@ function render(){
   $('#msg3').textContent = errs.filter(e => !/^(第 1|國字|學校)/.test(e)).join('；');
   $('#sumGoal').textContent = st.goal || '重要語詞訓練（沒有填目標）';
   $('#sumSets').textContent = st.sets.length ? st.sets.map(k => k === 'addr' ? `學校地址（${addrItems().length} 題）` : `${NAMES[k]}（${WBANK[k].items.length} 個）`).join('、') : '還沒選';
-  $('#sumTw').textContent = st.tw ? '「台」「臺」都算對' : '一定要打「臺」';
   $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
   $('#sumAward').textContent = st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
@@ -287,7 +285,7 @@ function render(){
   $('#f1').classList.toggle('done', !$('#ok1').hidden); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s && st.awd));
   saveForm();
 }
-['useNum','numSmall','numBig','useAddr','useCity','tw','nameOn'].forEach(id => $('#'+id).addEventListener('change', render));
+['useNum','numSmall','numBig','useAddr','useCity','nameOn'].forEach(id => $('#'+id).addEventListener('change', render));
 ['goal','classes','seats','awardAt'].forEach(id => $('#'+id).addEventListener('input', render));
 /* 地址、學校名稱改了就重拆（老師手動改過練習題就不自動覆蓋，要按「重新拆題」） */
 ['addr','school'].forEach(id => $('#'+id).addEventListener('input', () => { if (!addrEdited) resplit(); render(); }));
@@ -318,11 +316,11 @@ $('#open').onclick = () => window.open(linkOf(state()), '_blank');
 $('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
 /* 表單內容存在這個分頁（關掉就清掉），重新整理時不用重填 */
 function saveForm(){ try{ sessionStorage.setItem('setup_words', JSON.stringify({useNum:$('#useNum').checked, numSmall:$('#numSmall').checked, numBig:$('#numBig').checked,
-  useAddr:$('#useAddr').checked, useCity:$('#useCity').checked, tw:$('#tw').checked, school:$('#school').value, addr:$('#addr').value, items:$('#addrItems').value, edited:addrEdited,
+  useAddr:$('#useAddr').checked, useCity:$('#useCity').checked, school:$('#school').value, addr:$('#addr').value, items:$('#addrItems').value, edited:addrEdited,
   goal:$('#goal').value, awd:$('#awardAt').value, c:$('#classes').value, s:$('#seats').value, nameOn:$('#nameOn').checked})); }catch(e){} }
 (function(){ let f = null; try{ f = JSON.parse(sessionStorage.getItem('setup_words') || 'null'); }catch(e){}
   if (!f) return;
-  ['useNum','numSmall','numBig','useAddr','useCity','tw','nameOn'].forEach(id => { if (id in f) $('#'+id).checked = !!f[id]; });
+  ['useNum','numSmall','numBig','useAddr','useCity','nameOn'].forEach(id => { if (id in f) $('#'+id).checked = !!f[id]; });
   $('#school').value = f.school || ''; $('#addr').value = f.addr || ''; $('#addrItems').value = f.items || ''; addrEdited = !!f.edited;
   $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40'; })();
 render();
