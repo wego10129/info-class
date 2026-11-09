@@ -1233,12 +1233,16 @@ function renderHome(){
   const FOURTH_RULE = KIND === 'punc' ? '第四關打敗「標點大魔王」' : '第四關「影子賽車」每一盃都贏過配速車';
   const legendNote = FOURTH && has(FOURTH) && !legendOK() ? `${NMON().filter(md => !recOf(md).master.cleared).map(md => `${MODES[md].name}「${NINJA.master.name}」通關、`).join('')}${FOURTH_RULE} → 「${PK.legend}」（傳說獎）` : '';
   const firstRule = has('l1') ? TITLE_RULE[0] : has('l2') ? '玩一次第二關' : '';
+  /* 隱藏成就（老師 2026-11-09）：星星拿滿、每一級都通關、無傷打敗魔王不直接寫出條件；
+     全部通關以後才提示「好像還有隱藏成就唷！」和大方向，做到了再揭曉稱號 */
+  const hiddenLeft = [(has('l1') || has('l2')) && !starsFull() ? '每一關都拿 5 顆星' : '', NMON().length && !ninjaFull() ? `${NAMES_N()}每一級都通關` : '',
+    KIND === 'punc' && has('boss') && !(P.boss && P.boss.flawless) ? '一條命都不扣，打敗魔王' : ''].filter(Boolean);
+  const hiddenNote = allClear() && hiddenLeft.length ? `🔍 好像還有隱藏成就唷！大方向：${hiddenLeft.join('、')}` : '';
+  const gotNote = gi === 6 ? `已經是「${PK.supreme}」！全程制霸獎` : gi === 5 ? `已經是「${PK.legend}」！傳說獎` : gi === 4 ? `已經是「${PK.perfect}」！特優・金獎` : '';
   let nextT;
-  if (gi === 6) nextT = `已經是「${PK.supreme}」！全程制霸獎`;
-  else if (gi === 5) nextT = `已經是「${PK.legend}」！最後的挑戰：${has('l1') && has('l2') ? '第一關、第二關都拿 5 顆星' : has('l1') ? '第一關拿 5 顆星' : has('l2') ? '第二關拿 5 顆星' : ''}${NMON().length && !ninjaFull() ? `、${NAMES_N()}每一級都通關` : ''} → 「${PK.supreme}」（全程制霸獎）`;
-  else if (NMON().length && ti < 3){ const nx = ti < 0 && firstRule ? `${firstRule} → 「${TITLES[0]}」（${GRADES[0].name}）` : `${TITLE_RULE[Math.max(ti, 0) + 1]} → 「${TITLES[Math.max(ti, 0) + 1]}」（${GRADES[Math.max(ti, 0) + 1].name}）`; nextT = '下一個：' + nx; }
-  else if (NMON().length) nextT = [isPerfect() ? `已經是「${PK.perfect}」！特優・金獎` : `${has('l1') && has('l2') ? '第一關、第二關都拿 5 顆星，' : has('l1') ? '第一關拿 5 顆星，' : has('l2') ? '第二關拿 5 顆星，' : ''}${NAMES_N()}每一級都通關 → 「${PK.perfect}」（特優・金獎＋彩帶）`, legendNote].filter(Boolean).join('；');
-  else nextT = [ti < 0 && firstRule ? `下一個：${firstRule} → 「${TITLES[0]}」（${GRADES[0].name}）` : '', legendNote].filter(Boolean).join('；') || '把老師指定的關卡練熟，越快越好！';
+  if (NMON().length && ti < 3){ const nx = ti < 0 && firstRule ? `${firstRule} → 「${TITLES[0]}」（${GRADES[0].name}）` : `${TITLE_RULE[Math.max(ti, 0) + 1]} → 「${TITLES[Math.max(ti, 0) + 1]}」（${GRADES[Math.max(ti, 0) + 1].name}）`; nextT = '下一個：' + nx; }
+  else nextT = [gotNote, ti < 0 && firstRule ? `下一個：${firstRule} → 「${TITLES[0]}」（${GRADES[0].name}）` : '', legendNote, hiddenNote].filter(Boolean).join('；')
+    || (allClear() ? '全部通關了！' : '把老師指定的關卡練熟，越快越好！');
   const ladder = NMON().length ? `<span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>` : '';
   const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${gi<0 ? '還沒有' : gradeTitle(gi)}</b>${awd}${ladder}
     <span class="tnote" style="width:100%">${nextT}</span></div>`;
