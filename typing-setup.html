@@ -123,7 +123,7 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
     <label class="check-opt"><input type="checkbox" id="awdClear"><span><b>全部關卡都過關才能領獎狀（不看時間）</b><small>勾選後，學生每個有開的關卡都過關，關卡選單才出現「領取獎狀」按鈕。星星拿滿、全程制霸是隱藏成就，不用全部做到。</small></span></label>
-    <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
+    <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字會存在這台電腦的瀏覽器，不小心關掉網頁也不會不見，電腦還原時才會刪除；不會上傳到網路。</small></span></label>
     <aside class="tip-block" id="nameTip" hidden><b>📣 給老師（學生畫面不會出現這段）</b><ul><li>中文或英文名字都可以，不限定輸入法。</li><li>名字可以空白：不會打的學生，口頭提醒他直接按 Enter 就能進入，獎狀會改印座號。</li></ul></aside>
     <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，點了依目前的進度發獎狀，可以列印。</li><li>在這個時間之前就破完最後一關的最高一級，回到關卡選單時會自動跳出獎狀（選「再玩一次」就不會跳出）；之後拿到更高的獎狀，也會再跳出一次。</li><li>勾「全部關卡都過關才能領獎狀」：不看時間，學生每個有開的關卡都過關，按鈕才出現，也會自動跳出獎狀。</li><li>獎狀依「現在的紀錄」產生，之後再練習，下次領取的獎狀也會跟著更新。</li></ul></aside>
     <div class="lvrow"><span class="lvl">🎯 關卡安排：</span><span id="lvNow"></span><a class="btn" id="lvGo" href="levels.html#kind=en">指定關卡（另開一頁）</a></div>
