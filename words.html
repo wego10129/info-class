@@ -151,7 +151,7 @@
    sets＝題庫（num,big,city,addr）、addr＝學校地址的題目（用 | 分開）、tw＝舊連結用（現在一律要打「臺」，有沒有 tw 都一樣）、
    goal＝練習目標（網頁名稱）、end＝領取獎狀的時間（沒有＝全部通關才能領）、classes/seats＝班級座號範圍、nm=1＝可以輸入名字、demo＝老師示範
    每個題庫兩關：第一關「看字打字」（不限時、打對為止、可以看注音）→ 第二關「限時挑戰」（星星）
-   紀錄存在這台電腦的瀏覽器（localStorage），名字不儲存
+   紀錄、班級座號碼、名字都存在這台電腦的瀏覽器（localStorage），電腦還原時才會刪除；不會上傳到網路（老師 2026-11-09）
    ===================================================================== */
 const $ = s => document.querySelector(s);
 const H = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -210,7 +210,7 @@ $('#signForm').addEventListener('submit', e => {
   const nm = CFG.nameOn ? $('#sName').value.trim().replace(/\s+/g, ' ').slice(0, 20) : '';
   if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }
   WHO = r; $('#signWrap').hidden = true; renderWho();
-  store.set('sess', {code:r.code});   /* 只存班級座號碼，名字不儲存 */
+  store.set('sess', {code:r.code, name:r.name || ''});   /* 班級座號碼和名字都存在這台電腦，不小心關掉網頁也不用重打（老師 2026-11-09） */
   goHome();
 });
 function openSignin(){ $('#sCode').value = WHO ? WHO.code : ''; $('#sName').value = WHO && WHO.name || ''; $('#sPrev').textContent = WHO ? WHO.text : ''; $('#sPrev').className = 'preview'; $('#signWrap').hidden = false; setTimeout(() => $('#sCode').focus(), 50); }
@@ -384,7 +384,9 @@ $('#certClose').onclick = () => { $('#certWrap').hidden = true; };
 (function(){
   if (DEMO){ WHO = {code:'', text:'老師示範'}; renderWho(); goHome(); return; }
   const s = store.get('sess', null), r = s ? parseCode(s.code || '') : null;
-  if (r && r.err === undefined && !CFG.nameOn){ WHO = r; renderWho(); goHome(); return; }
+  const nm = r && CFG.nameOn ? String(s.name || '').slice(0, 20) : '';
+  if (nm){ r.name = nm; r.text = `${r.cls} ${nm}`; }
+  if (r && r.err === undefined && (!CFG.nameOn || nm)){ WHO = r; renderWho(); goHome(); return; }   /* 要輸入名字但還沒存過名字＝請學生再簽到一次 */
   goHome(); openSignin();
 })();
 </script>
