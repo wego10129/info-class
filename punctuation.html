@@ -840,6 +840,9 @@ const raceOpen = id => { if (KIND !== 'en' || !P || !has('race')) return false; 
 const fourthOpen = () => KIND === 'punc' ? bossOpen() : KIND === 'en' ? NINJA_ORDER.some(raceOpen) : false;
 const fourthDone = () => KIND === 'punc' ? !!(P.boss && P.boss.cleared) : KIND === 'en' ? NINJA_ORDER.slice(startIdx('race')).every(id => P.race[id].cleared) : false;
 const legendOK = () => !!FOURTH && has(FOURTH) && fourthDone() && NMON().every(md => recOf(md).master.cleared);
+/* 全部通關（老師 2026-11-08）：每個有開的關卡都達到「打開下一關」的標準，打敵人的關卡要打通最高一級、第四關要全部過關
+   星星拿滿、全程制霸是隱藏成就，不算在全部通關的條件裡 */
+const allClear = () => !!P && STAGES.filter(has).every(st => st === FOURTH ? fourthDone() : stageDone(st));
 const gradeIndex = () => legendOK() ? (starsFull() && ninjaFull() ? 6 : 5) : titleIndex() < 0 ? -1 : isPerfect() ? 4 : titleIndex();
 const gradeTitle = gi => gi === 6 ? PK.supreme : gi === 5 ? PK.legend : gi === 4 ? PK.perfect : TITLES[Math.max(0, Math.min(gi, 3))];
 let TITLE_RULE = [];   /* 關卡安排之後才知道開了哪幾個關卡 */
@@ -874,8 +877,9 @@ function stageDone(st){ return st === 'l1' ? P.l1.plays >= L1.plays : st === 'l2
 function prevDone(st){ for (let j = STAGES.indexOf(st) - 1; j >= 0; j--) if (has(STAGES[j])) return stageDone(STAGES[j]); return true; }
 function entryLock(st){ for (let j = STAGES.indexOf(st) - 1; j >= 0; j--){ const p = STAGES[j]; if (!has(p)) continue;
   return p === 'l1' ? `第一關完成 ${L1.plays} 次就打開` : p === 'l2' ? (KIND === 'en' ? '第二關三個小關都玩過一次就打開' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`) : MODES[p] ? `${MODES[p].name}「${NINJA.master.name}」通關就打開` : ''; } return ''; }
-/* end＝領取獎狀的時間（老師 2026-11-02）：到了這個時間，關卡選單出現「領取獎狀」按鈕 */
-const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:50',
+/* end＝領取獎狀的時間（老師 2026-11-02）：到了這個時間，關卡選單出現「領取獎狀」按鈕
+   沒有 end（或格式不對）＝每個有開的關卡都過關才出現（老師 2026-11-08；以前是 11:50） */
+const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '',
   classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40),
   nameOn: Q.get('nm') === '1'};   /* nm=1：老師勾選「學生可以輸入自己的名字」（姓名和簽到一起存在這台電腦的瀏覽器 localStorage，關掉網頁也不會不見；不會上傳到網路） */
 let DEMO = Q.has('demo');
@@ -1407,7 +1411,7 @@ function drillEnd(){
   syncL2();
   const crownNow = EN2 ? R.crown : P.l2.crown;
   save(); stars ? Sound.win() : Sound.soft();
-  if (gradeIndex() >= 4) markAward();   /* 星星拿滿而升到最高等第（全程達成）也算破關，回關卡選單時跳出 */
+  if (gradeIndex() >= 4 || (!CFG.end && allClear())) markAward();   /* 星星拿滿而升到最高等第（全程達成）也算破關；沒有 end 時，第一、二關是最後過的關卡也要跳出 */
   const trend = trendOf(score, prev, bestBefore, 5);
   const notes = [];
   if (d.lv===1 && !l2Was && l2Open()) notes.push(note(`「${L2.name}」打開了！`));
@@ -1448,7 +1452,7 @@ function trendOf(v, prev, bestBefore, flat){
 /* 自動跳出獎狀（老師 2026-11-02）：破完最高一級（或第四關），拿到比上次跳出時更高的獎狀，
    在結算畫面按「回關卡選單」時跳出；選「再玩一次」就不跳 */
 let PENDING_AWARD = false;
-function markAward(){ if (!DEMO && gradeIndex() >= 3 && gradeIndex() > (P.awardSeen == null ? -1 : P.awardSeen)) PENDING_AWARD = true; }
+function markAward(){ if (!DEMO && (CFG.end ? gradeIndex() >= 3 : allClear()) && gradeIndex() > (P.awardSeen == null ? -1 : P.awardSeen)) PENDING_AWARD = true; }
 function goHome(){ show('home'); if (PENDING_AWARD){ PENDING_AWARD = false; showAward(false); } }
 function showResult(title, trend, mid, stats, fc, notes, weak, heavy, hist, histR, max, again, nextBtn, nextFn){
   show('result');
@@ -2416,9 +2420,9 @@ function showAward(preview){
   $('#certL4').hidden = !(fourthOpen() && !fourthDone() && !preview); $('#certL4').textContent = KIND === 'en' ? '🏎 挑戰第四關' : '⚔ 挑戰第四關';
   $('#certWrap').hidden = false; Sound.win();
 }
-/* 領取獎狀的按鈕：到了老師設定的時間（學生電腦的時鐘）才出現；老師示範時一直出現 */
+/* 領取獎狀的按鈕：到了老師設定的時間（學生電腦的時鐘）才出現；沒有設定時間＝全部通關才出現；老師示範時一直出現 */
 function endTimeToday(){ const [h,m] = CFG.end.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d.getTime(); }
-const awardOpen = () => DEMO || Date.now() >= endTimeToday();
+const awardOpen = () => DEMO || (CFG.end ? Date.now() >= endTimeToday() : allClear());
 let awardWas = null;
 setInterval(() => { const o = awardOpen(); if (awardWas !== null && o !== awardWas && screen === 'home' && SET) renderHome(); awardWas = o; }, 10000);
 $('#certClose').onclick = () => { $('#certWrap').hidden = true; if (screen !== 'home'){ stopAll(); show('home'); } else renderHome(); };
@@ -2438,7 +2442,7 @@ $('#certPrint').onclick = () => window.print();
       <button class="btn sm" type="button" id="tUnlock">解鎖全部</button>
       <button class="btn sm" type="button" id="tReset">清除這台電腦的紀錄</button>
       <button class="btn sm" type="button" id="tClose">關閉</button></div>
-      <p class="tnote">領取獎狀的時間：${H(CFG.end)}（到了這個時間，關卡選單出現「領取獎狀」按鈕；教師設定頁可以改）。老師示範：網址後面加 #demo。要指定${PK.unit}，請到「中英文打字修練 → ${PK.setupName}」（${PK.setup}）。</p>`;
+      <p class="tnote">${CFG.end ? `領取獎狀的時間：${H(CFG.end)}（到了這個時間，關卡選單出現「領取獎狀」按鈕；教師設定頁可以改）` : '領取獎狀：每個關卡都過關後，關卡選單出現「領取獎狀」按鈕（教師設定頁可以改成指定時間）'}。老師示範：網址後面加 #demo。要指定${PK.unit}，請到「中英文打字修練 → ${PK.setupName}」（${PK.setup}）。</p>`;
     $('#tAward').onclick = () => showAward(true);
     $('#tUnlock').onclick = () => { P.unlock = true; save(); renderHome(); };
     let arm = false;

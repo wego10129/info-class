@@ -149,7 +149,7 @@
    重要語詞訓練（2026-11-06）
    網址參數（教師設定頁 words-setup.html 產生，放在 # 後面）：
    sets＝題庫（num,big,city,addr）、addr＝學校地址的題目（用 | 分開）、tw＝舊連結用（現在一律要打「臺」，有沒有 tw 都一樣）、
-   goal＝練習目標（網頁名稱）、end＝領取獎狀的時間、classes/seats＝班級座號範圍、nm=1＝可以輸入名字、demo＝老師示範
+   goal＝練習目標（網頁名稱）、end＝領取獎狀的時間（沒有＝全部通關才能領）、classes/seats＝班級座號範圍、nm=1＝可以輸入名字、demo＝老師示範
    每個題庫兩關：第一關「看字打字」（不限時、打對為止、可以看注音）→ 第二關「限時挑戰」（星星）
    紀錄存在這台電腦的瀏覽器（localStorage），名字不儲存
    ===================================================================== */
@@ -222,7 +222,9 @@ $('#fixWho').onclick = openSignin;
 function show(id){ ['home','play','result'].forEach(s => $('#' + s).hidden = s !== id); window.scrollTo(0, 0); }
 const l2Open = k => DEMO || REC[k].l1.plays > 0;
 const nowMin = () => { const d = new Date(); return d.getHours()*60 + d.getMinutes(); };
-const awardTime = () => { if (!CFG.end) return true; const [h, m] = CFG.end.split(':').map(Number); return nowMin() >= h*60 + m; };
+/* 沒有 end＝全部通關才能領（老師 2026-11-08）：每個題庫的第二關都拿到 1 顆星以上 */
+const allClear = () => SETS.every(k => REC[k].l2.stars >= 1);
+const awardTime = () => { if (!CFG.end) return allClear(); const [h, m] = CFG.end.split(':').map(Number); return nowMin() >= h*60 + m; };
 function goHome(){
   stopTimer(); show('home');
   $('#entries').innerHTML = SETS.map(k => { const B = WBANK[k], R = REC[k], o2 = l2Open(k);

@@ -1,4 +1,4 @@
-# 交接（2026-11-08 收工）
+# 交接（2026-11-09 更新）
 
 ## 目標
 - 把 info-class 從「每頁各自一份程式」改成「引擎＋設定」架構：不用 ES modules，產出教師下載版與學生網址版。
@@ -14,13 +14,11 @@
   - words.html 不論有沒有 `tw=0`，「台北市」都不算對
   - 動過的 9 個檔案打開都沒有錯誤
 
+- 待實作 (c)（PR：fix/award-without-end → main）：沒有 `end` 時全部通關才能領獎狀；四個教師設定頁加「全部通關才能領」勾選。用 Chromium 測過三種網址（沒有 end、end=23:59、end=00:00）、三種主題、words.html、四個設定頁。
+
 ## 下一步
-1. 確認 fix/words-tw-comments 的 PR 已合併。
-2. 接著做待實作 (c)：網址沒有 `end` 時，全部通關才能領獎狀。
-   先列出每個遊戲的「全部通關」怎麼算，給老師確認後才改程式：
-   - typing-ninja.html、punctuation.html、keyboard-hero.html（同一份程式）
-   - words.html
-3. 再做待實作 (d)：鍵盤小勇士（keyboard-w1～w3）的教師設定頁，產生 `#student` 連結或捷徑檔。屬於新功能，要先給老師看設計。
+1. 確認 fix/award-without-end 的 PR（待實作 (c)：沒有 `end` 時全部通關才能領獎狀）已合併。
+2. 再做待實作 (d)：鍵盤小勇士（keyboard-w1～w3）的教師設定頁，產生 `#student` 連結或捷徑檔。屬於新功能，要先給老師看設計。
 
 ## 動過的檔案（2026-11-08）
 - CLAUDE.md：新增，專案規則、目前結構、目標結構

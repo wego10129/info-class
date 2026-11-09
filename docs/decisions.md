@@ -49,13 +49,23 @@
 ## 2026-11-08 沒有設定領獎時間（end）時，全部通關才能領獎狀
 
 - **決定**：網址沒有 `end` 的時候，學生要全部通關才能領獎狀。有領獎狀功能的頁面都適用這條規則。
-- **現況**
+- **「全部通關」怎麼算**（老師 2026-11-09 確認）
+  - typing-ninja.html、punctuation.html、keyboard-hero.html：每個有開的關卡都達到「打開下一關」的標準：
+    - 第一關完成 3 次
+    - 第二關：英文三個小關都玩過；標點、按鍵拿到 3 顆星
+    - 打敵人的關卡（流星雨、忍者、病毒）打通最高一級
+    - 第四關（魔王戰、影子賽車）全部過關
+  - 星星拿滿、全程制霸是**隱藏成就**，不算在全部通關的條件裡。拿到的話，獎狀等第照樣會變高。
+  - words.html：每個題庫的第二關都拿到 1 顆星以上（60 分）。
+- **教師設定頁**（老師 2026-11-09 決定）：四個設定頁都加一個勾選「全部關卡都過關才能領獎狀（不看時間）」。勾選後產生的連結不帶 `end`。
+- **改以前**
   - typing-ninja.html、punctuation.html、keyboard-hero.html：沒有 `end` 時，11:50 起可以領。
   - words.html：沒有 `end` 時，隨時可以領。
 - **影響範圍**
-  - 只影響沒有 `end` 的連結。教師設定頁從 2026-11-02 起都會產生 `end`，所以主要是更早發出的舊連結。
-  - 用到的頁面：typing-ninja.html、punctuation.html、keyboard-hero.html、words.html，以及之後新增、有領獎狀功能的遊戲。
-- **狀態**：待實作。
+  - 沒有 `end` 的舊連結：改成全部通關才能領。
+  - 有 `end` 的連結：完全不變。
+  - 用到的頁面：typing-ninja.html、punctuation.html、keyboard-hero.html、words.html、keyboard.html、typing-setup.html、punct-setup.html、words-setup.html，以及之後新增、有領獎狀功能的遊戲。
+- **狀態**：已完成（2026-11-09）。
 
 ## 2026-11-08 重要語詞的縣市一律要打正式寫法「臺」
 
