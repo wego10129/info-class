@@ -204,7 +204,7 @@ html.meteor .scene[data-th="5"]{animation:none}
 html.meteor .scene .rain{display:none}
 html.meteor .scene .near{height:7%}
 html.meteor .scene .far{clip-path:polygon(0 100%,0 70%,6% 70%,6% 52%,12% 52%,12% 64%,20% 64%,20% 40%,27% 40%,27% 60%,36% 60%,36% 48%,44% 48%,44% 66%,55% 66%,55% 36%,61% 36%,61% 58%,70% 58%,70% 46%,78% 46%,78% 62%,88% 62%,88% 42%,94% 42%,94% 66%,100% 66%,100% 100%)}
-html.meteor .enemy{transform:translateX(-50%)}
+html.meteor .enemy{transform:translateX(-50%);width:clamp(54px,10vh,84px)}   /* 流星小一點，掉落的距離比較長（老師 2026-11-09） */
 html.meteor .enemy svg{animation:fall .6s ease-in-out infinite alternate}
 @keyframes fall{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
 html.meteor .enemy.poof svg{animation:poof .35s forwards}
@@ -778,6 +778,16 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
   brave: {name:'勇者', open:4, goal:20, lives:3, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]],     time:[8.5,8,7.6,7.3,7],   per:3,   multi:[1,1,1,1,1],   gap:3},
   master:{name:'大師', open:5, goal:30, lives:3, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[2,2],[2,2]],     time:[8,7.6,7.2,6.9,6.6], per:3,   multi:[1,1,1,1,2],   gap:3},
 };
+/* 英文字母流星雨專用的調整（老師 2026-11-09）：其他設定和打字忍者一樣，只改下面這幾項
+   per＝每多 1 個字母，多給幾秒（字母越多掉得越慢；忍者是 1.4／1.1／1）
+   勇者：3 個字母只在最後兩小關偶爾出現，同時 2 顆流星只在最後一小關（忍者的勇者第 3 小關就有 3 個字母） */
+const METEOR_TUNE = {
+  novice:{per:2.2},
+  brave: {per:2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2]},
+  master:{per:1.6},
+};
+/* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
+const METEOR_LAND = .08, METEOR_SLOW = 1.4;
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
    新手＝鍵名＋鍵盤提示、勇者＝只提示用途、大師＝只看情境（鍵帽沒有字）；2 個鍵的病毒＝兩種情境都要完成才會被消滅 */
 /* 重要按鍵練習（老師 2026-10-30）：沒有第二關；病毒來襲改回舊版「看電腦畫面的情境，按按鍵」。
@@ -1533,7 +1543,7 @@ function startNinja(id, md){
   md = MODES[md] && has(md) ? md : NMON()[0] || 'n'; useMode(md);   /* 流星雨（m）或忍者（n） */
   if (KIND === 'key') return vStart(id);
   stopAll();
-  const C = NINJA[id];
+  const C = METEOR ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
   N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
@@ -1549,7 +1559,7 @@ function freshWord(len){
 function spawn(){
   const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
   if (!word) return false;
-  const dur = C.time[N.stage-1] + C.per*(len-1);
+  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1);
   const el = document.createElement('div'); el.className = 'enemy';
   el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}`; el.style.left = X0 + '%';
   /* 流星雨：從上面掉下來；掉落的位置不要和畫面上的流星太近 */
@@ -1557,7 +1567,7 @@ function spawn(){
   if (METEOR){ for (let t=0; t<20; t++){ lane = ri(30, 88); if (N.es.every(o => Math.abs(o.lane - lane) > 20)) break; } el.style.left = lane + '%'; el.style.bottom = '100%'; }
   $('#enemyLayer').appendChild(el);
   const e = {word, el, dur, lane, start:performance.now(), w:el.querySelector('.word')};
-  if (METEOR){ const H = $('#nStage').clientHeight, h = el.offsetHeight; e.y0 = H - h - 4; e.y1 = H*.22 - h*.12; el.style.bottom = e.y0 + 'px'; }
+  if (METEOR){ const H = $('#nStage').clientHeight, h = el.offsetHeight; e.y0 = H - h - 4; e.y1 = H*METEOR_LAND; el.style.bottom = e.y0 + 'px'; }
   N.es.push(e); drawWords(); return true;
 }
 const maxNow = () => N.C.multi[N.stage-1] || 1;
