@@ -43,6 +43,7 @@
 .tip-block{margin-top:8px;border:3px dashed #F28C38;border-radius:12px;padding:8px 14px;background:#FFF4E5;font-size:15px}
 .tip-block ul{margin:4px 0 0;padding-left:1.2em;font-weight:700}
 .check-opt small{display:block;font-weight:700;color:var(--ink-soft)}
+#awardAt:disabled{opacity:.35;cursor:not-allowed}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:700}
 .sum dt{color:var(--soft)}
@@ -124,9 +125,10 @@ details summary{cursor:pointer;font-weight:900;color:var(--soft)}
     <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
+    <label class="check-opt"><input type="checkbox" id="awdClear"><span><b>全部關卡都過關才能領獎狀（不看時間）</b><small>勾選後，學生每個有開的關卡都過關，關卡選單才出現「領取獎狀」按鈕。星星拿滿、全程制霸是隱藏成就，不用全部做到。</small></span></label>
     <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。</small></span></label>
     <aside class="tip-block" id="nameTip" hidden><b>📣 給老師（學生畫面不會出現這段）</b><ul><li>中文或英文名字都可以，不限定輸入法。</li><li>名字可以空白：不會打的學生，口頭提醒他直接按 Enter 就能進入，獎狀會改印座號。</li></ul></aside>
-    <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，點了依目前的進度發獎狀，可以列印。</li><li>在這個時間之前就破完最後一關的最高一級，回到關卡選單時會自動跳出獎狀（選「再玩一次」就不會跳出）；之後拿到更高的獎狀，也會再跳出一次。</li><li>獎狀依「現在的紀錄」產生，之後再練習，下次領取的獎狀也會跟著更新。</li></ul></aside>
+    <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，點了依目前的進度發獎狀，可以列印。</li><li>在這個時間之前就破完最後一關的最高一級，回到關卡選單時會自動跳出獎狀（選「再玩一次」就不會跳出）；之後拿到更高的獎狀，也會再跳出一次。</li><li>勾「全部關卡都過關才能領獎狀」：不看時間，學生每個有開的關卡都過關，按鈕才出現，也會自動跳出獎狀。</li><li>獎狀依「現在的紀錄」產生，之後再練習，下次領取的獎狀也會跟著更新。</li></ul></aside>
     <div class="lvrow"><span class="lvl">🎯 關卡安排：</span><span id="lvNow"></span><a class="btn" id="lvGo" href="levels.html#kind=key">指定關卡（另開一頁）</a></div>
     <p class="note">想讓學生只練某一關（例：只練第三關），或從某一級開始，按「指定關卡」。</p>
     <p class="msg err" id="msg3"></p>
@@ -200,15 +202,15 @@ function normTime(v){
 }
 const numIn = (id, lo, hi, d) => { const n = parseInt($('#'+id).value, 10); return n >= lo && n <= hi ? n : null; };
 function state(){
-  const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value);
-  return {keys:keysNow(), goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && c && s && !!awd};
+  const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value), clr = $('#awdClear').checked;
+  return {keys:keysNow(), goal:$('#goal').value.trim(), c, s, awd, clr, nm:$('#nameOn').checked, ok: keysNow().length >= 2 && c && s && (clr || !!awd)};
 }
 function params(st, demo){
   const p = new URLSearchParams();
   p.set('keys', st.keys.join(''));
   if (LVS) p.set('lv', LVS);   /* 關卡安排 */
   if (st.goal) p.set('goal', st.goal);
-  p.set('end', st.awd);   /* 領取獎狀的時間（老師 2026-11-02） */
+  if (!st.clr) p.set('end', st.awd);   /* 領取獎狀的時間（老師 2026-11-02）；勾「全部通關才能領」就不放 end（老師 2026-11-08） */
   if (st.c !== 20) p.set('classes', st.c);
   if (st.s !== 40) p.set('seats', st.s);
   if (st.nm) p.set('nm', '1');
@@ -224,19 +226,19 @@ function render(){
   $('#ok1').hidden = k.length < 2;
   const errs = [];
   if (k.length < 2) errs.push('第 1 步：至少選 2 個按鍵');
-  if (!st.awd) errs.push('領取獎狀的時間要像 11:50 或 1150');
+  if (!st.clr && !st.awd) errs.push('領取獎狀的時間要像 11:50 或 1150');
   if (!st.c) errs.push('班級要是 1～30');
   if (!st.s) errs.push('座號要是 1～60');
   $('#msg3').textContent = errs.filter(e => !e.startsWith('第 1')).join('；');
   $('#sumGoal').textContent = st.goal || '老師指定（沒有填目標）';
   $('#sumKeys').textContent = k.length ? k.map(nameOf).join('、') : '還沒選';
   $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
-  $('#sumAward').textContent = st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
+  $('#sumAward').textContent = st.clr ? '全部通關後，學生的畫面出現「領取獎狀」按鈕' : st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
   ['open','demo','copy','shortcut'].forEach(id => $('#'+id).disabled = !st.ok);
   $('#link').textContent = st.ok ? linkOf(st) : '設定完成後才會出現連結';
   const m = $('#msg'); if (!st.ok){ m.className = 'msg err'; m.textContent = '還不能發給學生：' + errs.join('；'); } else if (m.classList.contains('err')){ m.className = 'msg'; m.textContent = ''; }
-  $('#f1').classList.toggle('done', k.length >= 2); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s && st.awd));
+  $('#f1').classList.toggle('done', k.length >= 2); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s && (st.clr || st.awd)));
 }
 $('#kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; picked.has(b.dataset.k) ? picked.delete(b.dataset.k) : picked.add(b.dataset.k); render(); });
 /* 快速選可以複選（老師 2026-10-30）：按一下加入這一組、再按一次取消；「清空」全部取消 */
@@ -245,6 +247,7 @@ document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const ks 
   if (!ks.length) picked.clear(); else if (ks.every(c => picked.has(c))) ks.forEach(c => picked.delete(c)); else ks.forEach(c => picked.add(c)); render(); });
 function syncPresets(){ document.querySelectorAll('[data-p]').forEach(b => { const ks = presetKeys(b); if (ks.length) b.setAttribute('aria-pressed', ks.every(c => picked.has(c))); }); }
 ['goal','classes','seats','awardAt'].forEach(id => $('#'+id).addEventListener('input', render));
+$('#awdClear').addEventListener('change', () => { $('#awardAt').disabled = $('#awdClear').checked; render(); });
 $('#awardAt').addEventListener('blur', () => { const t = normTime($('#awardAt').value); if (t) $('#awardAt').value = t; render(); });
 $('#nameOn').addEventListener('change', render);
 $('#nameOn').addEventListener('change', () => { $('#nameTip').hidden = !$('#nameOn').checked; });
@@ -274,11 +277,12 @@ $('#shortcut').onclick = () => {
 $('#open').onclick = () => window.open(linkOf(state()), '_blank');
 $('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
 /* 去「關卡安排」頁再回來時，表單照原樣（只存在這個分頁，關掉就清掉） */
-function saveForm(){ try{ sessionStorage.setItem('setup_' + KIND_, JSON.stringify({keys:[...picked], goal:$('#goal').value, awd:$('#awardAt').value, c:$('#classes').value, s:$('#seats').value, nm:$('#nameOn').checked})); }catch(e){} }
+function saveForm(){ try{ sessionStorage.setItem('setup_' + KIND_, JSON.stringify({keys:[...picked], goal:$('#goal').value, awd:$('#awardAt').value, clr:$('#awdClear').checked, c:$('#classes').value, s:$('#seats').value, nm:$('#nameOn').checked})); }catch(e){} }
 (function(){ let f = null; try{ f = JSON.parse(sessionStorage.getItem('setup_' + KIND_) || 'null'); }catch(e){}
   if (!f) return; picked.clear(); (f.keys || []).forEach(c => { if (ORDER.includes(c)) picked.add(c); });
-  $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40';
+  $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#awdClear').checked = !!f.clr; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40';
   $('#nameOn').checked = !!f.nm; $('#nameTip').hidden = !f.nm; })();
+$('#awardAt').disabled = $('#awdClear').checked;
 render();
 </script>
 </body>

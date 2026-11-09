@@ -43,6 +43,7 @@
 .tip-block{margin-top:8px;border:3px dashed #F28C38;border-radius:12px;padding:8px 14px;background:#FFF4E5;font-size:15px}
 .tip-block ul{margin:4px 0 0;padding-left:1.2em;font-weight:700}
 .check-opt small{display:block;font-weight:700;color:var(--ink-soft)}
+#awardAt:disabled{opacity:.35;cursor:not-allowed}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;background:var(--wash);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-weight:700}
 .sum dt{color:var(--soft)}
@@ -167,8 +168,9 @@ textarea.items:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 4px rg
     <datalist id="clsList"><option value="5"><option value="8"><option value="10"><option value="12"><option value="15"><option value="20"></datalist>
     <datalist id="seatList"><option value="25"><option value="28"><option value="30"><option value="32"><option value="35"><option value="40"></datalist>
     <p class="note">班級、座號只用來檢查學生輸入的班級座號碼（例：30101）。</p>
+    <label class="check-opt"><input type="checkbox" id="awdClear"><span><b>全部題庫都過關才能領獎狀（不看時間）</b><small>勾選後，學生每個題庫的第二關都拿到 1 顆星以上，才出現「領取獎狀」按鈕。</small></span></label>
     <label class="check-opt"><input type="checkbox" id="nameOn"><span><b>學生可以輸入自己的名字</b><small>簽到時多一格「你的名字」；獎狀印成「三年一班 王小明」。名字只留在畫面上，不會儲存。打自己的名字也是很好的注音練習。</small></span></label>
-    <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，可以列印。</li><li>獎狀等第看每個題庫第二關的星星（平均）：3 顆銅獎、4 顆銀獎、5 顆金獎；還沒到 3 顆是見習獎。</li></ul></aside>
+    <aside class="tip-block"><b>🏆 獎狀怎麼發（給老師，學生畫面不會出現這段）</b><ul><li>到了「領取獎狀的時間」（依學生電腦的時鐘），學生的關卡選單會出現「🏆 領取獎狀」按鈕，可以列印。</li><li>勾「全部題庫都過關才能領獎狀」：不看時間，每個題庫的第二關都拿到 1 顆星以上，按鈕才出現。</li><li>獎狀等第看每個題庫第二關的星星（平均）：3 顆銅獎、4 顆銀獎、5 顆金獎；還沒到 3 顆是見習獎。</li></ul></aside>
     <p class="msg err" id="msg3"></p>
   </section>
 
@@ -242,17 +244,17 @@ function sets(){
   return s;
 }
 function state(){
-  const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value), st = sets();
+  const c = numIn('classes',1,30), s = numIn('seats',1,60), awd = normTime($('#awardAt').value), clr = $('#awdClear').checked, st = sets();
   const addrBad = $('#useAddr').checked && !addrItems().length, numBad = $('#useNum').checked && !$('#numSmall').checked && !$('#numBig').checked;
-  return {sets:st, goal:$('#goal').value.trim(), c, s, awd, nm:$('#nameOn').checked, addrBad, numBad,
-    ok: st.length >= 1 && !addrBad && !numBad && c && s && !!awd};
+  return {sets:st, goal:$('#goal').value.trim(), c, s, awd, clr, nm:$('#nameOn').checked, addrBad, numBad,
+    ok: st.length >= 1 && !addrBad && !numBad && c && s && (clr || !!awd)};
 }
 function params(st, demo){
   const p = new URLSearchParams();
   p.set('sets', st.sets.join(','));
   if (st.sets.includes('addr')) p.set('addr', addrItems().join('|'));
   if (st.goal) p.set('goal', st.goal);
-  p.set('end', st.awd);
+  if (!st.clr) p.set('end', st.awd);   /* 領取獎狀的時間（老師 2026-11-02）；勾「全部通關才能領」就不放 end（老師 2026-11-08） */
   if (st.c !== 20) p.set('classes', st.c);
   if (st.s !== 40) p.set('seats', st.s);
   if (st.nm) p.set('nm', '1');
@@ -270,19 +272,19 @@ function render(){
   if (!st.sets.length) errs.push('第 1 步：至少選 1 個題庫');
   if (st.numBad) errs.push('國字數字：小寫、大寫至少勾一個');
   if (st.addrBad) errs.push('學校地址：請輸入地址或練習題');
-  if (!st.awd) errs.push('領取獎狀的時間要像 11:50 或 1150');
+  if (!st.clr && !st.awd) errs.push('領取獎狀的時間要像 11:50 或 1150');
   if (!st.c) errs.push('班級要是 1～30');
   if (!st.s) errs.push('座號要是 1～60');
   $('#msg3').textContent = errs.filter(e => !/^(第 1|國字|學校)/.test(e)).join('；');
   $('#sumGoal').textContent = st.goal || '重要語詞訓練（沒有填目標）';
   $('#sumSets').textContent = st.sets.length ? st.sets.map(k => k === 'addr' ? `學校地址（${addrItems().length} 題）` : `${NAMES[k]}（${WBANK[k].items.length} 個）`).join('、') : '還沒選';
   $('#sumName').textContent = st.nm ? '學生自己輸入，獎狀印「三年一班 王小明」' : '不輸入，獎狀印「三年一班 1 號」';
-  $('#sumAward').textContent = st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
+  $('#sumAward').textContent = st.clr ? '全部通關後，學生的畫面出現「領取獎狀」按鈕' : st.awd ? `${st.awd} 起，學生的關卡選單出現「領取獎狀」按鈕` : '時間格式不對';
   $('#sumCls').textContent = st.c && st.s ? `1～${st.c} 班、1～${st.s} 號` : '數字不對';
   ['open','demo','copy','shortcut'].forEach(id => $('#'+id).disabled = !st.ok);
   $('#link').textContent = st.ok ? linkOf(st) : '設定完成後才會出現連結';
   const m = $('#msg'); if (!st.ok){ m.className = 'msg err'; m.textContent = '還不能發給學生：' + errs.join('；'); } else if (m.classList.contains('err')){ m.className = 'msg'; m.textContent = ''; }
-  $('#f1').classList.toggle('done', !$('#ok1').hidden); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s && st.awd));
+  $('#f1').classList.toggle('done', !$('#ok1').hidden); $('#f2').classList.toggle('done', !!st.goal); $('#f3').classList.toggle('done', !!(st.c && st.s && (st.clr || st.awd)));
   saveForm();
 }
 ['useNum','numSmall','numBig','useAddr','useCity','nameOn'].forEach(id => $('#'+id).addEventListener('change', render));
@@ -291,6 +293,7 @@ function render(){
 ['addr','school'].forEach(id => $('#'+id).addEventListener('input', () => { if (!addrEdited) resplit(); render(); }));
 $('#addrItems').addEventListener('input', () => { addrEdited = true; render(); });
 $('#resplit').onclick = () => { resplit(); render(); };
+$('#awdClear').addEventListener('change', () => { $('#awardAt').disabled = $('#awdClear').checked; render(); });
 $('#awardAt').addEventListener('blur', () => { const t = normTime($('#awardAt').value); if (t) $('#awardAt').value = t; render(); });
 ['classes','seats'].forEach(id => $('#'+id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); }));
 document.querySelectorAll('.typein input').forEach(i => i.addEventListener('focus', () => i.select()));
@@ -317,12 +320,13 @@ $('#demo').onclick = () => window.open(linkOf(state(), true), '_blank');
 /* 表單內容存在這個分頁（關掉就清掉），重新整理時不用重填 */
 function saveForm(){ try{ sessionStorage.setItem('setup_words', JSON.stringify({useNum:$('#useNum').checked, numSmall:$('#numSmall').checked, numBig:$('#numBig').checked,
   useAddr:$('#useAddr').checked, useCity:$('#useCity').checked, school:$('#school').value, addr:$('#addr').value, items:$('#addrItems').value, edited:addrEdited,
-  goal:$('#goal').value, awd:$('#awardAt').value, c:$('#classes').value, s:$('#seats').value, nameOn:$('#nameOn').checked})); }catch(e){} }
+  goal:$('#goal').value, awd:$('#awardAt').value, clr:$('#awdClear').checked, c:$('#classes').value, s:$('#seats').value, nameOn:$('#nameOn').checked})); }catch(e){} }
 (function(){ let f = null; try{ f = JSON.parse(sessionStorage.getItem('setup_words') || 'null'); }catch(e){}
   if (!f) return;
   ['useNum','numSmall','numBig','useAddr','useCity','nameOn'].forEach(id => { if (id in f) $('#'+id).checked = !!f[id]; });
   $('#school').value = f.school || ''; $('#addr').value = f.addr || ''; $('#addrItems').value = f.items || ''; addrEdited = !!f.edited;
-  $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40'; })();
+  $('#goal').value = f.goal || ''; $('#awardAt').value = f.awd || '11:50'; $('#awdClear').checked = !!f.clr; $('#classes').value = f.c || '20'; $('#seats').value = f.s || '40'; })();
+$('#awardAt').disabled = $('#awdClear').checked;
 render();
 </script>
 </body>
