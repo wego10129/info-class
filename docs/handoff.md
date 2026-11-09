@@ -5,28 +5,24 @@
 - 舊網址、網址參數、學生紀錄（localStorage 鍵名）都不能失效。
 
 ## 已完成
-- 第 0 階段「打地基」，在 `setup/docs` 分支：
-  - 建立 CLAUDE.md
-  - 建立 docs/url-contract.md（每頁的網址參數與儲存鍵名）
-  - 建立 docs/decisions.md（決策紀錄）
-- 待實作 (a)(b)，在 `fix/words-tw-comments` 分支。這個分支從 setup/docs 開出，包含 setup/docs 的所有內容：
+- 第 0 階段「打地基」：CLAUDE.md、docs/url-contract.md、docs/decisions.md（PR #1，已合併到 main）。
+- 待實作 (a)(b)（PR：fix/words-tw-comments → main）：
   - (a) 改正 3 處和實際行為不一致的程式註解
   - (b) 重要語詞一律要打「臺」，設定頁拿掉勾選
 - 用 Chromium 測過：
   - words-setup.html 產生的網址沒有 `tw`，預覽顯示「一定要打『臺』」
   - words.html 不論有沒有 `tw=0`，「台北市」都不算對
   - 動過的 9 個檔案打開都沒有錯誤
-- 兩個分支都已推上 GitHub，**都還沒合併到 main**。
 
 ## 下一步
-1. 老師決定要不要合併。建議只合併 `fix/words-tw-comments`，它已經包含 setup/docs 的內容。
+1. 確認 fix/words-tw-comments 的 PR 已合併。
 2. 接著做待實作 (c)：網址沒有 `end` 時，全部通關才能領獎狀。
    先列出每個遊戲的「全部通關」怎麼算，給老師確認後才改程式：
    - typing-ninja.html、punctuation.html、keyboard-hero.html（同一份程式）
    - words.html
 3. 再做待實作 (d)：鍵盤小勇士（keyboard-w1～w3）的教師設定頁，產生 `#student` 連結或捷徑檔。屬於新功能，要先給老師看設計。
 
-## 動過的檔案（fix/words-tw-comments 分支，和 main 相比）
+## 動過的檔案（2026-11-08）
 - CLAUDE.md：新增，專案規則、目前結構、目標結構
 - docs/url-contract.md：新增，每頁的網址參數、預設行為、範例網址、儲存鍵名
 - docs/decisions.md：新增，5 筆決策
