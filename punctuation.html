@@ -877,7 +877,7 @@ function entryLock(st){ for (let j = STAGES.indexOf(st) - 1; j >= 0; j--){ const
 /* end＝領取獎狀的時間（老師 2026-11-02）：到了這個時間，關卡選單出現「領取獎狀」按鈕 */
 const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '11:50',
   classes: Math.min(30, +Q.get('classes') || 20), seats: Math.min(60, +Q.get('seats') || 40),
-  nameOn: Q.get('nm') === '1'};   /* nm=1：老師勾選「學生可以輸入自己的名字」（姓名只留在畫面上，不儲存） */
+  nameOn: Q.get('nm') === '1'};   /* nm=1：老師勾選「學生可以輸入自己的名字」（姓名和簽到一起存在這台電腦的瀏覽器 localStorage，關掉網頁也不會不見；不會上傳到網路） */
 let DEMO = Q.has('demo');
 const ALL = PK.all;
 const qKeys = [...new Set([...(Q.get('keys')||'').toLowerCase()].filter(c => ALL.includes(c)))].join('');

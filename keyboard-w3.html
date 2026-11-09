@@ -775,7 +775,7 @@ const SCAFFOLD_TEXT = {
 const kb = buildKeyboard($('#kb'));
 $('#verBadge').textContent = VERSION.name;
 
-/* ---------- 進度（只存這個分頁；關掉分頁就清空） ---------- */
+/* ---------- 進度（存在這台電腦的瀏覽器 localStorage：關掉瀏覽器還在；電腦還原或老師按「清除這台電腦的紀錄」才會刪掉） ---------- */
 const KEY = 'kbhero6_' + VERSION.id;
 const fresh = () => ({warm:false, review:{}, arrows:[], best:{}, stars:{}, crown:{}, history:{}, weight:{}, rtSum:0, rtN:0, unlock:false, title:null, virusBest:0, miniBest:0, cleared:{}});
 /* 老師示範模式：檔名含「示範」、網址後面加 #demo，或老師設定按「老師示範」。全部打開、什麼都不存 */

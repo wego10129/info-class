@@ -46,7 +46,7 @@
 - shared/：全站工具（params、storage、ui）
 - data/：題庫與關卡清單
 - teacher/：教師設定頁
-- docs/：規格與紀錄
+- docs/：規格與紀錄，開工前先讀 docs/handoff.md
 
 ## 做法
 - 改 engines/ 或 shared/ 之前，先列出會受影響的所有遊戲，改完逐一測試。
