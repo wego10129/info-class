@@ -232,6 +232,13 @@ html.mole .enemy.poof svg{animation:bonk .35s forwards}
 .tbar{width:84%;height:9px;border:2px solid var(--ink);border-radius:6px;background:#fff;margin-top:3px;overflow:hidden}
 .tbar i{display:block;height:100%;width:100%;background:var(--good)}
 .tbar.low i{background:var(--bad)}
+/* 補血機會（老師 2026-11-10）：換關前在畫面中間出現愛心和 2～3 個字母 */
+.heal{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:6;display:grid;justify-items:center;gap:4px;background:rgba(255,255,255,.9);border:4px solid #E11D48;border-radius:20px;padding:10px 22px 12px;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+.heal .heal-h{font:900 clamp(18px,3.4vh,26px)/1.2 var(--f-body);color:#BE123C;white-space:nowrap}
+.heal .heal-i{font-size:clamp(34px,7vh,56px);line-height:1;animation:bob .5s ease-in-out infinite alternate}
+.heal .word{margin:0}
+.heal .tbar{width:100%}
+#enemyLayer.healing .enemy{opacity:.2}   /* 補血時流星變淡，才不會打錯對象 */
 
 /* 打字欄位（訓練學生自己切換英文輸入法） */
 .typebox{flex:none;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px;width:min(100%,760px);margin-inline:auto}
@@ -817,9 +824,12 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
 const METEOR_TUNE = {
   novice:{per:3.6},
   brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2], gap:3},
-  master:{per:2.6, goal:40, len:[[2,3],[3,3],[3,4],[3,4],[3,4]], multi:[1,1,1,2,2], gap:3, rest:[3,4,5]},
+  master:{per:2.6, goal:40, len:[[2,3],[3,3],[3,4],[3,4],[3,4]], multi:[1,1,1,2,2], gap:3, rest:[3,4,5], heal:true},
 };
 const REST_SEC = 5;
+/* 補血機會（老師 2026-11-10）：大師、隱藏關（heal:true）換到下一關／下一波之前，如果少了命，畫面中間出現愛心和 2～3 個字母（HEAL_LEN）；
+   HEAL_SEC 秒內打對＝回 1 條命（最多回到原本的命數），時間到沒打對＝不扣命，直接進下一關。補血時流星停住不動 */
+const HEAL_SEC = 7, HEAL_LEN = [2,3];
 const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度設定） */
 /* 字母打地鼠（老師 2026-11-10）：以單一字母為主，練「眼睛找位置」；time＝地鼠探出頭停留幾秒，per＝每多 1 個字母多停幾秒
    新手＝一次 1 隻、最後一小關 2 隻、鍵盤提示；勇者＝2 隻起、後面偶爾 2 個字母；大師＝2～3 隻、鍵帽沒有字 */
@@ -840,7 +850,7 @@ const METEOR_LAND = .08, METEOR_SLOW = 1.4;
    不再有一閃就到的 1 個字母流星；同時最多 1、1、2、2、2 組（原本 2、2、3、3、3 顆）；間隔 gap 1.4→2.5 秒；最快 0.6→0.7 倍；
    每 restEvery 波停在休息站（同大師） */
 const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true, twin:true,
-  len:[[3,3],[3,4],[3,4],[3,5],[4,5]], multi:[1,1,2,2,2], gap:2.5, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.7, rest:[], restEvery:3};
+  len:[[3,3],[3,4],[3,4],[3,5],[4,5]], multi:[1,1,2,2,2], gap:2.5, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.7, rest:[], restEvery:3, heal:true};
 const crisisConf = () => Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
 const crisisOpen = () => KIND === 'en' && !!P && has('m') && (P.unlock || P.meteor.master.cleared);
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
@@ -1245,7 +1255,7 @@ function show(name){
 $('#homeBtn').onclick = () => { const fromResult = screen === 'result'; stopAll(); fromResult ? goHome() : show('home'); };
 $('#setsBtn').onclick = () => show('sets');
 $('#backSets').onclick = () => show('sets');
-function stopAll(){ if (RC){ RC.over = true; RC = null; } if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } if (B){ B.over = true; B = null; } $('#bShots').innerHTML = ''; $('#enemyLayer').innerHTML = ''; $('#vLayer').innerHTML = ''; tin.blur(); }
+function stopAll(){ $('#enemyLayer').classList.remove('healing'); if (RC){ RC.over = true; RC = null; } if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } if (B){ B.over = true; B = null; } $('#bShots').innerHTML = ''; $('#enemyLayer').innerHTML = ''; $('#vLayer').innerHTML = ''; tin.blur(); }
 
 function renderSets(){
   $('#sets').innerHTML = Object.keys(SETS).map(id => {
@@ -1288,10 +1298,10 @@ function renderHome(){
   const nCard = md => { useMode(md); const M = MODES[md], sN = startIdx(md);
     const nBtns = NINJA_ORDER.map((id,i) => { const C = nConf(md, id), R = recOf(md)[id], o = nOpen(md, id);
       const lock = nLock(md, i);
-      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}` : lock}</small></span>
+      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}${C.heal ? '・換關前有補血機會' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
     const CR = md === 'm' && crisisOpen() ? P.crisis : null;
-    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・3～5 個字母的雙子流星越來越快、越來越多・3 條命，看你能打碎幾組・每 3 波有休息站</small></span>
+    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・3～5 個字母的雙子流星越來越快、越來越多・3 條命，看你能打碎幾組・每 3 波有休息站・換波前有補血機會</small></span>
         <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} 組` : '還沒挑戰'}</span></span></button>`;
     const anyO = NINJA_ORDER.some(id => nOpen(md, id));
     return card(md, md === 'm' ? '#1D4E89' : md === 'w' ? '#7A5230' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns + crisisBtn, anyO ? '' : nLock(md, 0)); };
@@ -1690,6 +1700,7 @@ const progress = e => (performance.now() - e.start) / (e.dur*1000);
 const X0 = KIND === 'en' ? 96 : 90, X1 = 22;   /* 敵人從右邊（96%）走到忍者前面（22%） */
 function ninjaTick(now){
   if (!N || N.over || screen!=='ninja') return;
+  if (N.heal && paused==null) healTick(now);
   if (!N.locked && paused==null){
     /* 出現新敵人：畫面上的少於這一關的上限，而且還沒到目標數 */
     if (N.es.length < maxNow() && N.kills + N.es.length < N.C.goal && (N.es.length === 0 || now >= N.nextAt) && now >= N.holdUntil0){
@@ -1707,6 +1718,7 @@ function ninjaTick(now){
 const GRACE_MS = 1000, GRACE_MSG = '換下一顆！看清楚流星上的字母再打';
 function ninjaInput(v){
   if (N && N.rest){ tinReset(); return; }   /* 休息站：打的字不算 */
+  if (N && N.heal) return healInput(v);
   if (!N || N.locked) return;
   if (!v){ N.badLen = 0; tinState(''); drawWords(); return; }
   const ms = N.es.filter(e => e.word.startsWith(v));
@@ -1748,12 +1760,51 @@ function defeat(e){
   const p = document.createElement('div'); p.className = 'pts'; p.textContent = `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
   tinReset(); kb.clear(); drawWords(); ninjaHud();
   if (N.kills >= N.C.goal) return ninjaWin();
-  const st = stageOfKills(N.C, N.kills), n = N;
-  if (st > N.stage && (N.C.rest || []).includes(st)){ N.stage = st; restStop(); }
-  else if (N.C.restEvery && N.kills % N.C.wave === 0 && (N.kills / N.C.wave) % N.C.restEvery === 0){ N.stage = st; restStop(); }
-  else if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
-  else if (N.C.endless && N.kills % N.C.wave === 0){ const b = $('#stageBig'); b.textContent = `⚡ 第 ${N.kills / N.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); N.holdUntil0 = performance.now() + 1200; }
-  else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
+  const st = stageOfKills(N.C, N.kills);
+  const waveEnd = N.C.endless ? N.kills % N.C.wave === 0 : st > N.stage;
+  if (!waveEnd){ if (!N.es.length) N.holdUntil0 = performance.now() + 450; return; }
+  const rest = (st > N.stage && (N.C.rest || []).includes(st)) || !!(N.C.endless && N.C.restEvery && (N.kills / N.C.wave) % N.C.restEvery === 0);
+  /* 換關（換波）的順序：補血機會（少了命才有）→ 休息站（有設定才有）→ 下一關 */
+  if (N.C.heal && N.lives < N.C.lives) healStart(() => nextWave(st, rest)); else nextWave(st, rest);
+}
+function nextWave(st, rest){
+  const n = N; if (!n) return;
+  const up = st > n.stage; n.stage = st;
+  if (rest) return restStop();
+  if (up){ n.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
+  else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${n.kills / n.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
+}
+/* 補血機會：遊戲停住（流星不動），畫面中間出現愛心；HEAL_SEC 秒內打對回 1 條命，時間到不扣命 */
+function healStart(next){
+  const n = N, word = makeWord(ri(HEAL_LEN[0], HEAL_LEN[1])), now = performance.now();
+  const el = document.createElement('div'); el.className = 'heal';
+  el.innerHTML = `<div class="heal-h">💖 補血機會！${HEAL_SEC} 秒內打出來</div><div class="heal-i">❤️</div><div class="word"></div><div class="tbar"><i></i></div>`;
+  $('#enemyLayer').appendChild(el); $('#enemyLayer').classList.add('healing');
+  n.locked = true; n.heal = {word, el, next, at:now, until:now + HEAL_SEC*1000}; kb.clear(); tinReset(); healDraw(''); focusTin();
+  Sound.tone(784, .15, 'triangle', 0, .08); Sound.tone(1047, .2, 'triangle', .1, .08);
+}
+function healDraw(v){
+  const h = N.heal, pos = h.word.startsWith(v) ? v.length : 0;
+  h.el.querySelector('.word').innerHTML = [...h.word].map((c,i) => `<span class="${i<pos?'ok':i===pos?'cur':''}">${H(FOE_LBL(c, N.C))}</span>`).join('');
+}
+function healTick(now){
+  const h = N.heal, left = (h.until - now) / (HEAL_SEC*1000);
+  h.el.querySelector('.tbar i').style.width = Math.max(0, left*100) + '%'; h.el.querySelector('.tbar').classList.toggle('low', left < .3);
+  if (left <= 0) healEnd(false);
+}
+function healInput(v){
+  const h = N.heal;
+  if (!v){ tinState(''); healDraw(''); return; }
+  if (h.word.startsWith(v)){ Sound.key(); tinState(''); healDraw(v); if (v === h.word) healEnd(true); return; }
+  tinState('bad', '打錯了，按 Backspace 刪掉再打（打錯不扣命）'); Sound.bad();
+}
+function healEnd(ok){
+  const n = N, h = n.heal, now = performance.now(), d = now - h.at; n.heal = null;
+  h.el.remove(); $('#enemyLayer').classList.remove('healing'); tinReset();
+  n.es.forEach(x => x.start += d); n.nextAt += d; n.locked = false;
+  if (ok){ n.lives = Math.min(n.C.lives, n.lives + 1); [659,784,988].forEach((f,i) => Sound.tone(f,.2,'triangle',i*.1,.1)); fx($('#nFx'), 'ok', '💖 回復 1 條命！'); }
+  else fx($('#nFx'), 'mid', '時間到！沒關係，不扣命');
+  ninjaHud(); h.next();
 }
 /* 休息站（老師 2026-11-10）：遊戲停住，至少休息 REST_SEC 秒；之後按空白鍵（或 Enter、點按鈕）繼續。休息的時間不算進流星掉落的時間 */
 function restStop(){
@@ -2512,7 +2563,7 @@ document.querySelector('[data-screen=drill] .stage').addEventListener('click', f
 
 /* ---------- 暫停後接著玩：把暫停的時間加回去 ---------- */
 function resumeGame(){ if (paused == null) return; const d = performance.now() - paused; paused = null;
-  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; if (N.rest) N.restAt += d; } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
+  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; if (N.rest) N.restAt += d; if (N.heal){ N.heal.at += d; N.heal.until += d; } } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
 /* ---------- 視窗失去焦點時暫停 ---------- */
 (function(){
   const pill = $('#focusPill');
