@@ -241,9 +241,30 @@ html.mole .enemy.poof .word{transition:opacity .2s .1s;opacity:0}
 /* 敲到的瞬間：洞口冒出衝擊的星星 */
 .whack{position:absolute;z-index:8;pointer-events:none;transform:translate(-50%,-50%);font:900 clamp(28px,6vh,48px)/1 var(--f-display);color:#FDE047;-webkit-text-stroke:2px #1B2836;animation:whack .35s ease-out forwards}
 @keyframes whack{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
-#hammer.big{filter:drop-shadow(0 0 10px #FDE047)}
-/* 放大丸：從洞裡冒出來的膠囊 */
-.enemy.pill .word{border-color:#7C3AED}
+/* 放大丸（老師 2026-11-10 提供的圖 assets/pill.png，上面用螢光字寫「大」） */
+.enemy.pill .word{border-color:#65A30D}
+html.mole .enemy.pill{width:clamp(80px,15vh,124px)}
+.pillimg{position:relative;width:100%;animation:rise .28s ease-out;transform-origin:50% 100%}
+.pillimg img{width:100%;display:block}
+.pillimg b{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);font:900 clamp(34px,7.4vh,62px)/1 var(--f-display);color:#D9FF3B;
+  -webkit-text-stroke:1.5px #3F6212;text-shadow:0 0 6px #D9FF3B,0 0 14px #A3E635,0 0 24px #84CC16;animation:glow .6s ease-in-out infinite alternate}
+@keyframes glow{to{text-shadow:0 0 10px #F7FF9E,0 0 22px #BEF264,0 0 34px #84CC16}}
+html.mole .enemy.pill.poof .pillimg{animation:poof .35s forwards}
+/* 超級木槌（放大丸）：整個畫面大小的木槌敲在正中央；地鼠頭暈、頭上冒星星，再回到地底（老師 2026-11-10） */
+#bigHammer{position:absolute;z-index:8;pointer-events:none;transform-origin:50% 93%;display:none;filter:drop-shadow(0 10px 10px rgba(0,0,0,.45)) drop-shadow(0 0 14px #FDE047)}
+.smash-flash{position:absolute;inset:0;z-index:8;pointer-events:none;background:#fff;animation:sflash .4s ease-out forwards}
+@keyframes sflash{from{opacity:.9}to{opacity:0}}
+.smash-boom{position:absolute;z-index:9;pointer-events:none;transform:translate(-50%,-50%);font:900 clamp(48px,12vh,96px)/1 var(--f-display);color:#FDE047;-webkit-text-stroke:3px #1B2836;animation:boom .6s ease-out forwards}
+@keyframes boom{from{transform:translate(-50%,-50%) scale(.3);opacity:1}60%{opacity:1}to{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
+html.mole .enemy.dizzy svg{animation:dizzy .45s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes dizzy{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+html.mole .enemy.dizzy .word,html.mole .enemy.dizzy .tbar{visibility:hidden}
+.dizzy-stars{position:absolute;left:50%;top:-6%;width:84%;height:40%;pointer-events:none;animation:orbit 1s linear infinite}
+.dizzy-stars span{position:absolute;font-size:clamp(18px,3.8vh,32px);line-height:1;color:#FDE047;-webkit-text-stroke:1px #1B2836}
+.dizzy-stars span:nth-child(1){left:0;top:35%}.dizzy-stars span:nth-child(2){left:40%;top:0}.dizzy-stars span:nth-child(3){right:0;top:35%}
+@keyframes orbit{from{transform:translateX(-50%) scaleY(.5) rotate(0)}to{transform:translateX(-50%) scaleY(.5) rotate(360deg)}}
+html.mole .enemy.dizzy.sink svg{animation:hide .7s ease-in forwards}
+html.mole .enemy.sink .dizzy-stars{opacity:0;transition:opacity .3s}
 .tbar{width:84%;height:9px;border:2px solid var(--ink);border-radius:6px;background:#fff;margin-top:3px;overflow:hidden}
 .tbar i{display:block;height:100%;width:100%;background:var(--good)}
 .tbar.low i{background:var(--bad)}
@@ -623,7 +644,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
         <div class="scene" id="scene" data-th="1"><div class="moon"></div><div class="far"></div><div class="near"></div><div class="ground"></div><div class="rain"></div></div>
         <div class="player" id="player"></div>
         <div id="holeLayer"></div>
-        <img id="hammer" src="assets/hammer.png" alt="">
+        <img id="hammer" src="assets/hammer.png" alt=""><img id="bigHammer" src="assets/hammer.png" alt="">
         <div id="enemyLayer"></div>
         <div class="monitor kmon" id="kMon2" hidden><div class="kscene" id="kScene2"></div><div class="vlayer" id="vLayer"></div></div>
         <div id="stageBig" class="stagebig"></div>
@@ -1279,7 +1300,7 @@ function show(name){
 $('#homeBtn').onclick = () => { const fromResult = screen === 'result'; stopAll(); fromResult ? goHome() : show('home'); };
 $('#setsBtn').onclick = () => show('sets');
 $('#backSets').onclick = () => show('sets');
-function stopAll(){ if (RC){ RC.over = true; RC = null; } if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } if (B){ B.over = true; B = null; } $('#bShots').innerHTML = ''; $('#enemyLayer').innerHTML = ''; $('#vLayer').innerHTML = ''; tin.blur(); }
+function stopAll(){ const bh = document.getElementById('bigHammer'); if (bh){ bh.style.display = 'none'; (bh.getAnimations ? bh.getAnimations() : []).forEach(a => a.cancel()); } const hm = document.getElementById('hammer'); if (hm) hm.style.visibility = ''; if (RC){ RC.over = true; RC = null; } if (D){ D.over = true; D = null; } if (N){ N.over = true; N = null; } if (B){ B.over = true; B = null; } $('#bShots').innerHTML = ''; $('#enemyLayer').innerHTML = ''; $('#vLayer').innerHTML = ''; tin.blur(); }
 
 function renderSets(){
   $('#sets').innerHTML = Object.keys(SETS).map(id => {
@@ -1679,7 +1700,7 @@ function startNinja(id, md){
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '流星有 1～4 個字母，3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！流星會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到💊放大丸，打出上面的字母，木槌會變大，一次敲下全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '流星有 1～4 個字母，3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！流星會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; if (C.secs){ N.t0 = performance.now(); N.endAt = N.t0 + C.secs*1000; N.pillAt = N.t0 + (C.pill || 0)*1000; ninjaHud(); }
     focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
   if (MOLE) hammerIdle();
@@ -1835,13 +1856,13 @@ function itemGone(e){
   removeEnemy(e, MOLE ? 'hide' : 'poof'); if (wasTarget) tinReset(); drawWords();
 }
 /* 木槌位置：pivot（握把底端）放在地鼠右邊，往左下轉 70 度時槌頭剛好敲到地鼠頭上 */
-function hammerSize(){ const H = $('#nStage').clientHeight * ($('#hammer').classList.contains('big') ? .62 : .34); return [H * .63, H]; }
+function hammerSize(){ const H = $('#nStage').clientHeight * .34; return [H * .645, H]; }
 function hammerPlace(x, y){   /* (x, y)＝要敲的位置（相對於 #nStage 的 px） */
   const h = $('#hammer'), [W, H] = hammerSize(), r = H * .67, rad = 70 * Math.PI / 180;   /* 槌頭中心離握把底端 0.67 個圖高 */
   const px = x + r * Math.sin(rad), py = y + r * Math.cos(rad);
   h.style.width = W + 'px'; h.style.height = H + 'px'; h.style.left = (px - W/2) + 'px'; h.style.top = (py - H*.93) + 'px';
 }
-function hammerIdle(){ const st = $('#nStage'), h = $('#hammer'); h.classList.remove('swing', 'big'); hammerPlace(st.clientWidth * .82, st.clientHeight * .55); }
+function hammerIdle(){ const st = $('#nStage'), h = $('#hammer'); h.classList.remove('swing'); hammerPlace(st.clientWidth * .82, st.clientHeight * .55); }
 function hammerAim(e){
   if (!e || !e.el) return;
   const sr = $('#nStage').getBoundingClientRect(), r = (e.el.querySelector('svg') || e.el).getBoundingClientRect();
@@ -1869,37 +1890,63 @@ function hammerHit(e){
   if (anim && anim.ready) anim.ready.then(() => setTimeout(impact, HAMMER_HIT_MS)); else setTimeout(impact, HAMMER_HIT_MS);
 }
 /* 放大丸：在空的洞冒出一顆膠囊，上面 PILL_LEN 個字母；打對了木槌變大，敲下畫面上全部的地鼠 */
-const PILL_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-30 50 60)">
-  <rect x="18" y="42" width="64" height="36" rx="18" fill="#fff" stroke="#1B2836" stroke-width="4"/>
-  <path d="M50 42 H64 A18 18 0 0 1 64 78 H50 Z" fill="#8B5CF6" stroke="#1B2836" stroke-width="4"/>
-  <ellipse cx="34" cy="52" rx="8" ry="3" fill="#E0E7FF"/></g>
-  <text x="50" y="98" text-anchor="middle" font-size="18" font-weight="900" fill="#5B21B6">放大丸</text></svg>`;
 function pillSpawn(){
   const free = HOLES.filter(h => !N.es.some(o => o.hole === h)); if (!free.length) return false;
   let word = null;
   for (let t=0;t<30 && !word;t++){ const w = makeWord(PILL_LEN); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) word = w; }
   if (!word) return false;
   const hole = free[ri(0, free.length-1)], el = document.createElement('div'); el.className = 'enemy pill';
-  el.innerHTML = `<div class="word"></div>${PILL_SVG}<div class="tbar"><i></i></div>`;
+  el.innerHTML = `<div class="word"></div><div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b></div><div class="tbar"><i></i></div>`;
   el.style.left = hole.x + '%'; el.style.bottom = (hole.b + 4.5) + '%'; el.style.zIndex = hole.b < 10 ? 5 : 4;
   $('#enemyLayer').appendChild(el);
   N.es.push({word, el, dur:PILL_STAY, pill:true, hole, lane:-99, start:performance.now(), w:el.querySelector('.word'), bar:el.querySelector('.tbar')}); drawWords();
   Sound.tone(1047, .1, 'triangle', 0, .07); Sound.tone(1319, .12, 'triangle', .08, .07);
   return true;
 }
+/* 超級木槌：倒數暫停約 SMASH_MS；木槌變成整個畫面大 → 用力敲在正中央（畫面震動＋重擊聲）→ 地鼠全部頭暈冒星星（每隻都算分）
+   → 回到地底 → 場上淨空，倒數繼續、重新隨機出現地鼠 */
+const SMASH_MS = 5000, SMASH_HIT = 660, SMASH_SINK = 4200;
 function pillGot(e){
-  const n = N; removeEnemy(e); tinReset(); kb.clear();
-  const h = $('#hammer'); h.classList.add('big'); hammerAim(e);
-  const b = $('#stageBig'); b.textContent = '💊 木槌變大了！'; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
-  [523,659,784,1047].forEach((f,i) => Sound.tone(f,.15,'square',i*.07,.06));
-  /* 一隻一隻敲下去（每隻都算分），敲完木槌恢復原狀 */
-  const hit = () => {
-    if (N !== n || n.over) return;
-    const m = n.es.find(x => !x.pill && !x.heart);
-    if (!m){ setTimeout(() => { if (N === n && !n.over){ h.classList.remove('big'); hammerIdle(); } }, 250); return; }
-    defeat(m, true); setTimeout(hit, 260);
+  const n = N; removeEnemy(e); tinReset(); kb.clear(); n.locked = true; n.smashAt = performance.now();
+  const st = $('#nStage'), W = st.clientWidth, Hs = st.clientHeight, cx = W/2, cy = Hs*.56;
+  const bh = $('#bigHammer'), H = Hs*1.05, w = H*.645, r = H*.67, rad = 70 * Math.PI / 180;
+  const px = cx + r*Math.sin(rad), py = cy + r*Math.cos(rad);
+  bh.style.width = w + 'px'; bh.style.height = H + 'px'; bh.style.left = (px - w/2) + 'px'; bh.style.top = (py - H*.93) + 'px'; bh.style.display = 'block';
+  $('#hammer').style.visibility = 'hidden';
+  const b = $('#stageBig'); b.textContent = '🔨 超級木槌！'; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+  [523,659,784,1047,1319].forEach((f,i) => Sound.tone(f,.12,'square',i*.06,.06));
+  let anim = null;
+  if (bh.animate) anim = bh.animate([{transform:'rotate(10deg) scale(.25)', opacity:0, easing:'ease-out'}, {transform:'rotate(22deg) scale(1)', opacity:1, offset:.45},
+    {transform:'rotate(22deg) scale(1)', opacity:1, offset:.5, easing:'cubic-bezier(.7,0,1,1)'}, {transform:'rotate(-70deg) scale(1)', opacity:1, offset:.6, easing:'ease-out'},
+    {transform:'rotate(-63deg) scale(1)', opacity:1, offset:.72}, {transform:'rotate(-66deg) scale(1)', opacity:1}], {duration:1100, fill:'forwards'});
+  const later = (ms, f) => setTimeout(() => { if (N === n && !n.over) f(); }, ms);
+  const impact = () => {
+    /* 重擊：白光、大「碰」、畫面大震動、低沉的重擊聲 */
+    const fl = document.createElement('div'); fl.className = 'smash-flash'; st.appendChild(fl); setTimeout(() => fl.remove(), 420);
+    const bo = document.createElement('div'); bo.className = 'smash-boom'; bo.textContent = '碰！'; bo.style.left = cx + 'px'; bo.style.top = cy + 'px'; st.appendChild(bo); setTimeout(() => bo.remove(), 650);
+    if (st.animate) st.animate([{transform:'translate(0,0)'}, {transform:'translate(-12px,8px)'}, {transform:'translate(10px,-8px)'}, {transform:'translate(-8px,6px)'},
+      {transform:'translate(6px,-4px)'}, {transform:'translate(-3px,2px)'}, {transform:'translate(0,0)'}], {duration:520});
+    Sound.tone(55, .7, 'sawtooth', 0, .32); Sound.tone(90, .35, 'square', 0, .24); Sound.tone(38, .9, 'sine', .03, .4);
+    /* 場上的地鼠全部頭暈（每隻都算分，不算進字母熟練度） */
+    const ms = n.es.filter(x => !x.pill && !x.heart), now = performance.now();
+    n.es = n.es.filter(x => !ms.includes(x));
+    ms.forEach(m => {
+      const remFrac = Math.max(0, 1 - (now - m.start)/1000/m.dur), pts = SCORE.base + Math.round(SCORE.speed * remFrac);
+      n.score += pts; n.kills++; n.combo++; n.maxCombo = Math.max(n.maxCombo, n.combo);
+      m.el.classList.add('dizzy'); m.el.insertAdjacentHTML('beforeend', '<div class="dizzy-stars"><span>★</span><span>★</span><span>★</span></div>');
+      const p = document.createElement('div'); p.className = 'pts'; p.textContent = `+${pts}`; p.style.left = m.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
+    });
+    ninjaHud();
+    later(900, () => { if (bh.animate) bh.animate([{opacity:1}, {opacity:0}], {duration:350, fill:'forwards'}); });
+    later(SMASH_SINK - SMASH_HIT, () => ms.forEach(m => m.el.classList.add('sink')));
+    later(SMASH_MS - SMASH_HIT, () => {
+      ms.forEach(m => m.el.remove()); bh.style.display = 'none'; if (anim) anim.cancel(); $('#hammer').style.visibility = '';
+      const now2 = performance.now(), d = now2 - n.smashAt; n.smashAt = null;
+      n.endAt += d; n.pillAt += d; n.es.forEach(x => x.start += d); n.nextAt = now2; n.holdUntil0 = now2 + 300; n.locked = false;
+      hammerIdle(); ninjaHud(); focusTin();
+    });
   };
-  setTimeout(hit, 350);
+  if (anim && anim.ready) anim.ready.then(() => later(SMASH_HIT, impact)); else later(SMASH_HIT, impact);
 }
 /* 補血愛心：和流星一樣放在 N.es 裡（打字比對、字母提示都共用），heart:true；從右邊（HX0）橫著飄到左邊（HX1） */
 const HX0 = 104, HX1 = -4;
@@ -2698,7 +2745,7 @@ document.querySelector('[data-screen=drill] .stage').addEventListener('click', f
 
 /* ---------- 暫停後接著玩：把暫停的時間加回去 ---------- */
 function resumeGame(){ if (paused == null) return; const d = performance.now() - paused; paused = null;
-  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; if (N.rest) N.restAt += d; if (N.endAt){ N.endAt += d; N.pillAt += d; } } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
+  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; if (N.rest) N.restAt += d; if (N.endAt){ N.endAt += d; N.pillAt += d; } if (N.smashAt) N.smashAt += d; } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
 /* ---------- 視窗失去焦點時暫停 ---------- */
 (function(){
   const pill = $('#focusPill');
