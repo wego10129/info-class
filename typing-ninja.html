@@ -208,6 +208,11 @@ html.meteor .enemy{transform:translateX(-50%);width:clamp(54px,10vh,84px)}   /* 
 html.meteor .enemy svg{animation:fall .6s ease-in-out infinite alternate}
 @keyframes fall{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
 html.meteor .enemy.poof svg{animation:poof .35s forwards}
+/* 隱藏關的雙子流星：兩顆流星黏成一組，頭上一串字母（老師 2026-11-10） */
+html.meteor .enemy.twin{width:clamp(92px,17vh,144px)}
+.enemy .twin{display:flex;width:100%;align-items:flex-start}
+.enemy .twin svg{width:56%;flex:none}
+.enemy .twin svg+svg{margin-left:-12%;margin-top:10%}
 html.meteor .player.dash{transform:translateY(-8px) scale(1.05)}
 /* 英文・字母打地鼠（老師 2026-11-10）：地鼠從草地上的洞裡探出頭，頭上有字母，縮回洞裡以前打出來 */
 #holeLayer{position:absolute;inset:0;z-index:2;pointer-events:none}
@@ -646,7 +651,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 </form></div>
 <div id="crisisWrap" class="modal-wrap" hidden><div class="card crisis-pop" role="dialog" aria-labelledby="crisisT">
   <h2 id="crisisT">⚠ 危機！流星群襲來</h2>
-  <p>大批流星正往這裡衝過來！<br>這次的流星有 1～4 個字母，會越來越快、越來越多。<br>要挑戰嗎？</p>
+  <p>大批流星正往這裡衝過來！<br>這次是兩顆黏在一起的「雙子流星」，上面有 3～5 個字母，會越來越快、越來越多。<br>每 3 波有休息站。要挑戰嗎？</p>
   <div class="r-btns" style="justify-content:center"><button class="btn primary" type="button" id="crisisGo">🔥 挑戰</button><button class="btn" type="button" id="crisisNo">回到關卡選單</button></div>
 </div></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
@@ -830,10 +835,12 @@ const nConf = (md, id) => md === 'm' ? Object.assign({}, NINJA[id], METEOR_TUNE[
 /* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
 const METEOR_LAND = .08, METEOR_SLOW = 1.4;
 /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：流星雨「大師」通關後打開；生存挑戰，3 條命用完就結束，記錄最多打碎幾顆
-   每顆流星 1～4 個字母（隨機），秒數＝大師的算法再乘 fast（快 15～25%）；每打碎 wave 顆進下一波（同時出現的流星變多），
-   第 5 波以後每一波再快 5%（這一項最多快到 speedMin 倍） */
-const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true,
-  len:[[1,4],[1,4],[1,4],[1,4],[1,4]], multi:[2,2,3,3,3], gap:1.4, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.6, rest:[]};
+   秒數＝大師的算法再乘 fast（快 15～25%）；每打碎 wave 顆進下一波；第 5 波以後每一波再快 5%（這一項最多快到 speedMin 倍）
+   降低門檻（老師 2026-11-10：原本只有老師玩得動）：改成「雙子流星」（twin）＝兩顆黏成一組，一串 3～5 個字母，
+   不再有一閃就到的 1 個字母流星；同時最多 1、1、2、2、2 組（原本 2、2、3、3、3 顆）；間隔 gap 1.4→2.5 秒；最快 0.6→0.7 倍；
+   每 restEvery 波停在休息站（同大師） */
+const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true, twin:true,
+  len:[[3,3],[3,4],[3,4],[3,5],[4,5]], multi:[1,1,2,2,2], gap:2.5, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.7, rest:[], restEvery:3};
 const crisisConf = () => Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
 const crisisOpen = () => KIND === 'en' && !!P && has('m') && (P.unlock || P.meteor.master.cleared);
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
@@ -1284,8 +1291,8 @@ function renderHome(){
       return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
     const CR = md === 'm' && crisisOpen() ? P.crisis : null;
-    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・1～4 個字母的流星越來越快、越來越多・3 條命，看你能打碎幾顆</small></span>
-        <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} 顆` : '還沒挑戰'}</span></span></button>`;
+    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・3～5 個字母的雙子流星越來越快、越來越多・3 條命，看你能打碎幾組・每 3 波有休息站</small></span>
+        <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} 組` : '還沒挑戰'}</span></span></button>`;
     const anyO = NINJA_ORDER.some(id => nOpen(md, id));
     return card(md, md === 'm' ? '#1D4E89' : md === 'w' ? '#7A5230' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns + crisisBtn, anyO ? '' : nLock(md, 0)); };
   const c3 = NMON().map(nCard).join('');
@@ -1625,7 +1632,7 @@ const stageOfKills = (C, k) => Math.min(Math.floor(k / stageEvery(C)) + 1, stage
 const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-1) * (THEMES.length-1) / (C.len.length-1)) + 1;
 function ninjaHud(){
   hud([[KIND === 'key' || METEOR || MOLE ? '等級' : '忍者', N.C.endless ? '🔥 流星群' : N.C.name, 't'], ['生命', `<span class="hearts">${Array.from({length:N.C.lives},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
-    [MODES[N.md].hit, N.C.endless ? `${N.kills} 顆` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);
+    [MODES[N.md].hit, N.C.endless ? `${N.kills} 組` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);
 }
 function startNinja(id, md){
   md = MODES[md] && has(md) ? md : NMON()[0] || 'n'; useMode(md);   /* 流星雨（m）或忍者（n） */
@@ -1636,7 +1643,7 @@ function startNinja(id, md){
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '流星有 1～4 個字母，會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `敲到 ${C.goal} 隻就通關。地鼠縮回洞裡才扣命，` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '兩顆黏在一起的雙子流星，上面有 3～5 個字母，會越來越快、越來越多，看你能打碎幾組！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `敲到 ${C.goal} 隻就通關。地鼠縮回洞裡才扣命，` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
 }
 /* 新的字串不能和畫面上的敵人一樣，也不能是彼此的開頭（才能自動判斷要打哪一個） */
@@ -1649,8 +1656,8 @@ function spawn(){
   if (!word) return false;
   const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && !C.endless && maxNow() > 1 ? METEOR_MULTI_SLOW : 1)
     * (C.endless ? (C.fast[0] + Math.random()*(C.fast[1] - C.fast[0])) * Math.max(C.speedMin, Math.pow(C.speedUp, Math.max(0, Math.floor(N.kills / C.wave) + 1 - stageCount(C)))) : 1);
-  const el = document.createElement('div'); el.className = 'enemy';
-  el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
+  const el = document.createElement('div'); el.className = C.twin ? 'enemy twin' : 'enemy';
+  el.innerHTML = `<div class="word"></div>${C.twin ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
   /* 打地鼠：挑一個空的洞（前排的地鼠疊在後排前面） */
   let hole = null;
   if (MOLE){ const free = HOLES.filter(h => !N.es.some(o => o.hole === h)); if (!free.length) return false; hole = free[ri(0, free.length-1)];
@@ -1743,6 +1750,7 @@ function defeat(e){
   if (N.kills >= N.C.goal) return ninjaWin();
   const st = stageOfKills(N.C, N.kills), n = N;
   if (st > N.stage && (N.C.rest || []).includes(st)){ N.stage = st; restStop(); }
+  else if (N.C.restEvery && N.kills % N.C.wave === 0 && (N.kills / N.C.wave) % N.C.restEvery === 0){ N.stage = st; restStop(); }
   else if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
   else if (N.C.endless && N.kills % N.C.wave === 0){ const b = $('#stageBig'); b.textContent = `⚡ 第 ${N.kills / N.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); N.holdUntil0 = performance.now() + 1200; }
   else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
@@ -1751,7 +1759,7 @@ function defeat(e){
 function restStop(){
   const n = N, el = $('#nCover'); n.locked = true; n.rest = {ready:false}; n.restAt = performance.now(); kb.clear(); tinReset();
   let s = REST_SEC;
-  const draw = () => { el.innerHTML = `<h2>🌿 休息站</h2><p>手放下來，甩一甩、轉轉手腕，深呼吸。<br>肩膀放輕鬆，等一下慢慢打就好。</p><p>休息完就是第 ${n.stage} 關</p>${s > 0 ? `<div class="count">${s}</div>` : '<button class="btn primary" type="button" id="restGo">準備好了，繼續（按空白鍵）</button>'}`;
+  const draw = () => { el.innerHTML = `<h2>🌿 休息站</h2><p>手放下來，甩一甩、轉轉手腕，深呼吸。<br>肩膀放輕鬆，等一下慢慢打就好。</p><p>休息完就是${n.C.endless ? `第 ${n.kills / n.C.wave + 1} 波` : `第 ${n.stage} 關`}</p>${s > 0 ? `<div class="count">${s}</div>` : '<button class="btn primary" type="button" id="restGo">準備好了，繼續（按空白鍵）</button>'}`;
     if (s <= 0) $('#restGo').onclick = restGo; };
   el.hidden = false; draw(); Sound.soft(); clearInterval(cdTimer);
   const t = cdTimer = setInterval(() => { if (N !== n){ clearInterval(t); return; } s--; draw(); if (s <= 0){ clearInterval(t); n.rest.ready = true; } }, 1000);
@@ -1760,7 +1768,9 @@ function restGo(){
   const n = N; if (!n || !n.rest || !n.rest.ready) return;
   const now = performance.now(), d = now - n.restAt; n.rest = null; $('#nCover').hidden = true;
   n.es.forEach(x => x.start += d); n.nextAt += d; n.holdUntil0 = now + 1700; n.locked = false;
-  setTheme(themeOf(n.C, n.stage), n.stage); ninjaHud(); focusTin();
+  if (n.C.endless){ setTheme(themeOf(n.C, n.stage), 0); const b = $('#stageBig'); b.textContent = `⚡ 第 ${n.kills / n.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
+  else setTheme(themeOf(n.C, n.stage), n.stage);
+  ninjaHud(); focusTin();
 }
 document.addEventListener('keydown', e => { if (N && N.rest && (e.code === 'Space' || e.code === 'Enter')){ e.preventDefault(); restGo(); } });
 function enemyHits(e){
@@ -1830,10 +1840,10 @@ function crisisEnd(n){
   save(); Sound.soft();
   const trend = trendOf(n.kills, prev, bestBefore, 2), wave = Math.floor(n.kills / n.C.wave) + 1;
   const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
-  const notes = [note(`打到第 ${wave} 波！每打碎 ${n.C.wave} 顆，流星群就會更多、更快。`, true)];
-  showResult(`危機！流星群襲來`, trend, `<div class="r-stars">☄</div><div class="r-score">${n.kills}<small>顆</small></div>`,
-    [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最多打碎', `${R.bestKills} 顆`]], false,
-    notes, n.weak, [], R.hist, h => `${h.kills} 顆`, 1, () => startNinja('crisis', 'm'), '', () => {});
+  const notes = [note(`打到第 ${wave} 波！每打碎 ${n.C.wave} 組，流星群就會更多、更快。`, true)];
+  showResult(`危機！流星群襲來`, trend, `<div class="r-stars">☄</div><div class="r-score">${n.kills}<small>組</small></div>`,
+    [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最多打碎', `${R.bestKills} 組`]], false,
+    notes, n.weak, [], R.hist, h => `${h.kills} 組`, 1, () => startNinja('crisis', 'm'), '', () => {});
 }
 
 
