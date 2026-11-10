@@ -781,12 +781,15 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
    per＝每多 1 個字母，多給幾秒（字母越多掉得越慢；忍者是 1.4／1.1／1）
    老師試玩：兩個字母的流星和一個字母的掉得差不多快，所以 per 再加大（2.2／2／1.6 → 3.6／3.2／2.6）；
    一個字母的流星速度不變（再快學生會太吃力），兩個字母的流星大約只剩六成的速度
-   勇者：3 個字母只在最後兩小關偶爾出現，同時 2 顆流星只在最後一小關（忍者的勇者第 3 小關就有 3 個字母） */
+   勇者：3 個字母只在最後兩小關偶爾出現，同時 2 顆流星只在最後一小關（忍者的勇者第 3 小關就有 3 個字母）
+   大師（老師 2026-11-10 實測：學生多半在 26～30 顆沒命）：目標 50→40 顆；同時 2 顆流星從第 3 小關改到第 4 小關才開始 */
 const METEOR_TUNE = {
   novice:{per:3.6},
   brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2]},
-  master:{per:2.6},
+  master:{per:2.6, goal:40, multi:[1,1,1,2,2]},
 };
+/* 某個關卡（流星雨 m／忍者 n）某一級實際用的設定 */
+const nConf = (md, id) => md === 'm' ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
 /* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
 const METEOR_LAND = .08, METEOR_SLOW = 1.4;
 /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：流星雨「大師」通關後打開；生存挑戰，3 條命用完就結束，記錄最多打碎幾顆
@@ -867,7 +870,7 @@ let TITLE_RULE = [];   /* 關卡安排之後才知道開了哪幾個關卡 */
 /* 獎狀上的一句話：第 gi 級（1 新手～3 大師）在哪一個關卡通關（兩個都通關時寫忍者） */
 const AWARD_LINE = gi => { if (gi < 1) return '認真完成第一關 3 次'; const id = NINJA_ORDER[gi-1];
   const md = nTop() || 'n', M = MODES[md];
-  return `${M.hit}${M.name}「${NINJA[id].name}」的 ${NINJA[id].goal} ${M.cnt}${M.foe}`; };
+  return `${M.hit}${M.name}「${NINJA[id].name}」的 ${nConf(md, id).goal} ${M.cnt}${M.foe}`; };
 const WEIGHT = {base:1, bad:2, slow:1, recover:0.5, slowRatio:1.5, minSamples:5, max:6};
 const HISTORY_MAX = 10;
 /* 網址參數（老師設定頁產生）：keys 字母／符號、goal 練習目標、end 下課頒獎時間、classes/seats 範圍、demo 示範 */
@@ -1229,7 +1232,7 @@ function renderHome(){
   const star = (i, s0) => LV && i === s0 && s0 > 0 ? ' ⭐從這裡開始' : '';
   /* 打敵人的關卡（英文：字母流星雨、打字忍者各一張卡片；標點：標點忍者；重要按鍵：病毒來襲） */
   const nCard = md => { useMode(md); const M = MODES[md], sN = startIdx(md);
-    const nBtns = NINJA_ORDER.map((id,i) => { const C = NINJA[id], R = recOf(md)[id], o = nOpen(md, id);
+    const nBtns = NINJA_ORDER.map((id,i) => { const C = nConf(md, id), R = recOf(md)[id], o = nOpen(md, id);
       const lock = nLock(md, i);
       return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
@@ -1569,7 +1572,7 @@ function startNinja(id, md){
   md = MODES[md] && has(md) ? md : NMON()[0] || 'n'; useMode(md);   /* 流星雨（m）或忍者（n） */
   if (KIND === 'key') return vStart(id);
   stopAll();
-  const C = id === 'crisis' ? crisisConf() : METEOR ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
+  const C = id === 'crisis' ? crisisConf() : nConf(md, id);
   N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
