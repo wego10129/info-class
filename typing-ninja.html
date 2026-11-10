@@ -1594,8 +1594,10 @@ function spawn(){
   if (METEOR){ for (let t=0; t<20; t++){ lane = ri(30, 88); if (N.es.every(o => Math.abs(o.lane - lane) > 20)) break; } el.style.left = lane + '%'; el.style.bottom = '100%'; }
   $('#enemyLayer').appendChild(el);
   const e = {word, el, dur, lane, start:performance.now(), w:el.querySelector('.word')};
+  N.es.push(e); drawWords();
+  /* 流星：字母放進字卡以後才量高度，一出現字卡就整個在畫面裡（老師 2026-11-10：以前先量高度，字卡被切在畫面上面，學生看得到字的時間變少） */
   if (METEOR){ const H = $('#nStage').clientHeight, h = el.offsetHeight; e.y0 = H - h - 4; e.y1 = H*METEOR_LAND; el.style.bottom = e.y0 + 'px'; }
-  N.es.push(e); drawWords(); return true;
+  return true;
 }
 const maxNow = () => N.C.multi[N.stage-1] || 1;
 function drawWords(){
