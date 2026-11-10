@@ -1969,7 +1969,7 @@ function askShow(on){ const a = $('#kAsk1'); if (!D || !D.word){ a.hidden = true
 function vStart(id){
   stopAll();
   const C = NINJA[id];
-  N = {id, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, holdUntil0:0, sceneTok:null};
+  N = {id, md:'n', C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, holdUntil0:0, sceneTok:null};   /* md：上方資訊列用 MODES[N.md] 顯示「擊退」 */
   show('ninja'); kb.blank(C.blank); $('#kMon2').hidden = false; $('#kMon2').dataset.stage = '1';
   kS2.load({lines:[''], c:0}); $('#vLayer').innerHTML = ''; setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
