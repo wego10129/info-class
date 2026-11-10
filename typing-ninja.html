@@ -222,17 +222,25 @@ html.mole .scene .far,html.mole .scene .near{bottom:50%}
 html.mole .scene .near{height:10%}
 html.mole .scene .ground::after{animation:none;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.12) 0 3px,transparent 4px) 0 0/46px 38px}
 html.mole .scene .rain{display:none}
-html.mole .player{bottom:40%}
-html.mole .player.dash{transform:rotate(-12deg) scale(1.05)}
+html.mole .player{display:none}   /* 打地鼠不用魔法師（老師 2026-11-10），由木槌當主角 */
 html.mole .enemy{transform:translateX(-50%);width:clamp(66px,12.5vh,104px)}
 html.mole .enemy svg{animation:rise .28s ease-out;transform-origin:50% 100%}
 @keyframes rise{from{transform:translateY(45%) scaleY(.35);opacity:.3}}
 html.mole .enemy.poof svg{animation:bonk .35s forwards}
 @keyframes bonk{to{transform:scaleY(.2) scaleX(1.3);opacity:0}}
 /* 木槌（老師 2026-11-10 提供的圖）：跟著學生正在打的地鼠移動，打對了往下敲；pivot＝握把底端 */
-#hammer{position:absolute;z-index:7;pointer-events:none;transform-origin:50% 95%;transform:rotate(15deg);transition:left .12s ease-out,top .12s ease-out,height .25s,width .25s;display:none}
+/* 圖片本身已加白框（看得清楚）；再加一層影子。transform 由 hammerHit 用動畫控制 */
+#hammer{position:absolute;z-index:7;pointer-events:none;transform-origin:50% 93%;transform:rotate(15deg);transition:left .1s ease-out,top .1s ease-out,height .25s,width .25s;display:none;filter:drop-shadow(0 6px 5px rgba(0,0,0,.45))}
 html.mole #hammer{display:block}
-#hammer.swing{transform:rotate(-70deg);transition:left .12s ease-out,top .12s ease-out,transform .07s ease-in}
+#hammer.swing{transform:rotate(-70deg)}   /* 不支援動畫 API 時的備用 */
+/* 地鼠沒被敲到、自己縮回洞裡：往下沉（被敲到才是壓扁） */
+html.mole .enemy.hide svg{animation:hide .3s ease-in forwards}
+@keyframes hide{to{transform:translateY(60%) scaleY(.4);opacity:0}}
+html.mole .enemy.hide .word,html.mole .enemy.hide .tbar,html.mole .enemy.poof .tbar{visibility:hidden}
+html.mole .enemy.poof .word{transition:opacity .2s .1s;opacity:0}
+/* 敲到的瞬間：洞口冒出衝擊的星星 */
+.whack{position:absolute;z-index:8;pointer-events:none;transform:translate(-50%,-50%);font:900 clamp(28px,6vh,48px)/1 var(--f-display);color:#FDE047;-webkit-text-stroke:2px #1B2836;animation:whack .35s ease-out forwards}
+@keyframes whack{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
 #hammer.big{filter:drop-shadow(0 0 10px #FDE047)}
 /* 放大丸：從洞裡冒出來的膠囊 */
 .enemy.pill .word{border-color:#7C3AED}
@@ -1773,7 +1781,7 @@ function throwStar(e){
   requestAnimationFrame(() => { st.style.left = (er.left - sr.left + er.width/2) + 'px'; st.style.bottom = (sr.bottom - er.top - er.height*.55) + 'px'; });
   setTimeout(() => st.remove(), 220);
 }
-function removeEnemy(e){ N.es = N.es.filter(x => x !== e); e.el.classList.add('poof'); setTimeout(() => e.el.remove(), 400); }
+function removeEnemy(e, cls){ N.es = N.es.filter(x => x !== e); e.el.classList.add(cls || 'poof'); setTimeout(() => e.el.remove(), 400); }   /* cls：poof＝被打到（預設）、hide＝自己縮回去 */
 function defeat(e, auto){   /* auto＝放大丸自動敲到的（不算進學生的字母熟練度） */
   if (e.heart) return heartGot(e);
   if (e.pill) return pillGot(e);
@@ -1783,7 +1791,8 @@ function defeat(e, auto){   /* auto＝放大丸自動敲到的（不算進學生
   N.score += pts; N.kills += k; N.combo++; N.maxCombo = Math.max(N.maxCombo, N.combo);
   if (!auto){ N.rts.push(rt); e.word.split('').forEach(c => { if (learn(c, remFrac > .5 ? 'good' : 'ok', rt/e.word.length)) N.weak.add(c); }); save(); }
   e.w.innerHTML = [...e.word].map(c => `<span class="ok">${H(FOE_LBL(c, N.C))}</span>`).join('');
-  removeEnemy(e); Sound.slash();
+  if (MOLE){ N.es = N.es.filter(x => x !== e); setTimeout(() => e.el.remove(), 800); }   /* 地鼠等木槌落下才壓扁（hammerHit） */
+  else { removeEnemy(e); Sound.slash(); }
   const pl = $('#player'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
   const p = document.createElement('div'); p.className = 'pts'; p.textContent = k > 1 ? `+${pts}（2 顆！）` : `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
   tinReset(); kb.clear(); drawWords(); ninjaHud();
@@ -1823,14 +1832,14 @@ function moleClock(now){
 function itemGone(e){
   const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
   N.combo = 0; if (!e.pill){ e.word.split('').forEach(c => { learn(c,'bad',null); N.weak.add(c); }); save(); }   /* 沒敲到的字母列進「可以多練」（和以前一樣） */
-  removeEnemy(e); if (wasTarget) tinReset(); drawWords();
+  removeEnemy(e, MOLE ? 'hide' : 'poof'); if (wasTarget) tinReset(); drawWords();
 }
 /* 木槌位置：pivot（握把底端）放在地鼠右邊，往左下轉 70 度時槌頭剛好敲到地鼠頭上 */
 function hammerSize(){ const H = $('#nStage').clientHeight * ($('#hammer').classList.contains('big') ? .62 : .34); return [H * .63, H]; }
 function hammerPlace(x, y){   /* (x, y)＝要敲的位置（相對於 #nStage 的 px） */
-  const h = $('#hammer'), [W, H] = hammerSize(), r = H * .7, rad = 70 * Math.PI / 180;
+  const h = $('#hammer'), [W, H] = hammerSize(), r = H * .67, rad = 70 * Math.PI / 180;   /* 槌頭中心離握把底端 0.67 個圖高 */
   const px = x + r * Math.sin(rad), py = y + r * Math.cos(rad);
-  h.style.width = W + 'px'; h.style.height = H + 'px'; h.style.left = (px - W/2) + 'px'; h.style.top = (py - H*.95) + 'px';
+  h.style.width = W + 'px'; h.style.height = H + 'px'; h.style.left = (px - W/2) + 'px'; h.style.top = (py - H*.93) + 'px';
 }
 function hammerIdle(){ const st = $('#nStage'), h = $('#hammer'); h.classList.remove('swing', 'big'); hammerPlace(st.clientWidth * .82, st.clientHeight * .55); }
 function hammerAim(e){
@@ -1838,9 +1847,26 @@ function hammerAim(e){
   const sr = $('#nStage').getBoundingClientRect(), r = (e.el.querySelector('svg') || e.el).getBoundingClientRect();
   hammerPlace(r.left - sr.left + r.width/2, r.top - sr.top + r.height*.3);
 }
+/* 打擊感（老師 2026-11-10）：先往後舉（蓄力）→ 快速落下 → 敲到時地鼠才壓扁、出現衝擊星星、畫面小震、咚的聲音 → 彈回 */
+const HAMMER_HIT_MS = 160;
 function hammerHit(e){
-  const h = $('#hammer'); hammerAim(e); h.classList.add('swing'); Sound.tone(160, .12, 'square', 0, .1);
-  clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('swing'), 140);
+  const h = $('#hammer'), st = $('#nStage'); hammerAim(e);
+  const sr = st.getBoundingClientRect(), r = (e.el.querySelector('svg') || e.el).getBoundingClientRect();
+  const x = r.left - sr.left + r.width/2, y = r.top - sr.top + r.height*.3;
+  let anim = null;
+  if (h.animate){
+    (h.getAnimations ? h.getAnimations() : []).forEach(a => a.cancel());
+    anim = h.animate([{transform:'rotate(15deg)', easing:'ease-out'}, {transform:'rotate(38deg)', offset:.3, easing:'cubic-bezier(.6,0,1,1)'},
+      {transform:'rotate(-72deg)', offset:.53, easing:'ease-out'}, {transform:'rotate(-64deg)', offset:.68, easing:'ease-in-out'}, {transform:'rotate(15deg)'}], {duration:300});
+  } else { h.classList.add('swing'); clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('swing'), 160); }
+  const impact = () => {
+    e.el.classList.add('poof'); Sound.tone(150, .09, 'square', 0, .14); Sound.tone(70, .14, 'sine', 0, .2);
+    const w = document.createElement('div'); w.className = 'whack'; w.textContent = '✦'; w.style.left = x + 'px'; w.style.top = y + 'px';
+    st.appendChild(w); setTimeout(() => w.remove(), 360);
+    if (st.animate) st.animate([{transform:'translate(0,0)'}, {transform:'translate(2px,3px)'}, {transform:'translate(-2px,-1px)'}, {transform:'translate(0,0)'}], {duration:110});
+  };
+  /* 從木槌動畫真正開始的時間算起，槌頭落下的那一刻才「敲到」 */
+  if (anim && anim.ready) anim.ready.then(() => setTimeout(impact, HAMMER_HIT_MS)); else setTimeout(impact, HAMMER_HIT_MS);
 }
 /* 放大丸：在空的洞冒出一顆膠囊，上面 PILL_LEN 個字母；打對了木槌變大，敲下畫面上全部的地鼠 */
 const PILL_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-30 50 60)">
