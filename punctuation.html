@@ -782,12 +782,14 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
    老師試玩：兩個字母的流星和一個字母的掉得差不多快，所以 per 再加大（2.2／2／1.6 → 3.6／3.2／2.6）；
    一個字母的流星速度不變（再快學生會太吃力），兩個字母的流星大約只剩六成的速度
    勇者：3 個字母只在最後兩小關偶爾出現，同時 2 顆流星只在最後一小關（忍者的勇者第 3 小關就有 3 個字母）
-   大師（老師 2026-11-10 實測：學生多半在 26～30 顆沒命）：目標 50→40 顆；同時 2 顆流星從第 3 小關改到第 4 小關才開始 */
+   大師（老師 2026-11-10 實測：學生多半在 26～30 顆沒命）：目標 50→40 顆；同時 2 顆流星從第 3 小關改到第 4 小關才開始
+   同時 2 顆的小關（老師 2026-11-10）：兩顆之間至少隔 gap 秒（忍者是 1.8／1.5）；每顆的秒數再乘 METEOR_MULTI_SLOW（多 10%） */
 const METEOR_TUNE = {
   novice:{per:3.6},
-  brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2]},
-  master:{per:2.6, goal:40, multi:[1,1,1,2,2]},
+  brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2], gap:3},
+  master:{per:2.6, goal:40, multi:[1,1,1,2,2], gap:3},
 };
+const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度設定） */
 /* 某個關卡（流星雨 m／忍者 n）某一級實際用的設定 */
 const nConf = (md, id) => md === 'm' ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
 /* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
@@ -1588,7 +1590,7 @@ function freshWord(len){
 function spawn(){
   const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
   if (!word) return false;
-  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1)
+  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && !C.endless && maxNow() > 1 ? METEOR_MULTI_SLOW : 1)
     * (C.endless ? (C.fast[0] + Math.random()*(C.fast[1] - C.fast[0])) * Math.max(C.speedMin, Math.pow(C.speedUp, Math.max(0, Math.floor(N.kills / C.wave) + 1 - stageCount(C)))) : 1);
   const el = document.createElement('div'); el.className = 'enemy';
   el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}`; el.style.left = X0 + '%';
