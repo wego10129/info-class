@@ -399,6 +399,11 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .hs{color:var(--gold)}
 
 /* 簽到、獎狀 */
+.diff.crisis{background:#3B1D3F;color:#FFE7A8;border-color:#1B0F22}
+.diff.crisis small,.diff.crisis .lv-best{color:#F3DDF7}
+.crisis-pop{max-width:460px;text-align:center}
+.crisis-pop h2{font-size:28px;margin:0 0 8px}
+.crisis-pop p{font-size:19px;line-height:1.6;margin:0 0 16px}
 .modal-wrap{position:fixed;inset:0;z-index:40;background:rgba(27,40,54,.6);display:grid;place-items:center;padding:16px;overflow:auto}
 .signin{width:min(480px,100%);display:grid;gap:12px}
 .signin h2{font-size:30px}
@@ -630,6 +635,11 @@ html[data-kind=en] .target,html[data-kind=en] .word,html[data-kind=en] .tin,html
   <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
   <button class="btn" type="button" id="sBack" hidden>⬅ 回上一頁</button>
 </form></div>
+<div id="crisisWrap" class="modal-wrap" hidden><div class="card crisis-pop" role="dialog" aria-labelledby="crisisT">
+  <h2 id="crisisT">⚠ 危機！流星群襲來</h2>
+  <p>大批流星正往這裡衝過來！<br>這次的流星有 1～4 個字母，會越來越快、越來越多。<br>要挑戰嗎？</p>
+  <div class="r-btns" style="justify-content:center"><button class="btn primary" type="button" id="crisisGo">🔥 挑戰</button><button class="btn" type="button" id="crisisNo">回到關卡選單</button></div>
+</div></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
   <div class="r-btns" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certL4" hidden>⚔ 挑戰第四關</button><button class="btn" type="button" id="certClose">回關卡選單</button></div></div></div>
 <div id="capsWarn" class="caps-warn" hidden><div class="box"><h2>大寫燈亮著！</h2><div class="capkey">⇪ Caps Lock<i></i></div><p>按一下鍵盤左邊的 Caps Lock，把大寫燈關掉。<br>遊戲先暫停，時間不會算。</p></div></div>
@@ -790,6 +800,13 @@ const METEOR_TUNE = {
 };
 /* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
 const METEOR_LAND = .08, METEOR_SLOW = 1.4;
+/* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：流星雨「大師」通關後打開；生存挑戰，3 條命用完就結束，記錄最多打碎幾顆
+   每顆流星 1～4 個字母（隨機），秒數＝大師的算法再乘 fast（快 15～25%）；每打碎 wave 顆進下一波（同時出現的流星變多），
+   第 5 波以後每一波再快 5%（這一項最多快到 speedMin 倍） */
+const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true,
+  len:[[1,4],[1,4],[1,4],[1,4],[1,4]], multi:[2,2,3,3,3], gap:1.4, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.6};
+const crisisConf = () => Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
+const crisisOpen = () => KIND === 'en' && !!P && has('m') && (P.unlock || P.meteor.master.cleared);
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
    新手＝鍵名＋鍵盤提示、勇者＝只提示用途、大師＝只看情境（鍵帽沒有字）；2 個鍵的病毒＝兩種情境都要完成才會被消滅 */
 /* 重要按鍵練習（老師 2026-10-30）：沒有第二關；病毒來襲改回舊版「看電腦畫面的情境，按按鍵」。
@@ -992,6 +1009,8 @@ const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, be
   ninja:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}},
   meteor:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}},   /* 英文字母流星雨（2026-11-05 起和忍者分開記） */
   boss:{plays:0, best:0, cleared:false, hist:[]},
+  /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：plays 玩過幾次、best 最高分、bestKills 最多打碎幾顆、asked 跳過邀請視窗了沒 */
+  ...(KIND === 'en' ? {crisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]}} : {}),
   race:{novice:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, brave:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, master:{best:0, bestT:null, cleared:false, hist:[], ghost:null}},
   awardSeen:-1,
   weight:{}, rtSum:0, rtN:0, unlock:false});
@@ -1228,8 +1247,11 @@ function renderHome(){
       const lock = nLock(md, i);
       return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
+    const CR = md === 'm' && crisisOpen() ? P.crisis : null;
+    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・1～4 個字母的流星越來越快、越來越多・3 條命，看你能打碎幾顆</small></span>
+        <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} 顆` : '還沒挑戰'}</span></span></button>`;
     const anyO = NINJA_ORDER.some(id => nOpen(md, id));
-    return card(md, md === 'm' ? '#1D4E89' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns, anyO ? '' : nLock(md, 0)); };
+    return card(md, md === 'm' ? '#1D4E89' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns + crisisBtn, anyO ? '' : nLock(md, 0)); };
   const c3 = NMON().map(nCard).join('');
   const bo = bossOpen(), BR = P.boss;
   const c4b = KIND !== 'punc' || !has('boss') ? '' : card('boss', '#5B2A86', ['👹'], '第四關・魔王戰', `<button class="diff" type="button" data-boss="1" ${bo?'':'disabled'}><span>句子填空・打敗標點大魔王<small>${bo ? `看句子填對標點才打得到魔王、擋得住火球；填錯就落空・魔王 ${BOSS.hp} 滴血、3 個階段・${BOSS.lives} 條命` : entryLock('boss')}</small></span>
@@ -1550,23 +1572,23 @@ function setTheme(n, announce){
 /* 清掉上一局留下的大字（避免倒數時背後隱約出現「第 5 關」） */
 function clearBig(){ ['#stageBig','#dBig'].forEach(id => { const b = $(id); if (b){ b.classList.remove('go'); b.textContent = ''; } }); }
 const stageCount = C => C.len.length;
-const stageEvery = C => Math.ceil(C.goal / stageCount(C));
+const stageEvery = C => C.endless ? C.wave : Math.ceil(C.goal / stageCount(C));
 const stageOfKills = (C, k) => Math.min(Math.floor(k / stageEvery(C)) + 1, stageCount(C));
 const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-1) * (THEMES.length-1) / (C.len.length-1)) + 1;
 function ninjaHud(){
-  hud([[KIND === 'key' || METEOR ? '等級' : '忍者', NINJA[N.id].name, 't'], ['生命', `<span class="hearts">${Array.from({length:N.C.lives},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
-    [METEOR ? '打碎' : '擊退', `${N.kills}/${N.C.goal}`], ['分數', N.score], ['關卡', `第 ${N.stage} 關`, 't']]);
+  hud([[KIND === 'key' || METEOR ? '等級' : '忍者', N.C.endless ? '🔥 流星群' : N.C.name, 't'], ['生命', `<span class="hearts">${Array.from({length:N.C.lives},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
+    [METEOR ? '打碎' : '擊退', N.C.endless ? `${N.kills} 顆` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);
 }
 function startNinja(id, md){
   md = MODES[md] && has(md) ? md : NMON()[0] || 'n'; useMode(md);   /* 流星雨（m）或忍者（n） */
   if (KIND === 'key') return vStart(id);
   stopAll();
-  const C = METEOR ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
+  const C = id === 'crisis' ? crisisConf() : METEOR ? Object.assign({}, NINJA[id], METEOR_TUNE[id]) : NINJA[id];
   N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '流星有 1～4 個字母，會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
 }
 /* 新的字串不能和畫面上的敵人一樣，也不能是彼此的開頭（才能自動判斷要打哪一個） */
@@ -1577,7 +1599,8 @@ function freshWord(len){
 function spawn(){
   const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
   if (!word) return false;
-  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1);
+  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1)
+    * (C.endless ? (C.fast[0] + Math.random()*(C.fast[1] - C.fast[0])) * Math.max(C.speedMin, Math.pow(C.speedUp, Math.max(0, Math.floor(N.kills / C.wave) + 1 - stageCount(C)))) : 1);
   const el = document.createElement('div'); el.className = 'enemy';
   el.innerHTML = `<div class="word"></div>${enemySVG(themeOf(C, N.stage))}`; el.style.left = X0 + '%';
   /* 流星雨：從上面掉下來；掉落的位置不要和畫面上的流星太近 */
@@ -1663,6 +1686,7 @@ function defeat(e){
   if (N.kills >= N.C.goal) return ninjaWin();
   const st = stageOfKills(N.C, N.kills), n = N;
   if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
+  else if (N.C.endless && N.kills % N.C.wave === 0){ const b = $('#stageBig'); b.textContent = `⚡ 第 ${N.kills / N.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); N.holdUntil0 = performance.now() + 1200; }
   else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
 }
 function enemyHits(e){
@@ -1690,6 +1714,7 @@ function ninjaWin(){
 function ninjaEnd(win, fin){
   const n = fin || N; N = null; $('#enemyLayer').innerHTML = '';
   const md = n.md || 'n'; useMode(md);
+  if (n.C.endless) return crisisEnd(n);
   const R = recOf(md)[n.id], prev = R.hist.length ? R.hist[R.hist.length-1].score : null, bestBefore = R.best || null;
   R.hist.push({score:n.score, kills:n.kills, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
   const tiBefore = titleIndex(), nWas = nOpenList();
@@ -1713,6 +1738,26 @@ function ninjaEnd(win, fin){
   showResult(`${PK.ninjaName}・${n.C.name}${win ? '：通關！' : ''}`, trend, `<div class="r-stars">${win ? '🏆' : PK.icon || '🥋'}</div><div class="r-score">${n.score}<small>分</small></div>`,
     [[METEOR ? '打碎' : '擊退', `${n.kills}/${n.C.goal}`], ['打到', `第 ${stageOfKills(n.C, n.kills)} 關`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最高分', R.best]], false,
     notes, n.weak, [], R.hist, h => `${h.kills} 個`, 1, () => startNinja(n.id, md), nextBtn, () => nx ? startNinja(nx, md) : nxtMd ? startNinja(nxtFirst, nxtMd) : startFourth());
+  /* 第一次打通流星雨「大師」：跳出隱藏關的邀請（只跳一次，之後從關卡選單進去） */
+  if (win && md === 'm' && n.id === 'master' && crisisOpen() && !P.crisis.asked){ P.crisis.asked = true; save(); crisisInvite(); }
+}
+function crisisInvite(){
+  const w = $('#crisisWrap'); w.hidden = false; Sound.bad(); $('#crisisGo').focus();
+  $('#crisisGo').onclick = () => { w.hidden = true; startNinja('crisis', 'm'); };
+  $('#crisisNo').onclick = () => { w.hidden = true; goHome(); };
+}
+/* 隱藏關結算：記最多打碎幾顆、最高分 */
+function crisisEnd(n){
+  const R = P.crisis, prev = R.hist.length ? R.hist[R.hist.length-1].kills : null, bestBefore = R.plays ? R.bestKills : null;
+  R.plays++; R.hist.push({score:n.score, kills:n.kills, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
+  R.best = Math.max(R.best, n.score); R.bestKills = Math.max(R.bestKills, n.kills);
+  save(); Sound.soft();
+  const trend = trendOf(n.kills, prev, bestBefore, 2), wave = Math.floor(n.kills / n.C.wave) + 1;
+  const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
+  const notes = [note(`打到第 ${wave} 波！每打碎 ${n.C.wave} 顆，流星群就會更多、更快。`, true)];
+  showResult(`危機！流星群襲來`, trend, `<div class="r-stars">☄</div><div class="r-score">${n.kills}<small>顆</small></div>`,
+    [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最多打碎', `${R.bestKills} 顆`]], false,
+    notes, n.weak, [], R.hist, h => `${h.kills} 顆`, 1, () => startNinja('crisis', 'm'), '', () => {});
 }
 
 
