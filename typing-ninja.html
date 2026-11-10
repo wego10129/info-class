@@ -1021,9 +1021,20 @@ const KEYS = () => SETS[SET].keys.split('');
 const l2Open = () => has('l2') && (P.unlock || prevDone('l2'));   /* 重要按鍵練習 2026-11-02 起也有第二關（鍵盤偵探） */
 /* 第三關：起始級（含）以下＝前一關完成就打開；起始級以上＝前一級通關，或第二關拿到 open 顆星 */
 /* 第二關後面緊接著的那一關，第二關拿到 open 顆星也能打開較高的級數 */
+/* 英文（老師 2026-11-10）：第二關的小關拿到 EN_SUB_OPEN 顆星，就打開同一順位的級數（2-1→新手、2-2→勇者、2-3→大師）；
+   也可以照舊依序破關（新手要三個小關都玩過，或 2-1 拿到 3 顆星）。標點、重要按鍵照舊看第二關的星數 */
+const EN_SUB_OPEN = 3;
+const subGate = (md, i) => KIND === 'en' && prevStage(md) === 'l2' && !!L2_SUBS[i] && P.l2s[L2_SUBS[i].id].stars >= EN_SUB_OPEN;
 const nOpen = (md, id) => { if (!has(md)) return false; if (P.unlock) return true; const i = NINJA_ORDER.indexOf(id);
+  if (subGate(md, i)) return true;
   if (i <= startIdx(md)) return prevDone(md);
-  return recOf(md)[NINJA_ORDER[i-1]].cleared || (prevStage(md) === 'l2' && P.l2.stars >= NINJA[id].open && prevDone(md)); };
+  return recOf(md)[NINJA_ORDER[i-1]].cleared || (KIND !== 'en' && prevStage(md) === 'l2' && P.l2.stars >= NINJA[id].open && prevDone(md)); };
+/* 還沒打開時的說明：第 i 級要怎樣才打開 */
+function nLock(md, i){
+  const c = [i <= startIdx(md) ? entryLock(md).replace(/就打開$/, '') : `「${NINJA[NINJA_ORDER[i-1]].name}」通關`];
+  if (KIND === 'en' && prevStage(md) === 'l2' && L2_SUBS[i]) c.push(`「${L2_SUBS[i].no}」拿到 ${EN_SUB_OPEN} 顆星`);
+  else if (i > startIdx(md) && prevStage(md) === 'l2') c.push(`第二關拿到 ${NINJA[NINJA_ORDER[i]].open} 顆星`);
+  return c.filter(Boolean).join('，或') + '就打開'; }
 const ninjaOpen = id => NMON().some(md => nOpen(md, id));
 /* 打開了哪些（關卡.級數）：用來比對「剛打開」 */
 const nOpenList = () => NMON().flatMap(md => NINJA_ORDER.filter(id => nOpen(md, id)).map(id => md + '.' + id));
@@ -1214,11 +1225,11 @@ function renderHome(){
   /* 打敵人的關卡（英文：字母流星雨、打字忍者各一張卡片；標點：標點忍者；重要按鍵：病毒來襲） */
   const nCard = md => { useMode(md); const M = MODES[md], sN = startIdx(md);
     const nBtns = NINJA_ORDER.map((id,i) => { const C = NINJA[id], R = recOf(md)[id], o = nOpen(md, id);
-      const lock = i <= sN ? entryLock(md) : `「${NINJA[NINJA_ORDER[i-1]].name}」通關${prevStage(md) === 'l2' ? `，或第二關${KIND === 'en' ? '三個小關都' : ''}拿到 ${C.open} 顆星` : ''}就打開`;
+      const lock = nLock(md, i);
       return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
     const anyO = NINJA_ORDER.some(id => nOpen(md, id));
-    return card(md, md === 'm' ? '#1D4E89' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns, anyO ? '' : entryLock(md)); };
+    return card(md, md === 'm' ? '#1D4E89' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns, anyO ? '' : nLock(md, 0)); };
   const c3 = NMON().map(nCard).join('');
   const bo = bossOpen(), BR = P.boss;
   const c4b = KIND !== 'punc' || !has('boss') ? '' : card('boss', '#5B2A86', ['👹'], '第四關・魔王戰', `<button class="diff" type="button" data-boss="1" ${bo?'':'disabled'}><span>句子填空・打敗標點大魔王<small>${bo ? `看句子填對標點才打得到魔王、擋得住火球；填錯就落空・魔王 ${BOSS.hp} 滴血、3 個階段・${BOSS.lives} 條命` : entryLock('boss')}</small></span>
@@ -1441,7 +1452,8 @@ function drillEnd(){
   if (EN2) L2_SUBS.forEach((x,i) => { if (!subWas[i] && l2SubOpen(i)) notes.push(note(`「${x.name}」打開了！`)); });
   notes.push(...openedNotes(nWas));
   const afterL2 = NMON().find(md => prevStage(md) === 'l2');   /* 第二關後面緊接著的關卡 */
-  if (EN2 && afterL2 && !l2AllPlayed()){ const left = L2_SUBS.filter(x => !P.l2s[x.id].plays).map(x => x.no).join('、'); notes.push(note(`再玩過「${left}」，就能挑戰${MODES[afterL2].name}`, true)); }
+  if (EN2 && afterL2){ const ix = NINJA_ORDER.findIndex(id => !nOpen(afterL2, id));
+    if (ix >= 0) notes.push(note(`「${L2_SUBS[ix].no}」拿到 ${EN_SUB_OPEN} 顆星（${STAR_AT[EN_SUB_OPEN-1]} 分以上）${ix === 0 && !l2AllPlayed() ? '，或三個小關都玩過一次' : ''}，就能挑戰${MODES[afterL2].name}「${NINJA[NINJA_ORDER[ix]].name}」`, true)); }
   else if (d.lv===2 && !EN2 && afterL2){ const nx = NINJA_ORDER.find(id => !nOpen(afterL2, id)); if (nx) notes.push(note(`第二關拿到 ${NINJA[nx].open} 顆星（${STAR_AT[NINJA[nx].open-1]} 分以上），就能挑戰${MODES[afterL2].name}「${NINJA[nx].name}」`, true)); }
   if (titleIndex() > tiBefore) notes.push(note(`🎖 得到稱號「${TITLES[titleIndex()]}」！`));
   const avg = d.rts.length ? d.rts.reduce((a,b)=>a+b,0)/d.rts.length : 0;
