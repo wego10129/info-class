@@ -806,12 +806,15 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
    一個字母的流星速度不變（再快學生會太吃力），兩個字母的流星大約只剩六成的速度
    勇者：3 個字母只在最後兩小關偶爾出現，同時 2 顆流星只在最後一小關（忍者的勇者第 3 小關就有 3 個字母）
    大師（老師 2026-11-10 實測：學生多半在 26～30 顆沒命）：目標 50→40 顆；同時 2 顆流星從第 3 小關改到第 4 小關才開始
-   同時 2 顆的小關（老師 2026-11-10）：兩顆之間至少隔 gap 秒（忍者是 1.8／1.5）；每顆的秒數再乘 METEOR_MULTI_SLOW（多 10%） */
+   同時 2 顆的小關（老師 2026-11-10）：兩顆之間至少隔 gap 秒（忍者是 1.8／1.5）；每顆的秒數再乘 METEOR_MULTI_SLOW（多 10%）
+   大師後段（老師 2026-11-10：學生打到手抖，續航力撐不住）：第 5 小關從 4 個字母改成 3～4 個；
+   rest＝進入這幾個小關之前先停在「休息站」，至少休息 REST_SEC 秒，準備好了自己按空白鍵再繼續 */
 const METEOR_TUNE = {
   novice:{per:3.6},
   brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2], gap:3},
-  master:{per:2.6, goal:40, multi:[1,1,1,2,2], gap:3},
+  master:{per:2.6, goal:40, len:[[2,3],[3,3],[3,4],[3,4],[3,4]], multi:[1,1,1,2,2], gap:3, rest:[3,4,5]},
 };
+const REST_SEC = 5;
 const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度設定） */
 /* 字母打地鼠（老師 2026-11-10）：以單一字母為主，練「眼睛找位置」；time＝地鼠探出頭停留幾秒，per＝每多 1 個字母多停幾秒
    新手＝一次 1 隻、最後一小關 2 隻、鍵盤提示；勇者＝2 隻起、後面偶爾 2 個字母；大師＝2～3 隻、鍵帽沒有字 */
@@ -830,7 +833,7 @@ const METEOR_LAND = .08, METEOR_SLOW = 1.4;
    每顆流星 1～4 個字母（隨機），秒數＝大師的算法再乘 fast（快 15～25%）；每打碎 wave 顆進下一波（同時出現的流星變多），
    第 5 波以後每一波再快 5%（這一項最多快到 speedMin 倍） */
 const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true,
-  len:[[1,4],[1,4],[1,4],[1,4],[1,4]], multi:[2,2,3,3,3], gap:1.4, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.6};
+  len:[[1,4],[1,4],[1,4],[1,4],[1,4]], multi:[2,2,3,3,3], gap:1.4, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.6, rest:[]};
 const crisisConf = () => Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
 const crisisOpen = () => KIND === 'en' && !!P && has('m') && (P.unlock || P.meteor.master.cleared);
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
@@ -1278,7 +1281,7 @@ function renderHome(){
   const nCard = md => { useMode(md); const M = MODES[md], sN = startIdx(md);
     const nBtns = NINJA_ORDER.map((id,i) => { const C = nConf(md, id), R = recOf(md)[id], o = nOpen(md, id);
       const lock = nLock(md, i);
-      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}` : lock}</small></span>
+      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
     const CR = md === 'm' && crisisOpen() ? P.crisis : null;
     const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・1～4 個字母的流星越來越快、越來越多・3 條命，看你能打碎幾顆</small></span>
@@ -1696,6 +1699,7 @@ function ninjaTick(now){
 /* 忍者：比對打字欄位，自動找出要擊退的敵人（不用按 Enter） */
 const GRACE_MS = 1000, GRACE_MSG = '換下一顆！看清楚流星上的字母再打';
 function ninjaInput(v){
+  if (N && N.rest){ tinReset(); return; }   /* 休息站：打的字不算 */
   if (!N || N.locked) return;
   if (!v){ N.badLen = 0; tinState(''); drawWords(); return; }
   const ms = N.es.filter(e => e.word.startsWith(v));
@@ -1738,10 +1742,27 @@ function defeat(e){
   tinReset(); kb.clear(); drawWords(); ninjaHud();
   if (N.kills >= N.C.goal) return ninjaWin();
   const st = stageOfKills(N.C, N.kills), n = N;
-  if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
+  if (st > N.stage && (N.C.rest || []).includes(st)){ N.stage = st; restStop(); }
+  else if (st > N.stage){ N.stage = st; N.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
   else if (N.C.endless && N.kills % N.C.wave === 0){ const b = $('#stageBig'); b.textContent = `⚡ 第 ${N.kills / N.C.wave + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); N.holdUntil0 = performance.now() + 1200; }
   else if (!N.es.length) N.holdUntil0 = performance.now() + 450;
 }
+/* 休息站（老師 2026-11-10）：遊戲停住，至少休息 REST_SEC 秒；之後按空白鍵（或 Enter、點按鈕）繼續。休息的時間不算進流星掉落的時間 */
+function restStop(){
+  const n = N, el = $('#nCover'); n.locked = true; n.rest = {ready:false}; n.restAt = performance.now(); kb.clear(); tinReset();
+  let s = REST_SEC;
+  const draw = () => { el.innerHTML = `<h2>🌿 休息站</h2><p>手放下來，甩一甩、轉轉手腕，深呼吸。<br>肩膀放輕鬆，等一下慢慢打就好。</p><p>休息完就是第 ${n.stage} 關</p>${s > 0 ? `<div class="count">${s}</div>` : '<button class="btn primary" type="button" id="restGo">準備好了，繼續（按空白鍵）</button>'}`;
+    if (s <= 0) $('#restGo').onclick = restGo; };
+  el.hidden = false; draw(); Sound.soft(); clearInterval(cdTimer);
+  const t = cdTimer = setInterval(() => { if (N !== n){ clearInterval(t); return; } s--; draw(); if (s <= 0){ clearInterval(t); n.rest.ready = true; } }, 1000);
+}
+function restGo(){
+  const n = N; if (!n || !n.rest || !n.rest.ready) return;
+  const now = performance.now(), d = now - n.restAt; n.rest = null; $('#nCover').hidden = true;
+  n.es.forEach(x => x.start += d); n.nextAt += d; n.holdUntil0 = now + 1700; n.locked = false;
+  setTheme(themeOf(n.C, n.stage), n.stage); ninjaHud(); focusTin();
+}
+document.addEventListener('keydown', e => { if (N && N.rest && (e.code === 'Space' || e.code === 'Enter')){ e.preventDefault(); restGo(); } });
 function enemyHits(e){
   N.combo = 0; e.word.split('').forEach(c => { learn(c,'bad',null); N.weak.add(c); }); save();
   const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
@@ -2481,7 +2502,7 @@ document.querySelector('[data-screen=drill] .stage').addEventListener('click', f
 
 /* ---------- 暫停後接著玩：把暫停的時間加回去 ---------- */
 function resumeGame(){ if (paused == null) return; const d = performance.now() - paused; paused = null;
-  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
+  if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; if (N.rest) N.restAt += d; } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
 /* ---------- 視窗失去焦點時暫停 ---------- */
 (function(){
   const pill = $('#focusPill');
