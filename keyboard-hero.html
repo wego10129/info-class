@@ -1634,10 +1634,12 @@ function ninjaTick(now){
   loop = requestAnimationFrame(ninjaTick);
 }
 /* 忍者：比對打字欄位，自動找出要擊退的敵人（不用按 Enter） */
+const GRACE_MS = 1000, GRACE_MSG = '換下一顆！看清楚流星上的字母再打';
 function ninjaInput(v){
   if (!N || N.locked) return;
   if (!v){ N.badLen = 0; tinState(''); drawWords(); return; }
   const ms = N.es.filter(e => e.word.startsWith(v));
+  if (!ms.length && N.graceUntil && performance.now() < N.graceUntil){ tinReset(); tinState('ime', GRACE_MSG); drawWords(); return; }
   if (ms.length){
     if (v.length > N.lastLen) { Sound.key(); throwStar(target(v)); }
     N.lastLen = v.length; N.badLen = 0; tinState('');
@@ -1684,6 +1686,8 @@ function enemyHits(e){
   N.combo = 0; e.word.split('').forEach(c => { learn(c,'bad',null); N.weak.add(c); }); save();
   const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
   removeEnemy(e); if (wasTarget) tinReset();
+  /* 流星雨落地緩衝（老師 2026-11-10）：正在打的流星掉到地上，接下來 GRACE_MS 內按到對不上任何流星的鍵，直接丟掉（不算打錯、不用 Backspace） */
+  if (wasTarget && METEOR){ N.graceUntil = performance.now() + GRACE_MS; tinState('ime', GRACE_MSG); }
   N.holdUntil0 = performance.now() + 700;
   drawWords(); loseLife(KIND === 'key' && N.C.hint !== 'name' ? `被${FOE}碰到了！要按「${[...e.word].map(SHOW).join(' → ')}」` : METEOR ? '流星掉到地上了！' : `被${FOE}碰到了！`);
   if (KIND === 'key'){ kb.clear(); [...e.word].forEach(c => kb.show(c)); const n = N; setTimeout(() => { if (N === n) kb.clear(); }, 1500); }
