@@ -525,17 +525,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .rc-car svg{display:block;width:100%}
 .rc-car.rcg{opacity:.45}
 .rc-finish{position:absolute;top:0;bottom:0;left:91%;width:18px;background:repeating-conic-gradient(#fff 0 25%,#111 0 50%) 0 0/18px 18px;z-index:1;border-left:2px solid #111;border-right:2px solid #111}
-/* 英文：題目、打字欄位都用小寫（老師 2026-11-03：題目是大寫時，學生會習慣先按 Caps Lock）；鍵盤的鍵帽照樣是大寫 */
-html[data-kind=en] .target,html[data-kind=en] .word,html[data-kind=en] .tin,html[data-kind=en] .rc-chunks{text-transform:none}
-/* 大寫燈亮著：遊戲暫停，畫面中間跳出提醒（老師 2026-11-03） */
-.caps-warn{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(27,40,54,.55);pointer-events:none}
-.caps-warn[hidden]{display:none}
-.caps-warn .box{background:#fff;border:4px solid var(--ink);border-radius:22px;box-shadow:0 8px 0 var(--ink);padding:18px 30px;text-align:center;display:grid;gap:10px;justify-items:center;max-width:min(560px,92vw)}
-.caps-warn h2{font:900 clamp(26px,5vh,40px) var(--f-display);color:var(--bad)}
-.caps-warn .capkey{font:800 clamp(22px,4vh,32px) var(--f-key);background:var(--hl);border:4px solid var(--ink);border-radius:14px;padding:8px 22px;box-shadow:0 6px 0 var(--ink);animation:capsblink .8s ease-in-out infinite alternate;position:relative}
-.caps-warn .capkey i{position:absolute;right:8px;top:6px;width:12px;height:12px;border-radius:50%;background:#22C55E;box-shadow:0 0 10px #22C55E}
-@keyframes capsblink{to{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}}
-.caps-warn p{font:700 18px var(--f-body);color:var(--ink-soft)}
+/* 英文：題目、打字欄位都用大寫顯示（老師 2026-11-10：學生覺得大寫比較看得懂，出版社也用大寫）；打大寫、小寫都算對，大寫燈不用管 */
 .focus-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:#fff;border:3px solid var(--hl);border-radius:999px;padding:10px 22px;font:700 16px var(--f-body);cursor:pointer;max-width:calc(100% - 32px)}
 @media (max-width:720px){ html,body{height:auto} .wrap{height:auto} .stage{min-height:360px} }
 @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
@@ -642,7 +632,6 @@ html[data-kind=en] .target,html[data-kind=en] .word,html[data-kind=en] .tin,html
 </div></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
   <div class="r-btns" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certL4" hidden>⚔ 挑戰第四關</button><button class="btn" type="button" id="certClose">回關卡選單</button></div></div></div>
-<div id="capsWarn" class="caps-warn" hidden><div class="box"><h2>大寫燈亮著！</h2><div class="capkey">⇪ Caps Lock<i></i></div><p>按一下鍵盤左邊的 Caps Lock，把大寫燈關掉。<br>遊戲先暫停，時間不會算。</p></div></div>
 <button id="focusPill" class="focus-pill" type="button" hidden>點一下這裡，讓鍵盤連上遊戲</button>
 
 <script>
@@ -1174,7 +1163,6 @@ const kb = {
 
 /* ---------- 畫面切換 ---------- */
 let screen = 'sets', loop = 0, cdTimer = 0, D = null, N = null, B = null, paused = null;
-const CAPS = {on:false, paused:false};   /* 大寫燈（英文）：亮著、遊戲是不是因為大寫燈暫停 */
 const inGame = () => screen==='drill' || screen==='ninja' || screen==='boss' || screen==='race';
 function show(name){
   screen = name; cancelAnimationFrame(loop); clearInterval(cdTimer);
@@ -1188,8 +1176,6 @@ function show(name){
   $('#typeZone').hidden = KIND === 'key' || !game;   /* 鍵盤小勇士直接按鍵，不用打字欄位 */
   if (KIND === 'key' && (name==='drill' || name==='ninja') && document.activeElement) document.activeElement.blur();   /* 避免空白鍵、Enter 按到畫面上的按鈕 */
   tinReset(); kb.clear(); kb.blank(false); if (SET) kb.setIn(KEYS());
-  if (CAPS.paused){ CAPS.paused = false; paused = null; }   /* 換畫面：大寫燈造成的暫停不帶到下一個畫面 */
-  if (!game) $('#capsWarn').hidden = true;
   const bar = DEMO ? '<div class="demo-bar">老師示範模式：全部打開，紀錄不會保存。學生請用一般網址（不要加 #demo）。</div>' : '';
   $('#demoBar1').innerHTML = bar; $('#demoBar2').innerHTML = bar;
   if (name==='sets') renderSets();
@@ -2382,8 +2368,7 @@ function onTin(){
     return;
   }
   if (/[^\x00-\x7F]/.test(raw)){ tinState('ime', IME_MSG); remind('輸入法是中文喔！按一下 Shift 換成英文'); return; }   /* 注音、中文字：不算答錯，請學生刪掉、切換 */
-  if (/[A-Z]/.test(raw)){ tinState('ime', '打出來是大寫字母：按一下 Caps Lock 關掉大寫燈，大寫字母會自動刪掉'); remind('大寫燈亮了！按 Caps Lock 關掉'); return; }   /* 大寫不算（訓練學生確認輸入狀態） */
-  const v = raw.toLowerCase().replace(/\s+/g,'');
+  const v = raw.toLowerCase().replace(/\s+/g,'');   /* 大寫、小寫都算對（老師 2026-11-10） */
   if (/[^a-z]/.test(v)){ tinState('bad', '只要打英文字母喔，按 Backspace 刪掉'); return; }
   if (screen==='drill') drillInput(v); else if (screen==='ninja') ninjaInput(v); else if (screen==='race') raceInput(v);
 }
@@ -2428,33 +2413,11 @@ document.querySelector('[data-screen=drill] .stage').addEventListener('click', f
 /* ---------- 暫停後接著玩：把暫停的時間加回去 ---------- */
 function resumeGame(){ if (paused == null) return; const d = performance.now() - paused; paused = null;
   if (D){ D.start += d; D.deadline += d; } if (N){ N.es.forEach(x => x.start += d); N.nextAt += d; N.holdUntil0 += d; } if (B && B.t0) B.t0 += d; if (RC && RC.t0) RC.t0 += d; }
-/* ---------- 大寫燈（英文，老師 2026-11-03）：按鍵時讀得到 Caps Lock 有沒有開
-   開著＝畫面中間跳出提醒、遊戲暫停（時間不算）；關掉＝提醒消失、欄位裡的大寫字母自動刪掉、接著玩
-   網頁要等學生按了鍵才讀得到大寫燈，所以第一個鍵按下去才會跳出提醒 ---------- */
-const gameRunning = () => (D && !D.locked && !D.over) || (N && !N.locked && !N.over) || (RC && !RC.locked && !RC.over);
-function capsPause(){ if (gameRunning() && paused == null){ paused = performance.now(); CAPS.paused = true; } }
-function capsCheck(e){
-  if (KIND !== 'en' || !e.getModifierState) return;
-  const on = e.getModifierState('CapsLock'); CAPS.on = on;
-  if (on && inGame() && $('#signWrap').hidden && $('#certWrap').hidden){
-    if ($('#capsWarn').hidden){ $('#capsWarn').hidden = false; Sound.bad(); }
-    capsPause();
-  } else if (!on){
-    $('#capsWarn').hidden = true;
-    if (CAPS.paused){ CAPS.paused = false; if (document.hasFocus()) resumeGame(); }
-    if (/[A-Z]/.test(tin.value)){ tin.value = tin.value.replace(/[A-Z]/g, ''); onTin(); }
-  }
-}
-document.addEventListener('keydown', capsCheck, true);
-/* 倒數時就發現大寫燈亮著：倒數完、遊戲一開始就暫停 */
-setInterval(() => { if (CAPS.on && !$('#capsWarn').hidden) capsPause(); }, 200);
-document.addEventListener('keyup', capsCheck, true);
-
 /* ---------- 視窗失去焦點時暫停 ---------- */
 (function(){
   const pill = $('#focusPill');
   const off = () => { if (!$('#signWrap').hidden || !$('#certWrap').hidden) return; pill.hidden = false; pill.textContent = (D||N||B||RC) ? '遊戲暫停中：點一下這裡繼續' : '點一下這裡，讓鍵盤連上遊戲'; if (paused==null) paused = performance.now(); kbEl.querySelectorAll('.down').forEach(x => x.classList.remove('down')); };
-  const on = () => { pill.hidden = true; if (CAPS.paused) return focusTin(); resumeGame(); focusTin(); };
+  const on = () => { pill.hidden = true; resumeGame(); focusTin(); };
   window.addEventListener('blur', off); window.addEventListener('focus', on);
   pill.onclick = () => { window.focus(); on(); focusTin(); };
 })();
