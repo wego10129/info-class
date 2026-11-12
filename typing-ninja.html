@@ -902,7 +902,8 @@ const REST_SEC = 5;
 const HEAL_SEC = 10, HEAL_LEN = [2,3], HEAL_MAX = 5;
 /* 道具（老師 2026-11-12 同意清單）：大師、隱藏關（items:true）換關時，補血之後再飄來一個道具，打法和補血一樣（打出上面的字母）
    freeze＝暫停（流星雨：❄ 冰凍星／忍者：🌀 煙霧彈）：先存起來（最多 1 個），學生想休息時按空白鍵，敵人全部停住 FREEZE_SEC 秒
-   bomb＝一次消滅畫面上的敵人（流星雨：🌠 彗星大掃除／忍者：💥 手裡劍風暴）：打到馬上發動，算分、不算進字母熟練度
+   bomb＝一次消滅畫面上的敵人（流星雨：🌠 彗星大掃除／忍者：💥 手裡劍風暴）：打到馬上發動，算分、不算進字母熟練度；
+        場上同時有 2 個以上敵人才飄來（老師 2026-11-12），不在換關時飄來
    頻率：大師第 3、5 關＝暫停，第 4 關＝消滅；隱藏關每 2 波（第 3、5、9…波）＝暫停，每 3 波（第 4、7、10…波）＝消滅（同一波都有時給消滅） */
 const ITEM_SEC = 8, FREEZE_SEC = 5;
 function itemFor(n, st){
@@ -1872,11 +1873,15 @@ function ninjaTick(now){
     const foes = N.es.filter(e => !e.heart && !e.pill).length;
     /* 暫停道具：敵人、道具全部停住，時間到再一起往後挪 */
     if (N.frozenUntil){ if (now < N.frozenUntil){ loop = requestAnimationFrame(ninjaTick); return; } unfreeze(now); }
-    if (!N.heartDue && !N.itemDue && !N.es.some(e => e.heart) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+    /* 老師 2026-11-12：補血（防禦型）要等場上沒有敵人才出現，飄過時也不出新敵人；暫停、大絕招（攻擊型）出現時可以有敵人 */
+    if (!N.heartDue && !N.es.some(e => e.heart && !e.item) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
       if (spawn()) N.nextAt = now + N.C.gap*1000;
     }
-    if (N.heartDue && now >= N.holdUntil0 && heartSpawn()) N.heartDue = false;
+    if (N.heartDue && foes === 0 && now >= N.holdUntil0 && heartSpawn()) N.heartDue = false;
     else if (!N.heartDue && N.itemDue && now >= N.holdUntil0 && !N.es.some(e => e.heart) && heartSpawn(N.itemDue)) N.itemDue = null;
+    /* 大絕招：這一關（這一波）裡，第一次同時有 2 個以上敵人時才飄來；飄到一半敵人剩不到 2 個就淡出 */
+    if (N.bombDue && foes >= 2 && !N.es.some(e => e.heart) && heartSpawn('bomb')) N.bombDue = false;
+    for (const e of N.es) if (e.item === 'bomb' && foes < 2 && !e.fading){ e.fading = true; itemFade(e); }
     if (N.C.pill && now >= N.pillAt && foes >= 2 && !N.es.some(e => e.pill) && pillSpawn()) N.pillAt = now + N.C.pill*1000*(.8 + Math.random()*.4);
     for (const e of N.es.slice()){
       const p = Math.min(1, (now - e.start) / (e.dur*1000));
@@ -1945,7 +1950,7 @@ function defeat(e, auto){   /* auto＝放大丸自動敲到的（不算進學生
   if (!waveEnd){ if (!N.es.length) N.holdUntil0 = performance.now() + 450; return; }
   const rest = (st > N.stage && (N.C.rest || []).includes(st)) || !!(N.C.endless && N.C.restEvery && Math.floor(N.kills / N.C.wave) % N.C.restEvery === 0);
   if (N.C.heal) N.heartDue = true;   /* 下一關開始（休息站之後）飛來補血愛心 */
-  N.itemDue = itemFor(N, st);        /* 補血之後再飄來道具 */
+  { const it = itemFor(N, st); N.itemDue = it === 'freeze' ? it : null; N.bombDue = it === 'bomb'; }   /* 暫停：補血之後飄來；大絕招：場上 2 個以上敵人才飄來 */
   nextWave(st, rest);
 }
 function nextWave(st, rest){
@@ -2146,8 +2151,14 @@ function bombAll(n, ic, name){
   if (!waveEnd){ n.holdUntil0 = performance.now() + 900; return; }
   const rest = (st > n.stage && (n.C.rest || []).includes(st)) || !!(n.C.endless && n.C.restEvery && Math.floor(n.kills / n.C.wave) % n.C.restEvery === 0);
   if (n.C.heal) n.heartDue = true;
-  n.itemDue = itemFor(n, st);
+  { const it = itemFor(n, st); n.itemDue = it === 'freeze' ? it : null; n.bombDue = it === 'bomb'; }
   nextWave(st, rest);
+}
+/* 大絕招飄到一半，場上敵人剩不到 2 個：淡出消失 */
+function itemFade(e){
+  const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
+  N.es = N.es.filter(x => x !== e); e.el.style.transition = 'opacity .5s'; e.el.style.opacity = '0'; setTimeout(() => e.el.remove(), 550);
+  if (wasTarget) tinReset(); drawWords();
 }
 /* 按空白鍵用暫停道具 */
 function useFreeze(){
