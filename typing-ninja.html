@@ -213,6 +213,11 @@ html.meteor .enemy.twin{width:clamp(92px,17vh,144px)}
 .enemy .twin{display:flex;width:100%;align-items:flex-start}
 .enemy .twin svg{width:56%;flex:none}
 .enemy .twin svg+svg{margin-left:-12%;margin-top:10%}
+/* 忍者隱藏關（老師 2026-11-12）：小型敵人、騎馬的兩個敵人 */
+.enemy.mini{width:clamp(56px,11vh,92px)}
+.enemy.horse{width:clamp(130px,26vh,210px)}
+.enemy.horse svg{animation:gallop .28s ease-in-out infinite alternate}
+@keyframes gallop{from{transform:translateY(0) rotate(0)}to{transform:translateY(-5px) rotate(-2deg)}}
 html.meteor .player.dash{transform:translateY(-8px) scale(1.05)}
 /* 英文・字母打地鼠（老師 2026-11-10）：地鼠從草地上的洞裡探出頭，頭上有字母，縮回洞裡以前打出來 */
 #holeLayer{position:absolute;inset:0;z-index:2;pointer-events:none}
@@ -700,7 +705,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 </form></div>
 <div id="crisisWrap" class="modal-wrap" hidden><div class="card crisis-pop" role="dialog" aria-labelledby="crisisT">
   <h2 id="crisisT">⚠ 危機！流星群襲來</h2>
-  <p>大批流星正往這裡衝過來！<br>流星有 1～4 個字母：3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！<br>流星會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？</p>
+  <p id="crisisP">大批流星正往這裡衝過來！<br>流星有 1～4 個字母：3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！<br>流星會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？</p>
   <div class="r-btns" style="justify-content:center"><button class="btn primary" type="button" id="crisisGo">🔥 挑戰</button><button class="btn" type="button" id="crisisNo">回到關卡選單</button></div>
 </div></div>
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
@@ -915,8 +920,22 @@ const METEOR_LAND = .08, METEOR_SLOW = 1.4;
 const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true, twin:true,
   len:[[1,3],[1,4],[1,4],[1,4],[1,4]], multi:[1,1,2,2,2], gap:2.5, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.7, rest:[], restEvery:3, heal:true};
 const TWIN_MIN = 3;
-const crisisConf = () => Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
-const crisisOpen = () => KIND === 'en' && !!P && has('m') && (P.unlock || P.meteor.master.cleared);
+/* 打字忍者的隱藏關「危機！忍者大軍來襲」（老師 2026-11-12，比照流星雨）：打字忍者「大師」通關後打開；規則同上面的 CRISIS，
+   秒數用忍者大師的算法再乘 fast；1～2 個字母＝小型敵人，3～4 個字母＝兩個敵人騎一匹馬（打倒算 2 個、分數雙倍）；換波飛來補血飯糰 */
+const NCRISIS = {name:'危機！忍者大軍來襲'};
+const crisisConf = (md = 'm') => md === 'n' ? Object.assign({}, NINJA.master, CRISIS, NCRISIS) : Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
+const crisisOpen = (md = 'm') => KIND === 'en' && !!P && (md === 'm' || md === 'n') && has(md) && (P.unlock || recOf(md).master.cleared);
+const crisisRec = md => md === 'n' ? P.ncrisis : P.crisis;
+/* 隱藏關的說明文字（流星雨／忍者） */
+const CRISIS_TXT = {
+  m:{title:'危機！流星群襲來', hud:'🔥 流星群', icon:'☄', unit:'顆', faster:'流星變快了',
+     rule:'流星有 1～4 個字母，3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！流星會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，',
+     menu:'1～4 個字母的流星越來越快、越來越多，3～4 個字母的是兩顆黏在一起（算 2 顆）・3 條命，看你能打碎幾顆・每 3 波有休息站・換波時會飛來補血愛心',
+     pop:'大批流星正往這裡衝過來！<br>流星有 1～4 個字母：3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！<br>流星會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？'},
+  n:{title:'危機！忍者大軍來襲', hud:'🔥 忍者大軍', icon:'🐎', unit:'個', faster:'敵人變快了',
+     rule:'1～2 個字母的是小型敵人；3～4 個字母的是兩個敵人騎著馬，打倒算 2 個、分數雙倍！敵人會越來越快、越來越多，看你能擊退幾個！被敵人碰到就扣命，3 條命用完就結束，',
+     menu:'小型敵人和騎馬的兩個敵人（3～4 個字母，算 2 個）越來越快、越來越多・3 條命，看你能擊退幾個・每 3 波有休息站・換波時會飛來補血飯糰',
+     pop:'大批敵人正往這裡衝過來！<br>1～2 個字母的是小型敵人；3～4 個字母的是兩個敵人騎著馬，打倒算 2 個、分數雙倍！<br>敵人會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？'}};
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
    新手＝鍵名＋鍵盤提示、勇者＝只提示用途、大師＝只看情境（鍵帽沒有字）；2 個鍵的病毒＝兩種情境都要完成才會被消滅 */
 /* 重要按鍵練習（老師 2026-10-30）：沒有第二關；病毒來襲改回舊版「看電腦畫面的情境，按按鍵」。
@@ -1130,6 +1149,7 @@ const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, be
   boss:{plays:0, best:0, cleared:false, hist:[]},
   /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：plays 玩過幾次、best 最高分、bestKills 最多打碎幾顆、asked 跳過邀請視窗了沒 */
   ...(KIND === 'en' ? {crisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]},
+    ncrisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]},   /* 打字忍者的隱藏關（老師 2026-11-12 同意新增） */
     mole:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}}} : {}),   /* 字母打地鼠（2026-11-10） */
   race:{novice:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, brave:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, master:{best:0, bestT:null, cleared:false, hist:[], ghost:null}},
   awardSeen:-1,
@@ -1393,9 +1413,9 @@ function renderHome(){
       const lock = nLock(md, i);
       return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${C.secs ? `${C.secs} 秒限時賽・${M.hit} ${C.pass} ${M.cnt}就過關・沒敲到不扣分${C.pill ? '・會出現放大丸' : ''}` : `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命`}${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}${C.heal ? (md === 'm' ? '・換關時會飛來補血愛心' : '・換關時會飛來補血飯糰') : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
-    const CR = md === 'm' && crisisOpen() ? P.crisis : null;
-    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="m"><span>🔥 危機！流星群襲來<small>隱藏關卡・1～4 個字母的流星越來越快、越來越多，3～4 個字母的是兩顆黏在一起（算 2 顆）・3 條命，看你能打碎幾顆・每 3 波有休息站・換波時會飛來補血愛心</small></span>
-        <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} 顆` : '還沒挑戰'}</span></span></button>`;
+    const CR = crisisOpen(md) ? crisisRec(md) : null, CT = CRISIS_TXT[md];
+    const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="${md}"><span>🔥 ${CT.title}<small>隱藏關卡・${CT.menu}</small></span>
+        <span class="lv-r"><span class="lv-best">${CR.plays ? `最多 ${CR.bestKills} ${CT.unit}` : '還沒挑戰'}</span></span></button>`;
     const anyO = NINJA_ORDER.some(id => nOpen(md, id));
     return card(md, md === 'm' ? '#1D4E89' : md === 'w' ? '#7A5230' : 'var(--c-ninja)', [M.deco], `§${md}§・${M.name}`, nBtns + crisisBtn, anyO ? '' : nLock(md, 0)); };
   const c3 = NMON().map(nCard).join('');
@@ -1705,6 +1725,23 @@ function moleSVG(th){
     <rect x="44" y="68" width="5" height="7" fill="#fff" stroke="#1B2836" stroke-width="2"/><rect x="51" y="68" width="5" height="7" fill="#fff" stroke="#1B2836" stroke-width="2"/>
     <path d="M22 84 Q30 76 38 84 M62 84 Q70 76 78 84" fill="none" stroke="#1B2836" stroke-width="3" stroke-linecap="round"/></svg>`;
 }
+/* 騎馬的兩個敵人（忍者隱藏關，老師 2026-11-12）：一匹馬往左跑，背上坐兩個敵人；敵人的顏色跟著背景（th）變 */
+function horseSVG(th){
+  const C = [['#8BC34A','#5E8F2E'],['#F28C38','#B85E1A'],['#6B7BD1','#3E4A99'],['#C2410C','#7C2D12'],['#4B5563','#111827']][th-1];
+  const rider = (x, y) => `<g transform="translate(${x} ${y})"><path d="M-14 26 Q-17 2 0 -8 Q17 2 14 26 Z" fill="${C[0]}" stroke="#1B2836" stroke-width="3"/>
+    <circle cx="-5" cy="4" r="4" fill="#fff" stroke="#1B2836" stroke-width="2"/><circle cx="6" cy="4" r="4" fill="#fff" stroke="#1B2836" stroke-width="2"/>
+    <circle cx="-6" cy="5" r="1.8" fill="#1B2836"/><circle cx="5" cy="5" r="1.8" fill="#1B2836"/><path d="M-6 14 Q0 18 6 14" fill="none" stroke="#1B2836" stroke-width="2.5" stroke-linecap="round"/></g>`;
+  return `<svg viewBox="0 0 180 130" aria-hidden="true"><ellipse cx="92" cy="125" rx="62" ry="5" fill="rgba(0,0,0,.25)"/>
+    <path d="M150 64 Q172 70 166 98 Q160 84 148 78 Z" fill="#5B3A1E" stroke="#1B2836" stroke-width="3" stroke-linejoin="round"/>
+    <g stroke="#1B2836" stroke-width="3" fill="#8B5A2B"><path d="M58 92 L50 122 L60 122 L68 94 Z"/><path d="M78 94 L80 122 L90 122 L88 94 Z"/>
+      <path d="M118 94 L116 122 L126 122 L128 94 Z"/><path d="M136 90 L146 120 L156 118 L144 88 Z"/></g>
+    <ellipse cx="102" cy="80" rx="52" ry="22" fill="#A0693A" stroke="#1B2836" stroke-width="4"/>
+    <path d="M62 72 Q48 50 40 34 L22 38 Q14 42 18 50 L36 58 Q44 76 58 86 Z" fill="#A0693A" stroke="#1B2836" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M44 34 Q56 40 64 66" fill="none" stroke="#5B3A1E" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="32" cy="42" r="3" fill="#1B2836"/><path d="M38 30 L42 20 L48 32 Z" fill="#A0693A" stroke="#1B2836" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M70 64 Q102 56 134 64 L132 74 Q102 68 72 74 Z" fill="${C[1]}" stroke="#1B2836" stroke-width="3"/>
+    ${rider(122, 34)}${rider(86, 30)}</svg>`;
+}
 function enemySVG(th){
   if (METEOR) return meteorSVG(th);
   if (MOLE) return moleSVG(th);
@@ -1736,19 +1773,19 @@ const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-
 function ninjaHud(){
   if (N.C.secs) return hud([['等級', N.C.name, 't'], ['剩下', `${N.endAt ? Math.max(0, Math.ceil((N.endAt - performance.now()) / 1000)) : N.C.secs} 秒`, 't'],
     [MODES[N.md].hit, `${N.kills} 隻`], ['過關', `${N.C.pass} 隻`], ['分數', N.score]]);
-  hud([[KIND === 'key' || METEOR || MOLE ? '等級' : '忍者', N.C.endless ? '🔥 流星群' : N.C.name, 't'], ['生命', `<span class="hearts">${Array.from({length:Math.max(N.C.lives, N.lives)},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
-    [MODES[N.md].hit, N.C.endless ? `${N.kills} 顆` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);
+  hud([[KIND === 'key' || METEOR || MOLE ? '等級' : '忍者', N.C.endless ? CRISIS_TXT[N.md].hud : N.C.name, 't'], ['生命', `<span class="hearts">${Array.from({length:Math.max(N.C.lives, N.lives)},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
+    [MODES[N.md].hit, N.C.endless ? `${N.kills} ${CRISIS_TXT[N.md].unit}` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);
 }
 function startNinja(id, md){
   md = MODES[md] && has(md) ? md : NMON()[0] || 'n'; useMode(md);   /* 流星雨（m）或忍者（n） */
   if (KIND === 'key') return vStart(id);
   stopAll();
-  const C = id === 'crisis' ? crisisConf() : nConf(md, id);
+  const C = id === 'crisis' ? crisisConf(md) : nConf(md, id);
   N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0};
   show('ninja'); kb.blank(C.blank);
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? '流星有 1～4 個字母，3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！流星會越來越快、越來越多，看你能打碎幾顆！流星掉到地上就扣命，3 條命用完就結束，' : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
+  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; if (C.secs){ N.t0 = performance.now(); N.endAt = N.t0 + C.secs*1000; N.pillAt = N.t0 + (C.pill || 0)*1000; ninjaHud(); }
     focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
   if (MOLE) hammerIdle();
@@ -1764,8 +1801,9 @@ function spawn(){
   const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && !C.endless && maxNow() > 1 ? METEOR_MULTI_SLOW : 1)
     * (C.endless ? (C.fast[0] + Math.random()*(C.fast[1] - C.fast[0])) * Math.max(C.speedMin, Math.pow(C.speedUp, Math.max(0, Math.floor(N.kills / C.wave) + 1 - stageCount(C)))) : 1);
   const twin = !!C.twin && len >= TWIN_MIN;
-  const el = document.createElement('div'); el.className = twin ? 'enemy twin' : 'enemy';
-  el.innerHTML = `<div class="word"></div>${twin ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
+  const el = document.createElement('div'); el.className = twin ? (METEOR ? 'enemy twin' : 'enemy horse') : C.endless && !METEOR ? 'enemy mini' : 'enemy';
+  /* 兩個黏在一起：流星＝兩顆流星；忍者＝兩個敵人騎一匹馬（老師 2026-11-12） */
+  el.innerHTML = `<div class="word"></div>${twin ? (METEOR ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : horseSVG(themeOf(C, N.stage))) : enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
   /* 打地鼠：挑一個空的洞（前排的地鼠疊在後排前面） */
   let hole = null;
   if (MOLE){ const free = HOLES.filter(h => !N.es.some(o => o.hole === h)); if (!free.length) return false; hole = free[ri(0, free.length-1)];
@@ -1863,7 +1901,7 @@ function defeat(e, auto){   /* auto＝放大丸自動敲到的（不算進學生
   if (MOLE){ N.es = N.es.filter(x => x !== e); setTimeout(() => e.el.remove(), 800); }   /* 地鼠等木槌落下才壓扁（hammerHit） */
   else { removeEnemy(e); Sound.slash(); }
   const pl = $('#player'); pl.classList.add('dash'); setTimeout(() => pl.classList.remove('dash'), 150);
-  const p = document.createElement('div'); p.className = 'pts'; p.textContent = k > 1 ? `+${pts}（2 顆！）` : `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
+  const p = document.createElement('div'); p.className = 'pts'; p.textContent = k > 1 ? `+${pts}（2 ${MODES[N.md].cnt}！）` : `+${pts}`; p.style.left = e.el.style.left; p.style.bottom = '58%'; $('#enemyLayer').appendChild(p); setTimeout(() => p.remove(), 900);
   tinReset(); kb.clear(); drawWords(); ninjaHud();
   if (MOLE) hammerHit(e);
   if (N.C.secs){ if (!N.es.some(x => !x.pill)) N.holdUntil0 = performance.now() + 450; return; }   /* 限時賽：小關依時間推進 */
@@ -1880,7 +1918,7 @@ function nextWave(st, rest){
   const up = st > n.stage; n.stage = st;
   if (rest) return restStop();
   if (up){ n.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
-  else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
+  else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${CRISIS_TXT[n.md].faster}！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
 }
 /* ---------- 字母打地鼠：限時賽、木槌、放大丸（老師 2026-11-10） ---------- */
 /* 計時：時間到就結算；小關依經過的時間推進。回傳 true＝這一局結束了 */
@@ -2055,7 +2093,7 @@ function restGo(){
   const n = N; if (!n || !n.rest || !n.rest.ready) return;
   const now = performance.now(), d = now - n.restAt; n.rest = null; $('#nCover').hidden = true;
   n.es.forEach(x => x.start += d); n.nextAt += d; n.holdUntil0 = now + 1700; n.locked = false;
-  if (n.C.endless){ setTheme(themeOf(n.C, n.stage), 0); const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・流星變快了！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
+  if (n.C.endless){ setTheme(themeOf(n.C, n.stage), 0); const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${CRISIS_TXT[n.md].faster}！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
   else setTheme(themeOf(n.C, n.stage), n.stage);
   ninjaHud(); focusTin();
 }
@@ -2114,25 +2152,27 @@ function ninjaEnd(win, fin){
     [[MODES[md].hit, n.C.secs ? `${n.kills} 隻` : `${n.kills}/${n.C.goal}`], n.C.secs ? ['過關', `${n.C.pass} 隻`] : ['打到', `第 ${stageOfKills(n.C, n.kills)} 關`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最高分', R.best]], false,
     notes, n.weak, [], R.hist, h => `${h.kills} ${n.C.secs ? '隻' : '個'}`, 1, () => startNinja(n.id, md), nextBtn, () => nx ? startNinja(nx, md) : nxtMd ? startNinja(nxtFirst, nxtMd) : startFourth());
   /* 第一次打通流星雨「大師」：跳出隱藏關的邀請（只跳一次，之後從關卡選單進去） */
-  if (win && md === 'm' && n.id === 'master' && crisisOpen() && !P.crisis.asked){ P.crisis.asked = true; save(); crisisInvite(); }
+  if (win && n.id === 'master' && crisisOpen(md) && !crisisRec(md).asked){ crisisRec(md).asked = true; save(); crisisInvite(md); }
 }
-function crisisInvite(){
-  const w = $('#crisisWrap'); w.hidden = false; Sound.bad(); $('#crisisGo').focus();
-  $('#crisisGo').onclick = () => { w.hidden = true; startNinja('crisis', 'm'); };
+function crisisInvite(md = 'm'){
+  const w = $('#crisisWrap'), T = CRISIS_TXT[md]; $('#crisisT').textContent = `⚠ ${T.title}`; $('#crisisP').innerHTML = T.pop;
+  w.hidden = false; Sound.bad(); $('#crisisGo').focus();
+  $('#crisisGo').onclick = () => { w.hidden = true; startNinja('crisis', md); };
   $('#crisisNo').onclick = () => { w.hidden = true; goHome(); };
 }
 /* 隱藏關結算：記最多打碎幾顆、最高分 */
 function crisisEnd(n){
-  const R = P.crisis, prev = R.hist.length ? R.hist[R.hist.length-1].kills : null, bestBefore = R.plays ? R.bestKills : null;
+  const R = crisisRec(n.md), T = CRISIS_TXT[n.md], prev = R.hist.length ? R.hist[R.hist.length-1].kills : null, bestBefore = R.plays ? R.bestKills : null;
   R.plays++; R.hist.push({score:n.score, kills:n.kills, at:nowHM()}); while (R.hist.length > HISTORY_MAX) R.hist.shift();
   R.best = Math.max(R.best, n.score); R.bestKills = Math.max(R.bestKills, n.kills);
   save(); Sound.soft();
   const trend = trendOf(n.kills, prev, bestBefore, 2), wave = Math.floor(n.kills / n.C.wave) + 1;
   const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
-  const notes = [note(`打到第 ${wave} 波！每打碎 ${n.C.wave} 顆，流星群就會更多、更快。`, true)];
-  showResult(`危機！流星群襲來`, trend, `<div class="r-stars">☄</div><div class="r-score">${n.kills}<small>顆</small></div>`,
-    [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], ['最多打碎', `${R.bestKills} 顆`]], false,
-    notes, n.weak, [], R.hist, h => `${h.kills} 顆`, 1, () => startNinja('crisis', 'm'), '', () => {});
+  const hit = MODES[n.md].hit;
+  const notes = [note(`打到第 ${wave} 波！每${hit} ${n.C.wave} ${T.unit}，${n.md === 'n' ? '敵人' : '流星群'}就會更多、更快。`, true)];
+  showResult(T.title, trend, `<div class="r-stars">${T.icon}</div><div class="r-score">${n.kills}<small>${T.unit}</small></div>`,
+    [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], [`最多${hit}`, `${R.bestKills} ${T.unit}`]], false,
+    notes, n.weak, [], R.hist, h => `${h.kills} ${T.unit}`, 1, () => startNinja('crisis', n.md), '', () => {});
 }
 
 
