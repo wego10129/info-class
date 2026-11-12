@@ -760,7 +760,7 @@ const PACKS = {
     sets:{ basic:{name:'基本', keys:'，。？！', color:'var(--c-mid)'}, adv:{name:'進階', keys:'、；：', color:'var(--c-top)'}, all:{name:'全部', keys:'，。、；：？！', color:'var(--c-bot)'} },
     intro:['選擇要練習的標點符號','先選一組，三個關卡都會用這一組的符號出題。每一組的紀錄分開算。'],
     tlabel:'在這裡打標點<small>（按住 Ctrl 再按符號鍵，再按 Enter 送出）</small>',
-    l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1～4 個符號・連對升階',
+    l1:'第一關・單一符號', l1sub:'單一符號', l2:'第二關・譜面分歧', l2sub:'1 個 → 2 個 → 3～4 個符號',
     ninjaName:'標點忍者', enemyHint:'敵人頭上有標點符號，在下面的打字欄位打出來就能擊退它',
     titles:['標點見習生','標點下忍','標點中忍','標點上忍'], perfect:'完美標點上忍', legend:'標點傳說忍者', supreme:'完美標點傳說忍者',
   },
@@ -823,11 +823,22 @@ const EN_TIERS = (len, mid) => [
   {name:'普通', pat:'near',  len, up:3, down:null, goodBase:1.5, goodPer:1.6, limitBase:3, limitPer:3.5},
   {name:'玄人', pat:mid || 'cross', len, up:3, down:2,    goodBase:1.5, goodPer:2,   limitBase:3, limitPer:4},
   {name:'達人', pat:'jump',  len, up:null, down:2, goodBase:1.5, goodPer:2.4, limitBase:3, limitPer:4.5}];
-const L2_SUBS = [
+/* 標點（老師 2026-11-12：比照英文）：第二關依「一次出現幾個標點」分成三個小關（1 個 → 2 個 → 3～4 個），各 10 題、各自星星與皇冠；
+   每個小關裡仍是譜面分歧，越熟練（升階）給的時間越少：良＝1＋每個符號 4／3.5／3 秒；時限＝2＋每個符號 10／9／8 秒
+   （以前一整關 20 題，普通 1 個、玄人 2 個、達人 3～4 個符號；以前「普通」一個符號的時限 10 秒＝現在達人） */
+const PUNC_TIERS = len => [
+  {name:'普通', len, up:3, down:null, goodBase:1, goodPer:4,   limitBase:2, limitPer:10},
+  {name:'玄人', len, up:3, down:2,    goodBase:1, goodPer:3.5, limitBase:2, limitPer:9},
+  {name:'達人', len, up:null, down:2, goodBase:1, goodPer:3,   limitBase:2, limitPer:8}];
+const SUB2 = KIND === 'en' || KIND === 'punc';   /* 第二關分小關的主題 */
+const L2_SUBS = KIND === 'punc' ? [
+  {id:'a', no:'2-1', name:'第二關 2-1・一次 1 個標點', sub:'一次 1 個標點', tiers:PUNC_TIERS([1,1])},
+  {id:'b', no:'2-2', name:'第二關 2-2・一次 2 個標點', sub:'一次 2 個標點', tiers:PUNC_TIERS([2,2])},
+  {id:'c', no:'2-3', name:'第二關 2-3・一次 3～4 個標點', sub:'一次 3～4 個標點', tiers:PUNC_TIERS([3,4])}] : [
   {id:'a', no:'2-1', name:'第二關 2-1・兩個字母', sub:'2 個字母', tiers:EN_TIERS([2,2])},
   {id:'b', no:'2-2', name:'第二關 2-2・三個字母', sub:'3 個字母', tiers:EN_TIERS([3,3])},
   {id:'c', no:'2-3', name:'第二關 2-3・四～五個字母', sub:'4～5 個字母', tiers:EN_TIERS([4,5], 'xcross')}];
-const L2 = KIND === 'en'   /* 標點：譜面分歧；重要按鍵：鍵盤偵探 */
+const L2 = SUB2   /* 英文、標點：分小關的譜面分歧；重要按鍵：鍵盤偵探 */
   ? Object.assign({name:PK.l2, mode:'branch', n:10, subs:L2_SUBS}, {tiers:L2_SUBS[0].tiers})
   /* 重要按鍵練習・鍵盤偵探（2026-11-02）：看「之前」「之後」兩個畫面，推出按了哪個鍵（情境推論）；good 秒內又沒按錯＝良，limit 秒＝時間到 */
   : KIND === 'key' ? {name:PK.l2, mode:'detect', n:10, good:6, limit:15}
@@ -1010,10 +1021,10 @@ TITLE_RULE = ['第一關完成 3 次'].concat(NINJA_ORDER.map(id => `${(NM.filte
 useMode(NM.find(has) || 'n');
 const startIdx = st => LV && typeof LV[st] === 'string' ? NINJA_ORDER.indexOf(LV[st]) : 0;
 /* 前面最近一個有開的關卡完成了沒（沒有＝直接打開） */
-function stageDone(st){ return st === 'l1' ? P.l1.plays >= L1.plays : st === 'l2' ? (KIND === 'en' ? l2AllPlayed() : P.l2.stars >= NINJA.novice.open) : MODES[st] ? recOf(st).master.cleared : false; }
+function stageDone(st){ return st === 'l1' ? P.l1.plays >= L1.plays : st === 'l2' ? (SUB2 ? l2AllPlayed() : P.l2.stars >= NINJA.novice.open) : MODES[st] ? recOf(st).master.cleared : false; }
 function prevDone(st){ for (let j = STAGES.indexOf(st) - 1; j >= 0; j--) if (has(STAGES[j])) return stageDone(STAGES[j]); return true; }
 function entryLock(st){ for (let j = STAGES.indexOf(st) - 1; j >= 0; j--){ const p = STAGES[j]; if (!has(p)) continue;
-  return p === 'l1' ? `第一關完成 ${L1.plays} 次就打開` : p === 'l2' ? (KIND === 'en' ? '第二關三個小關都玩過一次就打開' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`) : MODES[p] ? `${MODES[p].name}「${NINJA.master.name}」通關就打開` : ''; } return ''; }
+  return p === 'l1' ? `第一關完成 ${L1.plays} 次就打開` : p === 'l2' ? (SUB2 ? '第二關三個小關都玩過一次就打開' : `第二關拿到 ${NINJA.novice.open} 顆星就打開`) : MODES[p] ? `${MODES[p].name}「${NINJA.master.name}」通關就打開` : ''; } return ''; }
 /* end＝領取獎狀的時間（老師 2026-11-02）：到了這個時間，關卡選單出現「領取獎狀」按鈕
    沒有 end（或格式不對）＝每個有開的關卡都過關才出現（老師 2026-11-08；以前是 11:50） */
 const CFG = {end: /^\d{1,2}:\d{2}$/.test(Q.get('end')||'') ? Q.get('end') : '',
@@ -1137,8 +1148,11 @@ const save = () => { if (!DEMO && SET) store.set(keyOf(SET), P); };
 const l2SubOpen = i => i === 0 ? l2Open() : l2Open() && (P.unlock || P.l2s[L2_SUBS[i-1].id].plays > 0);
 const l2AllPlayed = () => L2_SUBS.every(s => P.l2s[s.id].plays > 0);
 function syncL2(){
-  if (KIND !== 'en' || !P) return;
+  if (!SUB2 || !P) return;
   const a = L2_SUBS.map(s => P.l2s[s.id] = Object.assign({plays:0, best:null, stars:0, crown:false, hist:[]}, P.l2s[s.id]));
+  /* 標點（2026-11-12 分小關）：以前一整關的第二關成績，搬到 2-1（以前多半在打 1 個符號的「普通」）；只搬一次 */
+  if (KIND === 'punc' && !a[0].plays && P.l2.plays > 0)
+    Object.assign(a[0], {plays:P.l2.plays, best:P.l2.best, stars:P.l2.stars, crown:!!P.l2.crown, hist:(P.l2.hist || []).slice()}, P.l2.tierBest ? {tierBest:P.l2.tierBest} : {});
   const all = a.every(r => r.plays > 0);
   P.l2.plays = a.reduce((t,r) => t + r.plays, 0);
   P.l2.stars = all ? Math.min(...a.map(r => r.stars)) : 0;
@@ -1152,15 +1166,15 @@ const l2Open = () => has('l2') && (P.unlock || prevDone('l2'));   /* 重要按�
 /* 英文（老師 2026-11-10）：第二關的小關拿到 EN_SUB_OPEN 顆星，就打開同一順位的級數（2-1→新手、2-2→勇者、2-3→大師）；
    也可以照舊依序破關（新手要三個小關都玩過，或 2-1 拿到 3 顆星）。標點、重要按鍵照舊看第二關的星數 */
 const EN_SUB_OPEN = 3;
-const subGate = (md, i) => KIND === 'en' && prevStage(md) === 'l2' && !!L2_SUBS[i] && P.l2s[L2_SUBS[i].id].stars >= EN_SUB_OPEN;
+const subGate = (md, i) => SUB2 && prevStage(md) === 'l2' && !!L2_SUBS[i] && P.l2s[L2_SUBS[i].id].stars >= EN_SUB_OPEN;
 const nOpen = (md, id) => { if (!has(md)) return false; if (P.unlock) return true; const i = NINJA_ORDER.indexOf(id);
   if (subGate(md, i)) return true;
   if (i <= startIdx(md)) return prevDone(md);
-  return recOf(md)[NINJA_ORDER[i-1]].cleared || (KIND !== 'en' && prevStage(md) === 'l2' && P.l2.stars >= NINJA[id].open && prevDone(md)); };
+  return recOf(md)[NINJA_ORDER[i-1]].cleared || (!SUB2 && prevStage(md) === 'l2' && P.l2.stars >= NINJA[id].open && prevDone(md)); };
 /* 還沒打開時的說明：第 i 級要怎樣才打開 */
 function nLock(md, i){
   const c = [i <= startIdx(md) ? entryLock(md).replace(/就打開$/, '') : `「${NINJA[NINJA_ORDER[i-1]].name}」通關`];
-  if (KIND === 'en' && prevStage(md) === 'l2' && L2_SUBS[i]) c.push(`「${L2_SUBS[i].no}」拿到 ${EN_SUB_OPEN} 顆星`);
+  if (SUB2 && prevStage(md) === 'l2' && L2_SUBS[i]) c.push(`「${L2_SUBS[i].no}」拿到 ${EN_SUB_OPEN} 顆星`);
   else if (i > startIdx(md) && prevStage(md) === 'l2') c.push(`第二關拿到 ${NINJA[NINJA_ORDER[i]].open} 顆星`);
   return c.filter(Boolean).join('，或') + '就打開'; }
 const ninjaOpen = id => NMON().some(md => nOpen(md, id));
@@ -1366,10 +1380,10 @@ function renderHome(){
     <span class="lv-r">${o2 ? `<span class="stars">${starStr(P.l2.stars)}</span><span class="lv-best">${P.l2.crown?'👑 ':''}${P.l2.best!=null?`最佳 ${P.l2.best} 分`:'還沒挑戰'}${L2.mode==='branch' && P.l2.tierBest ? `・最高 ${tierStars(P.l2.tierBest)}` : ''}</span>` : '🔒'}</span></button>`,
     o2 ? '' : entryLock('l2'));
   /* 英文第二關：三個小關各一個按鈕（老師 2026-11-03） */
-  const c2en = KIND !== 'en' || !has('l2') ? '' : card('l2', S.color, [S.keys.slice(0,2).toUpperCase(), S.keys.slice(2,5).toUpperCase()], L2.name, L2_SUBS.map((sb,i) => {
+  const c2en = !SUB2 || !has('l2') ? '' : card('l2', S.color, [S.keys.slice(0,2).toUpperCase(), S.keys.slice(2,5).toUpperCase()], L2.name, L2_SUBS.map((sb,i) => {
     const R = P.l2s[sb.id], o = l2SubOpen(i);
     const lock = i ? `「${L2_SUBS[i-1].no}」玩過一次就打開` : entryLock('l2');
-    return `<button class="diff" type="button" data-l="2" data-sub="${i}" ${o?'':'disabled'}><span>${sb.no}・${sb.sub}<small>${o ? `${L2.n} 題・先打${enPatTxt(sb.tiers[0].pat)}，連對 ${sb.tiers[0].up} 題升階：${enPatTxt(sb.tiers[1].pat)} → 跳來跳去・${L2_CROWN_STARS} 顆星得到皇冠` : lock}</small></span>
+    return `<button class="diff" type="button" data-l="2" data-sub="${i}" ${o?'':'disabled'}><span>${sb.no}・${sb.sub}<small>${o ? `${L2.n} 題・${KIND === 'en' ? `先打${enPatTxt(sb.tiers[0].pat)}，連對 ${sb.tiers[0].up} 題升階：${enPatTxt(sb.tiers[1].pat)} → 跳來跳去` : `連對 ${sb.tiers[0].up} 題升階：${sb.tiers.map(t => t.name).join(' → ')}，越升時間越少`}・${L2_CROWN_STARS} 顆星得到皇冠` : lock}</small></span>
       <span class="lv-r">${o ? `<span class="stars">${starStr(R.stars)}</span><span class="lv-best">${R.crown?'👑 ':''}${R.best!=null?`最佳 ${R.best} 分`:'還沒挑戰'}${R.tierBest ? `・最高 ${tierStars(R.tierBest)}` : ''}</span>` : '🔒'}</span></button>`; }).join(''),
     o2 ? '' : entryLock('l2'));
   const star = (i, s0) => LV && i === s0 && s0 > 0 ? ' ⭐從這裡開始' : '';
@@ -1413,7 +1427,7 @@ function renderHome(){
   const ladder = NMON().length ? `<span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>` : '';
   const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${gi<0 ? '還沒有' : gradeTitle(gi)}</b>${awd}${ladder}
     <span class="tnote" style="width:100%">${nextT}</span></div>`;
-  $('#entries').innerHTML = tb + c1 + (KIND === 'en' ? c2en : c2) + c3 + c4b + c4r;
+  $('#entries').innerHTML = tb + c1 + (SUB2 ? c2en : c2) + c3 + c4b + c4r;
   if ($('#awardBtn')) $('#awardBtn').onclick = () => showAward(false);
 }
 $('#entries').addEventListener('click', e => {
@@ -1444,7 +1458,7 @@ function scoreOf(d){
 }
 function startDrill(lv, si = 0){
   stopAll();
-  if (KIND === 'en' && lv === 2){ const sb = L2_SUBS[si] || L2_SUBS[0]; L2.name = sb.name; L2.tiers = sb.tiers; }
+  if (SUB2 && lv === 2){ const sb = L2_SUBS[si] || L2_SUBS[0]; L2.name = sb.name; L2.tiers = sb.tiers; }
   const isL1 = lv === 1, br = !isL1 && L2.mode === 'branch', det = !isL1 && L2.mode === 'detect';
   const q = isL1 ? l1Queue() : det ? l1Queue(P.l2.plays === 0) : br ? [] : Array.from({length:L2.n}, () => makeWord(ri(L2.minLen, L2.maxLen)));
   D = {lv, sub:si, br, det, n: isL1 ? q.length : L2.n, q, i:0, great:0, good:0, ok:0, bad:0, typos:0, combo:0, maxCombo:0, rts:[], weak:new Set(), locked:true, over:false,
@@ -1457,7 +1471,7 @@ function startDrill(lv, si = 0){
   $('#zones').innerHTML = isL1 ? `<span>「優」${L1.great} 秒內</span><span>「良」${L1.great}～${L1.good} 秒</span><span>「可」${L1.good} 秒以上</span><span>${KIND === 'key' ? `不限時：${KEYHINT_SEC} 秒後鍵盤亮燈提示；按錯了，再按正確的鍵就好` : '不限時：打錯按 Backspace 刪掉再打，打對為止'}</span>`
     : det ? `<span>「良」${L2.good} 秒內、沒按錯</span><span>「可」按錯過，或比較慢</span><span>${L2.limit} 秒還沒按對＝「不可」</span>`
     : br && KIND === 'en' ? `<span>${L2.tiers.map(t => `${t.name}＝${enPatTxt(t.pat)}`).join('・')}</span><span>連續答對 ${L2.tiers[0].up} 題升一階・連錯 ${L2.tiers[1].down} 題降一階</span><span>升階後時間也變多</span>`
-    : br ? `<span>連續答對 ${L2.tiers[0].up} 題 → 升一階</span><span>連續答錯 ${L2.tiers[1].down} 題（打錯或太慢）→ 降一階</span><span>「良」沒打錯又夠快・「可」打錯改正或比較慢・超過時間＝「不可」</span>`
+    : br ? `<span>連續答對 ${L2.tiers[0].up} 題 → 升一階（時間變少）</span><span>連續答錯 ${L2.tiers[1].down} 題（打錯或太慢）→ 降一階</span><span>「良」沒打錯又夠快・「可」打錯改正或比較慢・超過時間＝「不可」</span>`
     : `<span>「良」沒打錯、夠快</span><span>「可」打錯後按 Backspace 改正，或比較慢</span><span>超過時間＝「不可」</span>`;
   drillHud();
   const playNo = P.l1.plays >= L1.plays ? P.l1.plays + 1 : Math.min(P.l1.plays + 1, L1.plays);
@@ -1466,13 +1480,13 @@ function startDrill(lv, si = 0){
     : isL1 ? (P.l1.plays ? `這一次會多出現你比較不熟的${PK.unit}。不限時，${KIND === 'key' ? '按對' : '打對'}為止，越快成績越好！` : KIND === 'key' ? `看到鍵名，就在鍵盤上按下那個鍵（${howIn}）。不限時，按對為止，越快成績越好！` : `在下面的打字欄位打出${PK.unit}（${howIn}）。不限時，打對為止，越快成績越好！`)
     : det ? `鍵盤偵探出動！左邊是「之前」，右邊是「之後」。比一比哪裡不一樣，推出按了哪一個鍵。按錯可以再按，但只能拿「可」；${L2.limit} 秒內要按對。`
     : br && KIND === 'en' ? `先打「${enPatTxt(L2.tiers[0].pat)}」的字母（像 ${enWord(L2.tiers[0].pat, 3).toUpperCase().split('').join(' ')}）。連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」：${enPatTxt(L2.tiers[1].pat)}（像 ${enWord(L2.tiers[1].pat, 2).toUpperCase().split('').join(' ')}）；再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」：字母會跳來跳去！`
-    : br ? `從「${L2.tiers[0].name}」開始：連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」，再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」！`
+    : br ? `從「${L2.tiers[0].name}」開始：連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」，再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」！升得越高，時間越少。`
     : `在打字欄位依序打出${PK.unit}，打錯了按 Backspace 改正`;
   const d = D;
   countdown($('#dCover'), isL1 ? `${L1.name}（第 ${playNo} 次）` : L2.name, sub, () => { if (D===d) drillNext(); });
 }
 function drillHud(){
-  const items = [['關卡', D.lv===1 ? '第一關' : KIND === 'en' ? '第二關 ' + L2_SUBS[D.sub].no : '第二關', 't'], ['分數', scoreOf(D)], ['連段', D.combo], ['進度', `${Math.min(D.i+1, D.n)}/${D.n}`]];
+  const items = [['關卡', D.lv===1 ? '第一關' : SUB2 ? '第二關 ' + L2_SUBS[D.sub].no : '第二關', 't'], ['分數', scoreOf(D)], ['連段', D.combo], ['進度', `${Math.min(D.i+1, D.n)}/${D.n}`]];
   if (D.br) items.splice(1, 0, ['譜面', `${tierStars(D.tier+1)} ${L2.tiers[D.tier].name}`, 'h']);
   hud(items);
 }
@@ -1578,7 +1592,7 @@ function drillResolve(forced, timeout){
 }
 function drillEnd(){
   const d = D; D = null;
-  const EN2 = KIND === 'en' && d.lv === 2, SB = EN2 ? L2_SUBS[d.sub] : null;
+  const EN2 = SUB2 && d.lv === 2, SB = EN2 ? L2_SUBS[d.sub] : null;
   const R = d.lv===1 ? P.l1 : EN2 ? P.l2s[SB.id] : P.l2;   /* 英文第二關：每個小關各自的紀錄 */
   const subWas = EN2 ? L2_SUBS.map((x,i) => l2SubOpen(i)) : [];
   const score = scoreOf(d), stars = starsOf(score);
@@ -1614,7 +1628,7 @@ function drillEnd(){
   const heavy = KEYS().filter(k => wOf(k) > WEIGHT.base).sort((a,b) => wOf(b)-wOf(a)).slice(0,3);
   const nGo = nNext();   /* [關卡, 級數] */
   const subNx = EN2 && d.sub < L2_SUBS.length - 1 && l2SubOpen(d.sub + 1) ? d.sub + 1 : null;
-  const nextBtn = d.lv===1 && l2Open() ? `<button class="btn" type="button" id="rNext">去「${KIND === 'en' ? L2_SUBS[0].name : L2.name}」</button>`
+  const nextBtn = d.lv===1 && l2Open() ? `<button class="btn" type="button" id="rNext">去「${SUB2 ? L2_SUBS[0].name : L2.name}」</button>`
     : subNx != null && !(P.l2s[L2_SUBS[subNx].id].plays && nGo) ? `<button class="btn" type="button" id="rNext">去「${L2_SUBS[subNx].name}」</button>`
     : (d.lv===2 || !has('l2')) && nGo ? `<button class="btn" type="button" id="rNext">去${MODES[nGo[0]].name}</button>` : '';
   const stats = d.lv===1 ? [['優',d.great],['良',d.good],['可',d.ok],['打錯',d.typos],['平均',avg?avg.toFixed(1)+' 秒':'—']]
@@ -2813,7 +2827,7 @@ function showAward(preview){
       <p class="cert-grade">${gi === 6 ? '👑' : gi === 5 ? '🌈' : gi === 4 ? '🏆' : gi === 3 ? '🥇' : gi === 2 ? '🥈' : gi === 1 ? '🥉' : '🎖'} ${G.name}</p>
       <p class="cert-body">${WHO ? H(WHO.text) : '＿＿年＿＿班＿＿號'} ${WHO && WHO.name ? '' : '同學'}<br>在「${PK.app}・${H(S.name)}（${H(dispKeys(S.keys))}）」中${H(line)}，<br>特頒此狀，恭喜成為</p>
       <h2 class="cert-title">${t}</h2>
-      <div class="cert-scores">${has('l1') ? `<div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div>` : ''}${has('l2') ? (KIND === 'en' ? `<div>第二關・最佳 ${L2_SUBS.map(x => { const r = P.l2s[x.id]; return `${r.crown ? '👑' : ''}${x.no} ${r.best!=null ? r.best + ' 分' : '—'}`; }).join('／')}</div>` : `<div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>`) : ''}${nin}${KIND === 'en' ? NINJA_ORDER.filter(id => P.race[id].bestT).map(id => `<div>${P.race[id].cleared ? '🏆 ' : ''}影子賽車${RACE[id].name}・最快 ${P.race[id].bestT.toFixed(1)} 秒</div>`).join('') : ''}${KIND === 'punc' && P.boss && (P.boss.best || P.boss.cleared) ? `<div>${P.boss.cleared ? '🌈 ' : ''}第四關魔王戰・最高 ${P.boss.best} 分</div>` : ''}</div>${KIND === 'punc' && P.boss && P.boss.flawless ? '<p class="cert-hidden">🛡 隱藏成就・無傷擊敗魔王</p>' : ''}
+      <div class="cert-scores">${has('l1') ? `<div>第一關・最佳 ${P.l1.best!=null ? P.l1.best + ' 分' : '—'}</div>` : ''}${has('l2') ? (SUB2 ? `<div>第二關・最佳 ${L2_SUBS.map(x => { const r = P.l2s[x.id]; return `${r.crown ? '👑' : ''}${x.no} ${r.best!=null ? r.best + ' 分' : '—'}`; }).join('／')}</div>` : `<div>${P.l2.crown ? '👑 ' : ''}第二關・最佳 ${P.l2.best!=null ? P.l2.best + ' 分' : '—'}</div>`) : ''}${nin}${KIND === 'en' ? NINJA_ORDER.filter(id => P.race[id].bestT).map(id => `<div>${P.race[id].cleared ? '🏆 ' : ''}影子賽車${RACE[id].name}・最快 ${P.race[id].bestT.toFixed(1)} 秒</div>`).join('') : ''}${KIND === 'punc' && P.boss && (P.boss.best || P.boss.cleared) ? `<div>${P.boss.cleared ? '🌈 ' : ''}第四關魔王戰・最高 ${P.boss.best} 分</div>` : ''}</div>${KIND === 'punc' && P.boss && P.boss.flawless ? '<p class="cert-hidden">🛡 隱藏成就・無傷擊敗魔王</p>' : ''}
       <p class="cert-date">${todayStr()}${preview && giNow < 0 ? '（預覽）' : ''}</p><div class="cert-seal">資訊課<br>認證</div>`;
   }
   const gi2 = giNow < 0 && !preview ? -1 : Math.max(0, giNow), cert = document.querySelector('.cert');

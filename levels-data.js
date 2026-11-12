@@ -15,7 +15,7 @@ window.LEVELS = {
     {id:'race', name:'影子賽車', desc:'打對字母車子往前衝，和自己的最佳紀錄（影子車）比賽', lv:[['novice','新手盃'],['brave','勇者盃'],['master','大師盃']]}]},
   punc: {app:'標點符號大挑戰', setup:'punct-setup.html', stages:[
     {id:'l1', name:'單一符號', desc:'一次一個標點，不限時、打對為止'},
-    {id:'l2', name:'譜面分歧', desc:'連續答對升階，一次 1～4 個標點'},
+    {id:'l2', name:'譜面分歧', desc:'三個小關：一次 1 個 → 2 個 → 3～4 個標點，連續答對升階'},
     {id:'n', name:'標點忍者', desc:'敵人頭上有標點，打出來就擊退', lv:[['novice','新手'],['brave','勇者'],['master','大師']]},
     {id:'boss', name:'魔王戰', desc:'句子填空，填對標點才打得到魔王、擋得住火球'}]},
   key: {app:'重要按鍵練習', setup:'keyboard.html', stages:[
