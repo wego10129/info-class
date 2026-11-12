@@ -865,9 +865,10 @@ const METEOR_TUNE = {
 };
 const REST_SEC = 5;
 /* 補血愛心（老師 2026-11-10 修正）：大師、隱藏關（heal:true）每換到下一關／下一波，就有一顆長翅膀的愛心，帶著 2～3 個字母（HEAL_LEN），
-   花 HEAL_SEC 秒從畫面右邊飄到左邊；遊戲照常進行（流星照樣掉）。打對了愛心飛到「生命」欄位淡出，加 1 條命；
-   命是滿的也可以加（額外的命，最多 HEAL_MAX 條），為後面的關卡做準備。要不要打由學生自己判斷；沒打到不扣命 */
-const HEAL_SEC = 7, HEAL_LEN = [2,3], HEAL_MAX = 5;
+   花 HEAL_SEC 秒從畫面右邊飄到左邊；遊戲照常進行（畫面上已經有的流星照樣掉）。打對了愛心飛到「生命」欄位淡出，加 1 條命；
+   命是滿的也可以加（額外的命，最多 HEAL_MAX 條），為後面的關卡做準備。要不要打由學生自己判斷；沒打到不扣命
+   老師 2026-11-12：愛心飛過去的時候不出現新的流星（等愛心被打到或飛走才出現）；飛過去的時間 7→10 秒 */
+const HEAL_SEC = 10, HEAL_LEN = [2,3], HEAL_MAX = 5;
 const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度設定） */
 /* 字母打地鼠（老師 2026-11-10）：以單一字母為主，練「眼睛找位置」；time＝地鼠探出頭停留幾秒，per＝每多 1 個字母多停幾秒
    限時賽（老師 2026-11-10 修正）：secs 秒內敲越多分數越高；沒有命，地鼠縮回去不扣分；敲到 pass 隻＝過關（打開下一級、算稱號）
@@ -1751,10 +1752,10 @@ const X0 = KIND === 'en' ? 96 : 90, X1 = 22;   /* 敵人從右邊（96%）走到
 function ninjaTick(now){
   if (!N || N.over || screen!=='ninja') return;
   if (!N.locked && paused==null){
-    /* 出現新敵人：畫面上的少於這一關的上限，而且還沒到目標數（補血愛心不算） */
+    /* 出現新敵人：畫面上的少於這一關的上限，而且還沒到目標數（補血愛心不算）；補血愛心要飛來或正在飛的時候不出新敵人 */
     if (N.C.secs && moleClock(now)) return;
     const foes = N.es.filter(e => !e.heart && !e.pill).length;
-    if (foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+    if (!N.heartDue && !N.es.some(e => e.heart) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
       if (spawn()) N.nextAt = now + N.C.gap*1000;
     }
     if (N.heartDue && now >= N.holdUntil0 && heartSpawn()) N.heartDue = false;
