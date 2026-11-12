@@ -814,17 +814,19 @@ const L1_PTS = {great:1, good:.8, ok:.5};   /* 第一關每題得分（優／良
          答對＝沒打錯、沒超時；答錯＝打錯過或超時（超時＝太慢） */
 /* 英文（老師 2026-11-03：原本一次 2～4 個字母挫折感很重）：第二關分成三個小關（2 個字母 → 3 個 → 4～5 個），各 10 題、各自星星與皇冠；
    每個小關都是譜面分歧：普通＝相鄰的字母（fds、jkl）→ 玄人＝左右手同一指交錯（sl、fj、gh）→ 達人＝字母可以跳躍；
-   連對 up 題升一階、連錯 down 題降一階；階數越高，每個字母給的時間越多；前一個小關玩過一次就打開下一個 */
+   連對 up 題升一階、連錯 down 題降一階；階數越高，每個字母給的時間越多；前一個小關玩過一次就打開下一個
+   有上下排時（老師 2026-11-12）：普通改成「同一根手指上下」（ed、edc、uju）；玄人在 2-1、2-2 是同一排的左右手同指（dk），
+   2-3 進階到「左右手同指、換一排」（ek、rj）。每個小關只用三種，一種至少連對 3 題才換，學生不會一題換一種、一下子跳太難 */
 /* 秒數（老師 2026-11-05：速度判定太難，放寬）：良＝1.5＋每個字母 1.6／2／2.4 秒；時限＝3＋每個字母 3.5／4／4.5 秒
    （2026-11-03 原本：良＝1＋1.2／1.5／1.8；時限＝2＋2.5／3／3.5） */
-const EN_TIERS = len => [
+const EN_TIERS = (len, mid) => [
   {name:'普通', pat:'near',  len, up:3, down:null, goodBase:1.5, goodPer:1.6, limitBase:3, limitPer:3.5},
-  {name:'玄人', pat:'cross', len, up:3, down:2,    goodBase:1.5, goodPer:2,   limitBase:3, limitPer:4},
+  {name:'玄人', pat:mid || 'cross', len, up:3, down:2,    goodBase:1.5, goodPer:2,   limitBase:3, limitPer:4},
   {name:'達人', pat:'jump',  len, up:null, down:2, goodBase:1.5, goodPer:2.4, limitBase:3, limitPer:4.5}];
 const L2_SUBS = [
   {id:'a', no:'2-1', name:'第二關 2-1・兩個字母', sub:'2 個字母', tiers:EN_TIERS([2,2])},
   {id:'b', no:'2-2', name:'第二關 2-2・三個字母', sub:'3 個字母', tiers:EN_TIERS([3,3])},
-  {id:'c', no:'2-3', name:'第二關 2-3・四～五個字母', sub:'4～5 個字母', tiers:EN_TIERS([4,5])}];
+  {id:'c', no:'2-3', name:'第二關 2-3・四～五個字母', sub:'4～5 個字母', tiers:EN_TIERS([4,5], 'xcross')}];
 const L2 = KIND === 'en'   /* 標點：譜面分歧；重要按鍵：鍵盤偵探 */
   ? Object.assign({name:PK.l2, mode:'branch', n:10, subs:L2_SUBS}, {tiers:L2_SUBS[0].tiers})
   /* 重要按鍵練習・鍵盤偵探（2026-11-02）：看「之前」「之後」兩個畫面，推出按了哪個鍵（情境推論）；good 秒內又沒按錯＝良，limit 秒＝時間到 */
@@ -1207,11 +1209,37 @@ const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
    jump＝字母可以跳來跳去（依錯題權重抽，不連續重複） */
 const EN_ROWS = ['qwertyuiop','asdfghjkl','zxcvbnm'];
 const EN_MIRROR = (() => { const m = {q:'p', w:'o', e:'i', r:'u', t:'y', s:'l', d:'k', f:'j', g:'h', v:'m', b:'n'}; Object.keys(m).forEach(k => m[m[k]] = k); return m; })();
+/* 有上下排時（老師 2026-11-12）：
+   vert＝同一根手指上下（同一直行，例 e d c、u j m；到盡頭折回）；普通（near）在選到的字母有上下兩排同指時改用 vert
+   xcross＝左右手同一根手指、但不在同一排（例 e→k、r→j）；湊不出來時改用 cross */
+const EN_COLS = ['qaz','wsx','edc','rfv','tgb','yhn','ujm','ik','ol'];
+const EN_FINGER = (() => { const f = {}; ['qaz','wsx','edc','rfvtgb','yhnujm','ik','ol','p'].forEach((g,i) => [...g].forEach(c => f[c] = i)); return f; })();
+const enRow = c => EN_ROWS.findIndex(r => r.includes(c));
+const enCols = keys => EN_COLS.map(c => [...c].filter(k => keys.includes(k))).filter(c => c.length >= 2);
+const enXPairs = keys => keys.filter(k => EN_FINGER[k] < 4).flatMap(a => keys.filter(b => EN_FINGER[b] === 7 - EN_FINGER[a] && enRow(b) !== enRow(a)).map(b => [a, b]));
+const enPairs = keys => keys.filter(k => 'qwertasdfgzxcvb'.includes(k) && EN_MIRROR[k] && keys.includes(EN_MIRROR[k])).map(k => [k, EN_MIRROR[k]]);
+/* 這一組字母實際能出哪一種題（湊不出來就往簡單的退） */
+function enPat(pat, keys){
+  keys = keys || KEYS();
+  if (pat === 'jump') return 'jump';
+  if (pat === 'xcross' && enXPairs(keys).length) return 'xcross';
+  if ((pat === 'xcross' || pat === 'cross') && enPairs(keys).length) return 'cross';
+  return enCols(keys).length ? 'vert' : 'near';
+}
+const EN_PAT_TXT = {near:'相鄰的字母', vert:'同一根手指上下', cross:'左右手同一根手指', xcross:'左右手同一根手指、換一排', jump:'跳來跳去'};
+const enPatTxt = pat => EN_PAT_TXT[enPat(pat)];
 function enWord(pat, len){
   const keys = KEYS(); if (keys.length < 2) return makeWord(len);
+  pat = enPat(pat, keys);
   if (pat === 'jump') return makeWord(len);
-  if (pat === 'cross'){
-    const pairs = keys.filter(k => 'qwertasdfgzxcvb'.includes(k) && EN_MIRROR[k] && keys.includes(EN_MIRROR[k])).map(k => [k, EN_MIRROR[k]]);
+  if (pat === 'vert'){
+    const cols = enCols(keys), start = pickWeighted(cols.flat(), null), col = cols.find(c => c.includes(start));
+    let i = col.indexOf(start), d = i === 0 ? 1 : i === col.length - 1 ? -1 : (Math.random() < .5 ? 1 : -1), w = '';
+    for (let t=0; t<len; t++){ w += col[i]; if (i + d < 0 || i + d >= col.length) d = -d; i += d; }
+    return w;
+  }
+  if (pat === 'xcross' || pat === 'cross'){
+    const pairs = pat === 'xcross' ? enXPairs(keys) : enPairs(keys);
     if (pairs.length){
       const rh = Math.random() < .5;   /* 先打右手還是左手 */
       let w = '', prev = null;
@@ -1341,7 +1369,7 @@ function renderHome(){
   const c2en = KIND !== 'en' || !has('l2') ? '' : card('l2', S.color, [S.keys.slice(0,2).toUpperCase(), S.keys.slice(2,5).toUpperCase()], L2.name, L2_SUBS.map((sb,i) => {
     const R = P.l2s[sb.id], o = l2SubOpen(i);
     const lock = i ? `「${L2_SUBS[i-1].no}」玩過一次就打開` : entryLock('l2');
-    return `<button class="diff" type="button" data-l="2" data-sub="${i}" ${o?'':'disabled'}><span>${sb.no}・${sb.sub}<small>${o ? `${L2.n} 題・先打相鄰的字母，連對 ${sb.tiers[0].up} 題升階：左右手交錯 → 跳來跳去・${L2_CROWN_STARS} 顆星得到皇冠` : lock}</small></span>
+    return `<button class="diff" type="button" data-l="2" data-sub="${i}" ${o?'':'disabled'}><span>${sb.no}・${sb.sub}<small>${o ? `${L2.n} 題・先打${enPatTxt(sb.tiers[0].pat)}，連對 ${sb.tiers[0].up} 題升階：${enPatTxt(sb.tiers[1].pat)} → 跳來跳去・${L2_CROWN_STARS} 顆星得到皇冠` : lock}</small></span>
       <span class="lv-r">${o ? `<span class="stars">${starStr(R.stars)}</span><span class="lv-best">${R.crown?'👑 ':''}${R.best!=null?`最佳 ${R.best} 分`:'還沒挑戰'}${R.tierBest ? `・最高 ${tierStars(R.tierBest)}` : ''}</span>` : '🔒'}</span></button>`; }).join(''),
     o2 ? '' : entryLock('l2'));
   const star = (i, s0) => LV && i === s0 && s0 > 0 ? ' ⭐從這裡開始' : '';
@@ -1428,7 +1456,7 @@ function startDrill(lv, si = 0){
   $('#tier').hidden = !br; $('#dojo').dataset.tier = '1'; $('#timerWrap').hidden = isL1;   /* 第一關不顯示計時長條，避免壓力（老師 2026-10-29） */
   $('#zones').innerHTML = isL1 ? `<span>「優」${L1.great} 秒內</span><span>「良」${L1.great}～${L1.good} 秒</span><span>「可」${L1.good} 秒以上</span><span>${KIND === 'key' ? `不限時：${KEYHINT_SEC} 秒後鍵盤亮燈提示；按錯了，再按正確的鍵就好` : '不限時：打錯按 Backspace 刪掉再打，打對為止'}</span>`
     : det ? `<span>「良」${L2.good} 秒內、沒按錯</span><span>「可」按錯過，或比較慢</span><span>${L2.limit} 秒還沒按對＝「不可」</span>`
-    : br && KIND === 'en' ? `<span>普通＝相鄰的字母・玄人＝左右手交錯・達人＝跳來跳去</span><span>連續答對 ${L2.tiers[0].up} 題升一階・連錯 ${L2.tiers[1].down} 題降一階</span><span>升階後時間也變多</span>`
+    : br && KIND === 'en' ? `<span>${L2.tiers.map(t => `${t.name}＝${enPatTxt(t.pat)}`).join('・')}</span><span>連續答對 ${L2.tiers[0].up} 題升一階・連錯 ${L2.tiers[1].down} 題降一階</span><span>升階後時間也變多</span>`
     : br ? `<span>連續答對 ${L2.tiers[0].up} 題 → 升一階</span><span>連續答錯 ${L2.tiers[1].down} 題（打錯或太慢）→ 降一階</span><span>「良」沒打錯又夠快・「可」打錯改正或比較慢・超過時間＝「不可」</span>`
     : `<span>「良」沒打錯、夠快</span><span>「可」打錯後按 Backspace 改正，或比較慢</span><span>超過時間＝「不可」</span>`;
   drillHud();
@@ -1437,7 +1465,7 @@ function startDrill(lv, si = 0){
   const sub = isL1 && KIND === 'key' ? `電腦出狀況了！看畫面，按下可以解決的鍵。想不出來時，${KEYHINT_SEC} 秒後鍵盤會亮燈提示。不限時，按對為止，越快成績越好！`
     : isL1 ? (P.l1.plays ? `這一次會多出現你比較不熟的${PK.unit}。不限時，${KIND === 'key' ? '按對' : '打對'}為止，越快成績越好！` : KIND === 'key' ? `看到鍵名，就在鍵盤上按下那個鍵（${howIn}）。不限時，按對為止，越快成績越好！` : `在下面的打字欄位打出${PK.unit}（${howIn}）。不限時，打對為止，越快成績越好！`)
     : det ? `鍵盤偵探出動！左邊是「之前」，右邊是「之後」。比一比哪裡不一樣，推出按了哪一個鍵。按錯可以再按，但只能拿「可」；${L2.limit} 秒內要按對。`
-    : br && KIND === 'en' ? `先打「相鄰」的字母（像 f d s）。連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」：左右手同一根手指交錯（像 s l、f j）；再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」：字母會跳來跳去！`
+    : br && KIND === 'en' ? `先打「${enPatTxt(L2.tiers[0].pat)}」的字母（像 ${enWord(L2.tiers[0].pat, 3).toUpperCase().split('').join(' ')}）。連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」：${enPatTxt(L2.tiers[1].pat)}（像 ${enWord(L2.tiers[1].pat, 2).toUpperCase().split('').join(' ')}）；再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」：字母會跳來跳去！`
     : br ? `從「${L2.tiers[0].name}」開始：連續答對 ${L2.tiers[0].up} 題升到「${L2.tiers[1].name}」，再連對 ${L2.tiers[1].up} 題升到「${L2.tiers[2].name}」！`
     : `在打字欄位依序打出${PK.unit}，打錯了按 Backspace 改正`;
   const d = D;
