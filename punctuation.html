@@ -1980,7 +1980,7 @@ function hammerAim(e){
   const sr = $('#nStage').getBoundingClientRect(), r = (e.el.querySelector('svg') || e.el).getBoundingClientRect();
   hammerPlace(r.left - sr.left + r.width/2, r.top - sr.top + r.height*.3);
 }
-/* 打擊感（老師 2026-11-10）：先往後舉（蓄力）→ 快速落下 → 敲到時地鼠才壓扁、出現衝擊星星、畫面小震、咚的聲音 → 彈回 */
+/* 打擊感（老師 2026-11-10）：先往後舉（蓄力）→ 快速落下 → 敲到時地鼠才壓扁、出現衝擊星星、咚的聲音 → 彈回（2026-11-12 拿掉畫面小震） */
 const HAMMER_HIT_MS = 160;
 function hammerHit(e){
   const h = $('#hammer'), st = $('#nStage'); hammerAim(e);
@@ -1995,8 +1995,7 @@ function hammerHit(e){
   const impact = () => {
     e.el.classList.add('poof'); Sound.tone(150, .09, 'square', 0, .14); Sound.tone(70, .14, 'sine', 0, .2);
     const w = document.createElement('div'); w.className = 'whack'; w.textContent = '✦'; w.style.left = x + 'px'; w.style.top = y + 'px';
-    st.appendChild(w); setTimeout(() => w.remove(), 360);
-    if (st.animate) st.animate([{transform:'translate(0,0)'}, {transform:'translate(2px,3px)'}, {transform:'translate(-2px,-1px)'}, {transform:'translate(0,0)'}], {duration:110});
+    st.appendChild(w); setTimeout(() => w.remove(), 360);   /* 一般敲擊不震動畫面（老師 2026-11-12：看久了頭暈）；震動只留給超級木槌 */
   };
   /* 從木槌動畫真正開始的時間算起，槌頭落下的那一刻才「敲到」 */
   if (anim && anim.ready) anim.ready.then(() => setTimeout(impact, HAMMER_HIT_MS)); else setTimeout(impact, HAMMER_HIT_MS);
@@ -2017,7 +2016,7 @@ function pillSpawn(){
 }
 /* 超級木槌：倒數暫停約 SMASH_MS；木槌變成整個畫面大 → 用力敲在正中央（畫面震動＋重擊聲）→ 地鼠全部頭暈冒星星（每隻都算分）
    → 回到地底 → 場上淨空，倒數繼續、重新隨機出現地鼠 */
-const SMASH_MS = 5000, SMASH_HIT = 660, SMASH_SINK = 4200;
+const SMASH_MS = 3000, SMASH_HIT = 660, SMASH_SINK = 2250;   /* 老師 2026-11-12：整段動畫 5 秒 → 3 秒 */
 function pillGot(e){
   const n = N; removeEnemy(e); tinReset(); kb.clear(); n.locked = true; n.smashAt = performance.now();
   const st = $('#nStage'), W = st.clientWidth, Hs = st.clientHeight, cx = W/2, cy = Hs*.56;
