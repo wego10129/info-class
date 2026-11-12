@@ -155,6 +155,14 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .go-cover{position:absolute;inset:0;background:rgba(27,40,54,.86);z-index:9;display:grid;place-items:center;align-content:center;gap:12px;color:#fff;text-align:center;padding:16px}
 .go-cover h2{font-size:34px}
 .go-cover p{font-size:18px;font-weight:700}
+/* 道具的步驟圖（老師 2026-11-12） */
+.guide{display:flex;align-items:center;gap:20px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:14px 22px;max-width:640px;text-align:left}
+.g-ic{flex:none;width:clamp(70px,14vh,110px)}.g-ic svg{width:100%;display:block}
+.g-txt h3{font-size:22px;margin:0 0 6px}.g-txt p{font-size:18px;line-height:1.6;margin:0}
+.g-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.g-flow span{background:var(--wash);border:2px solid var(--ink);border-radius:10px;padding:4px 8px;font-size:16px;line-height:1.4}
+.g-flow b{font-size:22px}
+.guide kbd{display:inline-block;border:2px solid var(--ink);border-bottom-width:4px;border-radius:6px;padding:0 10px;background:#fff;font:inherit}
+.g-dots{display:flex;gap:8px;justify-content:center}.g-dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.35)}.g-dots i.on{background:#FDE047}
 .count{font:600 72px/1 var(--f-key)}
 .remind{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:8;background:#FFC233;border:3px solid var(--ink);border-radius:12px;padding:2px 14px;font-weight:900;white-space:nowrap}
 
@@ -1501,7 +1509,30 @@ function countdown(el, title, sub, done){
   el.hidden = false; let n = 3;
   const draw = () => { el.innerHTML = `<h2>${H(title)}</h2><p>${H(sub)}</p><div class="count">${n}</div>`; };
   draw(); Sound.tick(); clearInterval(cdTimer);
-  const t = cdTimer = setInterval(() => { n--; if (n<=0){ clearInterval(t); el.hidden = true; done(); return; } draw(); Sound.tick(); }, 800);
+  const t = cdTimer = setInterval(() => { n--; if (n<=0){ clearInterval(t); el.hidden = true; done(); return; } draw(); Sound.tick(); }, 1000);   /* 真正的 3 秒（老師 2026-11-12；以前每格 0.8 秒） */
+}
+/* 有道具的關卡（老師 2026-11-12）：開始前先用步驟圖說明道具怎麼用；每次都顯示，可以跳過；看完或跳過後倒數 3 秒 */
+let guideKey = null;
+function itemGuide(el, title, sub, done){
+  const foe = MODES[CUR_MD].foe, heal = METEOR ? '補血愛心' : '補血飯糰', [fi, fn] = itemTxt('freeze', CUR_MD), [bi, bn] = itemTxt('bomb', CUR_MD);
+  const steps = [
+    {ic:healSVG(), h:`${METEOR ? '💖' : '🍙'} ${heal}`, p:`場上沒有${foe}的時候會飛來。<br>打出上面的字母，<b>加 1 條命</b>！`},
+    {ic:itemSVG('freeze'), h:`${fi} ${fn}：讓${foe}停下來`, p:`<span class="g-flow"><span>① 打出上面的字母<br>先存起來</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${foe}停住<br>${FREEZE_SEC} 秒</span></span>`},
+    {ic:itemSVG('bomb'), h:`${bi} ${bn}：大絕招`, p:`場上有 <b>2 個以上</b>${foe}時才會飛來。<br>打出上面的字母，<b>一次清光畫面</b>！`}];
+  let i = 0;
+  const finish = () => { document.removeEventListener('keydown', guideKey); guideKey = null; countdown(el, title, sub, done); };
+  const draw = () => {
+    const S = steps[i];
+    el.innerHTML = `<h2>道具怎麼用？</h2><div class="guide"><div class="g-ic">${S.ic}</div><div class="g-txt"><h3>${S.h}</h3><p>${S.p}</p></div></div>
+      <div class="g-dots">${steps.map((x,j) => `<i class="${j===i?'on':''}"></i>`).join('')}</div>
+      <div class="r-btns" style="justify-content:center"><button class="btn primary" type="button" id="gNext">${i < steps.length-1 ? '下一步（Enter）' : '開始挑戰（Enter）'}</button><button class="btn" type="button" id="gSkip">跳過（Esc）</button></div>`;
+    $('#gNext').onclick = next; $('#gSkip').onclick = finish; $('#gNext').focus();
+  };
+  const next = () => { if (i < steps.length - 1){ i++; draw(); Sound.tick(); } else finish(); };
+  if (guideKey) document.removeEventListener('keydown', guideKey);
+  guideKey = e => { if (el.hidden || !$('#gNext')) return; if (e.key === 'Enter'){ e.preventDefault(); next(); } else if (e.key === 'Escape'){ e.preventDefault(); finish(); } };
+  document.addEventListener('keydown', guideKey);
+  el.hidden = false; clearInterval(cdTimer); draw();
 }
 function fx(el, kind, text){ el.className = 'fixfx' + (kind==='no'?' no':kind==='mid'?' mid':''); el.innerHTML = `<span>${H(text)}</span>`; clearTimeout(el._t); el._t = setTimeout(()=>el.innerHTML='', 800); }
 function hud(items){ $('#hud').innerHTML = items.map(([l,v,cls]) => `<div class="hud-item"><span class="hud-l">${l}</span>${cls==='h' ? v : `<b class="${cls||''}">${v}</b>`}</div>`).join(''); }
@@ -1825,7 +1856,7 @@ function startNinja(id, md){
   show('ninja'); kb.blank(C.blank); $('#enemyLayer').classList.remove('frozen', 'smoked');
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  countdown($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `換關時會飛來道具：${a}${an}（先存起來，想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒）、${b}${bn}（打到就清光畫面）。`; })() : ''}`, () => {
+  (C.items ? itemGuide : countdown)($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `換關時會飛來道具：${a}${an}（先存起來，想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒）、${b}${bn}（打到就清光畫面）。`; })() : ''}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; if (C.secs){ N.t0 = performance.now(); N.endAt = N.t0 + C.secs*1000; N.pillAt = N.t0 + (C.pill || 0)*1000; ninjaHud(); }
     focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
   if (MOLE) hammerIdle();
