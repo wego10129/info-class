@@ -932,13 +932,14 @@ const nConf = (md, id) => md === 'm' ? Object.assign({}, NINJA[id], METEOR_TUNE[
 /* 流星掉落的距離（從畫面最上面掉到草地中間）：比以前長，秒數依距離放大，看起來的速度和以前差不多 */
 const METEOR_LAND = .08, METEOR_SLOW = 1.4;
 /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：流星雨「大師」通關後打開；生存挑戰，3 條命用完就結束，記錄最多打碎幾顆
-   秒數＝大師的算法再乘 fast（快 15～25%）；每打碎 wave 顆進下一波；第 5 波以後每一波再快 5%（這一項最多快到 speedMin 倍）
+   速度（老師 2026-11-12 修正：原本「大師再快 15～25%」太快）：第 1 波＝新手第 1 小關的速度，每一波慢慢變快，第 RAMP_WAVES 波起＝大師最後一小關的速度，
+   之後不再變快（最快不超過大師）。每打碎 wave 顆進下一波
    降低門檻（老師 2026-11-10：原本只有老師玩得動）：同時最多 1、1、2、2、2 個（原本 2、2、3、3、3）；間隔 gap 1.4→2.5 秒；最快 0.6→0.7 倍；
    每 restEvery 波停在休息站（同大師）
    兩顆黏在一起（老師 2026-11-10 修正）：玩法和原本一樣是 1～4 個字母；1～2 個字母＝單顆，TWIN_MIN 個字母以上（twin）＝兩顆黏在一起，
    打碎算 2 顆、分數雙倍。第 1 波最多 3 個字母 */
 const CRISIS = {name:'危機！流星群襲來', lives:3, goal:Infinity, endless:true, glow:false, blank:true, twin:true,
-  len:[[1,3],[1,4],[1,4],[1,4],[1,4]], multi:[1,1,2,2,2], gap:2.5, wave:10, fast:[.75,.85], speedUp:.95, speedMin:.7, rest:[], restEvery:3, heal:true, items:true};
+  len:[[1,3],[1,4],[1,4],[1,4],[1,4]], multi:[1,1,2,2,2], gap:2.5, wave:10, rest:[], restEvery:3, heal:true, items:true};
 const TWIN_MIN = 3;
 /* 打字忍者的隱藏關「危機！忍者大軍來襲」（老師 2026-11-12，比照流星雨）：打字忍者「大師」通關後打開；規則同上面的 CRISIS，
    秒數用忍者大師的算法再乘 fast；1～2 個字母＝小型敵人，3～4 個字母＝兩個敵人騎一匹馬（打倒算 2 個、分數雙倍）；換波飛來補血飯糰 */
@@ -946,6 +947,15 @@ const NCRISIS = {name:'危機！忍者大軍來襲'};
 const crisisConf = (md = 'm') => md === 'n' ? Object.assign({}, NINJA.master, CRISIS, NCRISIS) : Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
 const crisisOpen = (md = 'm') => KIND === 'en' && !!P && (md === 'm' || md === 'n') && has(md) && (P.unlock || recOf(md).master.cleared);
 const crisisRec = md => md === 'n' ? P.ncrisis : P.crisis;
+const RAMP_WAVES = 6;
+/* 隱藏關這一波的速度進度：0＝新手、1＝大師（第 RAMP_WAVES 波起） */
+const crisisT = n => Math.min(1, Math.floor(n.kills / n.C.wave) / (RAMP_WAVES - 1));
+/* 隱藏關一個 len 個字母的敵人要走（掉）幾秒：新手第 1 小關 → 大師最後一小關，依 crisisT 慢慢變快 */
+function crisisDur(n, len){
+  const a = nConf(n.md, 'novice'), b = nConf(n.md, 'master'), t = crisisT(n);
+  const slow = a.time[0] + a.per*(len-1), fast = b.time[b.time.length-1] + b.per*(len-1);
+  return slow + (fast - slow) * t;
+}
 /* 隱藏關的說明文字（流星雨／忍者） */
 const CRISIS_TXT = {
   m:{title:'危機！流星群襲來', hud:'🔥 流星群', icon:'☄', unit:'顆', faster:'流星變快了',
@@ -1819,8 +1829,7 @@ function freshWord(len){
 function spawn(){
   const C = N.C, [a,b] = C.len[N.stage-1], len = ri(a,b), word = freshWord(len);
   if (!word) return false;
-  const dur = (C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && !C.endless && maxNow() > 1 ? METEOR_MULTI_SLOW : 1)
-    * (C.endless ? (C.fast[0] + Math.random()*(C.fast[1] - C.fast[0])) * Math.max(C.speedMin, Math.pow(C.speedUp, Math.max(0, Math.floor(N.kills / C.wave) + 1 - stageCount(C)))) : 1);
+  const dur = (C.endless ? crisisDur(N, len) : C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && maxNow() > 1 ? METEOR_MULTI_SLOW : 1);
   const twin = !!C.twin && len >= TWIN_MIN;
   const el = document.createElement('div'); el.className = twin ? (METEOR ? 'enemy twin' : 'enemy horse') : C.endless && !METEOR ? 'enemy mini' : 'enemy';
   /* 兩個黏在一起：流星＝兩顆流星；忍者＝兩個敵人騎一匹馬（老師 2026-11-12） */
@@ -1944,7 +1953,7 @@ function nextWave(st, rest){
   const up = st > n.stage; n.stage = st;
   if (rest) return restStop();
   if (up){ n.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
-  else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${CRISIS_TXT[n.md].faster}！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
+  else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${crisisT(n) >= 1 ? '已經是大師的速度！' : CRISIS_TXT[n.md].faster + '！'}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
 }
 /* ---------- 字母打地鼠：限時賽、木槌、放大丸（老師 2026-11-10） ---------- */
 /* 計時：時間到就結算；小關依經過的時間推進。回傳 true＝這一局結束了 */
@@ -2174,7 +2183,7 @@ function restGo(){
   const n = N; if (!n || !n.rest || !n.rest.ready) return;
   const now = performance.now(), d = now - n.restAt; n.rest = null; $('#nCover').hidden = true;
   n.es.forEach(x => x.start += d); n.nextAt += d; n.holdUntil0 = now + 1700; n.locked = false;
-  if (n.C.endless){ setTheme(themeOf(n.C, n.stage), 0); const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${CRISIS_TXT[n.md].faster}！`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
+  if (n.C.endless){ setTheme(themeOf(n.C, n.stage), 0); const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${crisisT(n) >= 1 ? '已經是大師的速度！' : CRISIS_TXT[n.md].faster + '！'}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
   else setTheme(themeOf(n.C, n.stage), n.stage);
   ninjaHud(); focusTin();
 }
