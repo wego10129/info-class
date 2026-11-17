@@ -572,6 +572,22 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .hist-row.now .bar i{background:var(--c-top)}
 .hist-row span:nth-child(3),.hist-row span:nth-child(4){text-align:right}
 .hs{color:var(--gold)}
+/* 我的紀錄（老師 2026-11-17：學生在關卡選單看自己的挑戰歷程、看到進步） */
+.review-btn{font:900 16px var(--f-body);background:#E0F2FE;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);padding:3px 12px;cursor:pointer;color:var(--ink)}
+.review{width:min(860px,100%);max-height:calc(100vh - 32px);overflow:auto;display:grid;gap:12px;padding-top:0}
+.rv-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;z-index:1;background:var(--card);padding-top:14px;padding-bottom:6px;border-bottom:2px dashed var(--cap-dim)}
+.rv-head h2{margin:0;font-size:26px}
+.rv-sum{display:flex;flex-wrap:wrap;gap:8px}
+.rv-sum div{border:3px solid var(--ink);border-radius:12px;padding:4px 12px;background:#FFF9DB;font-weight:900;font-size:15px}
+.rv-sum b{font-size:22px;color:var(--mid)}
+.rv-keys{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-weight:900;font-size:15px}
+.rv-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:12px;align-items:start}
+.rv-card{border:3px solid var(--ink);border-radius:14px;padding:10px 12px;background:var(--wash);display:grid;gap:6px}
+.rv-card h3{margin:0;font-size:18px}
+.rv-say{margin:0;font-weight:900;font-size:15px}
+.rv-say.up{color:var(--good)}
+.rv-card .hist{max-width:none}
+.rv-empty{font-size:20px;font-weight:900;text-align:center;padding:30px 10px;line-height:1.8}
 
 /* 簽到、獎狀 */
 .diff.crisis{background:#3B1D3F;color:#FFE7A8;border-color:#1B0F22}
@@ -802,6 +818,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
   <button class="btn primary" type="submit" style="font-size:22px">開始！</button>
   <button class="btn" type="button" id="sBack" hidden>⬅ 回上一頁</button>
 </form></div>
+<div id="reviewWrap" class="modal-wrap" hidden><div class="card review" role="dialog" aria-labelledby="reviewT"><div class="rv-head"><h2 id="reviewT">📈 我的紀錄</h2><button class="btn" type="button" id="reviewClose">關閉（Esc）</button></div><div id="reviewBody"></div></div></div>
 <div id="crisisWrap" class="modal-wrap" hidden><div class="card crisis-pop" role="dialog" aria-labelledby="crisisT">
   <h2 id="crisisT">⚠ 危機！流星群襲來</h2>
   <p id="crisisP">大批流星正往這裡衝過來！<br>流星有 1～4 個字母：3～4 個字母的是兩顆黏在一起，打碎算 2 顆、分數雙倍！<br>流星會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？</p>
@@ -1574,11 +1591,65 @@ function renderHome(){
   else nextT = [gotNote, ti < 0 && firstRule ? `下一個：${firstRule} → 「${TITLES[0]}」（${GRADES[0].name}）` : '', legendNote, hiddenNote].filter(Boolean).join('；')
     || (allClear() ? '全部通關了！' : '把老師指定的關卡練熟，越快越好！');
   const ladder = NMON().length ? `<span class="ladder">${TITLES.map((t,i)=>`<span class="${i<=ti?'on':''}" title="${TITLE_RULE[i]}">${t}</span>`).join('')}</span>` : '';
-  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${gi<0 ? '還沒有' : gradeTitle(gi)}</b>${awd}${ladder}
+  const tb = `<div class="titlebar" style="grid-column:1/-1"><span>目前稱號：</span><b>${gi<0 ? '還沒有' : gradeTitle(gi)}</b>${awd}<button class="review-btn" type="button" id="reviewBtn">📈 我的紀錄</button>${ladder}
     <span class="tnote" style="width:100%">${nextT}</span></div>`;
   $('#entries').innerHTML = tb + c1 + (SUB2 ? c2en : c2) + c3 + c4b + c4r;
   if ($('#awardBtn')) $('#awardBtn').onclick = () => showAward(false);
+  $('#reviewBtn').onclick = showReview;
 }
+/* ---------- 我的紀錄（老師 2026-11-17）：關卡選單打開，看每一關最近的挑戰（每關最多 HISTORY_MAX 次）和進步；也看字母熟不熟
+   只讀紀錄、不改紀錄（紀錄格式不變）。關卡順序和關卡選單一樣，沒玩過的關卡不顯示 */
+function reviewRows(){
+  const rows = [], add = (title, hist, o) => { if (hist && hist.length) rows.push(Object.assign({title, hist, low:false}, o)); };
+  const pts = {val:h => h.score, fmt:v => `${v} 分`, extra:h => h.stars != null ? '★'.repeat(h.stars) || '—' : ''};
+  if (has('l1')) add(L1.name, P.l1.hist, pts);
+  if (has('l2')){ if (SUB2) L2_SUBS.forEach(sb => add(`${L2.name}・${sb.no}`, P.l2s[sb.id].hist, pts)); else add(L2.name, P.l2.hist, pts); }
+  const md0 = CUR_MD;
+  NMON().forEach(md => { useMode(md); const M = MODES[md];
+    NINJA_ORDER.forEach(id => { const R = recOf(md)[id]; if (R) add(`${M.name}・${nConf(md, id).name}`, R.hist, {val:h => h.kills, fmt:v => `${v} ${M.cnt}`, extra:h => `${h.score} 分`}); });
+    if (crisisOpen(md)){ const CT = CRISIS_TXT[md]; add(`${M.name}・🔥 ${CT.title}`, crisisRec(md).hist, {val:h => h.kills, fmt:v => `${v} ${CT.unit}`, extra:h => `${h.score} 分`}); } });
+  if (md0) useMode(md0);
+  if (KIND === 'punc' && has('boss') && P.boss) add('第四關・魔王戰', P.boss.hist, {val:h => h.score, fmt:v => `${v} 分`, extra:h => h.win ? '🏆' : ''});
+  if (KIND === 'en' && has('race') && P.race) NINJA_ORDER.forEach(id => add(`影子賽車・${RACE[id].name}`, P.race[id].hist, {low:true, val:h => h.t || null, fmt:v => `${v.toFixed(1)} 秒`, extra:h => h.win ? '🏆' : ''}));
+  return rows;
+}
+/* 進步多少：第一次和最近一次比（比率，不同關卡才能比較誰進步最多）；賽車是秒數越少越好 */
+function reviewGain(r){
+  const v = r.hist.map(r.val).filter(x => x != null); if (v.length < 2) return null;
+  const a = v[0], b = v[v.length-1]; return {a, b, best:r.low ? Math.min(...v) : Math.max(...v), pct:r.low ? (a - b) / a : (b - a) / Math.max(a, 1)};
+}
+function reviewCard(r){
+  const v = r.hist.map(r.val), ok = v.filter(x => x != null), last = r.hist.length - 1, g = reviewGain(r);
+  const best = ok.length ? (r.low ? Math.min(...ok) : Math.max(...ok)) : null, mx = Math.max(1, ...ok);
+  let say, up = false;
+  if (best == null) say = '還沒有完成的紀錄，再挑戰一次！';
+  else if (!g) say = `挑戰了 1 次：${r.fmt(ok[0])}。再挑戰一次，看看有沒有進步！`;
+  else if (g.pct > 0){ up = true; say = `第一次 ${r.fmt(g.a)} → 最近 ${r.fmt(g.b)}，${r.low ? `快了 ${(g.a - g.b).toFixed(1)} 秒` : `進步 ${g.b - g.a}`}！🎉`; }
+  else if (g.b === g.best) say = `最近 ${r.fmt(g.b)}，保持得很穩！`;
+  else say = `最近 ${r.fmt(g.b)}，你最好是 ${r.fmt(g.best)}。再試一次，追上你自己！`;
+  const rowsH = r.hist.map((h,i) => { const x = v[i], isB = x != null && x === best;
+    const w = x == null ? 0 : r.low ? Math.round(best / x * 100) : Math.round(x / mx * 100);
+    return `<div class="hist-row ${i===last?'now':''} ${isB?'best':''}"><span>${i===last?'最近':H(h.at || '')}</span><span class="bar"><i style="width:${w}%"></i></span><span>${isB?'🏅 ':''}${x == null ? '沒跑完' : r.fmt(x)}</span><span class="hs">${r.extra(h)}</span></div>`; }).join('');
+  return `<div class="rv-card"><h3>${H(r.title)}</h3><p class="rv-say ${up?'up':''}">${say}</p><div class="hist">${rowsH}</div></div>`;
+}
+function showReview(){
+  const rows = reviewRows(), n = rows.reduce((a, r) => a + r.hist.length, 0);
+  const gs = rows.map(r => [r, reviewGain(r)]).filter(([, g]) => g && g.pct > 0).sort((x, y) => y[1].pct - x[1].pct);
+  const most = rows.slice().sort((a, b) => b.hist.length - a.hist.length)[0];
+  /* 字母熟練度：learn() 記的 P.weight，WEIGHT.base＝很熟，越大越不熟；只算練過的字母 */
+  const ws = Object.entries(P.weight || {}), weak = ws.filter(([, w]) => w > WEIGHT.base).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+  const good = ws.filter(([, w]) => w <= WEIGHT.base).map(x => x[0]).slice(0, 3);
+  const keysH = ws.length ? `<div class="rv-keys">${good.length ? `<span>👍 已經很熟：</span>${good.map(chip).join('')}` : ''}${weak.length ? `<span>💪 下次多練：</span>${weak.map(chip).join('')}` : `<span>每一個都很熟，太厲害了！</span>`}</div>` : '';
+  $('#reviewBody').innerHTML = !rows.length ? `<div class="rv-empty">還沒有紀錄唷！<br>先去挑戰一關，再回來看看自己的進步。</div>` : `
+    <div class="rv-sum"><div>最近挑戰了 <b>${n}</b> 次</div><div>最常玩：<b>${H(most.title)}</b></div>${gs.length ? `<div>進步最多：<b>${H(gs[0][0].title)}</b>（${gs[0][0].fmt(gs[0][1].a)} → ${gs[0][0].fmt(gs[0][1].b)}）</div>` : ''}</div>
+    ${keysH}<p class="tnote" style="margin:0">每一關記最近 ${HISTORY_MAX} 次；🏅＝最好的一次，「最近」＝最後一次。</p>
+    <div class="rv-cards">${rows.map(reviewCard).join('')}</div>`;
+  $('#reviewWrap').hidden = false; $('#reviewClose').focus();
+}
+const closeReview = () => { $('#reviewWrap').hidden = true; };
+$('#reviewClose').onclick = closeReview;
+$('#reviewWrap').addEventListener('click', e => { if (e.target.id === 'reviewWrap') closeReview(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#reviewWrap').hidden){ e.preventDefault(); closeReview(); } });
 $('#entries').addEventListener('click', e => {
   Sound.init();
   const l = e.target.closest('[data-l]'); if (l && !l.disabled) return startDrill(+l.dataset.l, +(l.dataset.sub || 0));
