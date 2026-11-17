@@ -176,6 +176,7 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 @keyframes dPoof{0%{left:110%;opacity:1;transform:translateX(-50%) scale(1)}12%,22%{left:62%;opacity:1;transform:translateX(-50%) scale(1)}27%,100%{left:62%;opacity:0;transform:translateX(-50%) scale(1.7)}}
 .d-word{font:600 18px/1.1 var(--f-key);background:#fff;border:2px solid #7C3AED;border-radius:8px;padding:0 6px;margin-bottom:3px;white-space:nowrap;text-transform:uppercase;color:var(--ink)}
 .gdemo.heal .d-word{border-color:#E11D48}
+.gdemo.w.heal .d-word{border-color:#D97706}.gdemo.w.heal .d-num{color:var(--ink);letter-spacing:0}
 .d-word .l1{animation-name:dL1}.d-word .l2{animation-name:dL2}
 @keyframes dL1{0%,13.9%{color:var(--ink)}14%,100%{color:var(--good)}}
 @keyframes dL2{0%,19.9%{color:var(--ink)}20%,100%{color:var(--good)}}
@@ -374,6 +375,7 @@ html:not(.meteor) .enemy.heart{width:clamp(70px,13vh,108px);z-index:6}
 html:not(.meteor) .enemy.heart svg{animation:rice 1.2s ease-in-out infinite alternate}
 @keyframes rice{from{transform:translateY(-6px) rotate(-10deg)}to{transform:translateY(6px) rotate(10deg)}}
 .enemy.heart.rice .word{border-color:#16A34A}
+.enemy.heart.clock .word{border-color:#D97706}
 /* 道具（老師 2026-11-12） */
 .enemy.heart.item{width:clamp(70px,13vh,108px);z-index:6}
 .enemy.heart.item .word{border-color:#7C3AED}
@@ -1069,9 +1071,16 @@ const TWIN_MIN = 3;
 /* 打字忍者的隱藏關「危機！忍者大軍來襲」（老師 2026-11-12，比照流星雨）：打字忍者「大師」通關後打開；規則同上面的 CRISIS，
    秒數用忍者大師的算法再乘 fast；1～2 個字母＝小型敵人，3～4 個字母＝兩個敵人騎一匹馬（打倒算 2 個、分數雙倍）；換波飛來補血飯糰 */
 const NCRISIS = {name:'危機！忍者大軍來襲'};
-const crisisConf = (md = 'm') => md === 'n' ? Object.assign({}, NINJA.master, CRISIS, NCRISIS) : Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
-const crisisOpen = (md = 'm') => KIND === 'en' && !!P && (md === 'm' || md === 'n') && has(md) && (P.unlock || recOf(md).master.cleared);
-const crisisRec = md => md === 'n' ? P.ncrisis : P.crisis;
+/* 字母打地鼠的隱藏關「地鼠大暴動」（學生 2026-11-17 回饋，老師同意名稱、+5 秒、新增紀錄欄位 wcrisis）：打擊大師通關後打開
+   限時：一開始 secs 秒，時間用完就結束，記最多敲到幾隻。每敲 wave 隻是一波，速度從新手慢慢變快到大師（crisisDur，最快不超過大師）
+   換波時：地鼠先全部回洞裡（不冒新地鼠），場上沒有地鼠才飛來 ⏰ 加秒（防禦型道具），飛過的時候倒數暫停；打到 +TIME_ADD 秒
+   每 2 波（第 3、5、7…波）再飛來 ❄ 冰凍槌；放大丸照大師的頻率 */
+const WCRISIS = {name:'地鼠大暴動', endless:true, secs:30, goal:Infinity, pass:Infinity, glow:false, blank:true, twin:false,
+  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], multi:[2,2,3,3,4], gap:2, wave:8, pill:12, ice:true, heal:true, items:false};
+const TIME_ADD = 5;
+const crisisConf = (md = 'm') => md === 'n' ? Object.assign({}, NINJA.master, CRISIS, NCRISIS) : md === 'w' ? Object.assign({}, NINJA.master, MOLE_TUNE.master, WCRISIS) : Object.assign({}, NINJA.master, METEOR_TUNE.master, CRISIS);
+const crisisOpen = (md = 'm') => KIND === 'en' && !!P && (md === 'm' || md === 'n' || md === 'w') && has(md) && (P.unlock || recOf(md).master.cleared);
+const crisisRec = md => md === 'n' ? P.ncrisis : md === 'w' ? P.wcrisis : P.crisis;
 const RAMP_WAVES = 6;
 /* 隱藏關這一波的速度進度：0＝新手、1＝大師（第 RAMP_WAVES 波起） */
 const crisisT = n => Math.min(1, Math.floor(n.kills / n.C.wave) / (RAMP_WAVES - 1));
@@ -1090,7 +1099,11 @@ const CRISIS_TXT = {
   n:{title:'危機！忍者大軍來襲', hud:'🔥 忍者大軍', icon:'🐎', unit:'個', faster:'敵人變快了',
      rule:'1～2 個字母的是小型敵人；3～4 個字母的是兩個敵人騎著馬，打倒算 2 個、分數雙倍！敵人會越來越快、越來越多，看你能擊退幾個！被敵人碰到就扣命，3 條命用完就結束，',
      menu:'小型敵人和騎馬的兩個敵人（3～4 個字母，算 2 個）越來越快、越來越多・3 條命，看你能擊退幾個・每 3 波有休息站・換波時會飛來補血飯糰',
-     pop:'大批敵人正往這裡衝過來！<br>1～2 個字母的是小型敵人；3～4 個字母的是兩個敵人騎著馬，打倒算 2 個、分數雙倍！<br>敵人會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？'}};
+     pop:'大批敵人正往這裡衝過來！<br>1～2 個字母的是小型敵人；3～4 個字母的是兩個敵人騎著馬，打倒算 2 個、分數雙倍！<br>敵人會越來越快、越來越多，每 3 波有休息站。要挑戰嗎？'},
+  w:{title:'地鼠大暴動', hud:'🔥 地鼠大暴動', icon:'🐹', unit:'隻', faster:'地鼠變快了', foes:'地鼠',
+     rule:`一開始只有 ${WCRISIS.secs} 秒！每敲 ${WCRISIS.wave} 隻是一波，換波時地鼠會先回洞裡，接著飛來 ⏰ 加秒，打到就多 ${TIME_ADD} 秒（它飛過的時候時間暫停）。地鼠會越來越快、越來越多，時間用完就結束，看你能敲幾隻！`,
+     menu:`一開始 ${WCRISIS.secs} 秒・地鼠越來越快、越來越多・每一波飛來 ⏰ 加 ${TIME_ADD} 秒・有冰凍槌和放大丸・看你能敲幾隻`,
+     pop:`地鼠們大暴動了！<br>一開始只有 ${WCRISIS.secs} 秒，每敲完一波（${WCRISIS.wave} 隻）會飛來 ⏰，打到就加 ${TIME_ADD} 秒。<br>地鼠會越來越快、越來越多，要挑戰嗎？`}};
 /* 鍵盤小勇士的病毒來襲：速度同標點忍者；病毒頭上的提示依舊版鷹架（老師 2026-10-30）：
    新手＝鍵名＋鍵盤提示、勇者＝只提示用途、大師＝只看情境（鍵帽沒有字）；2 個鍵的病毒＝兩種情境都要完成才會被消滅 */
 /* 重要按鍵練習（老師 2026-10-30）：沒有第二關；病毒來襲改回舊版「看電腦畫面的情境，按按鍵」。
@@ -1305,6 +1318,7 @@ const fresh = () => ({l1:{plays:0, best:null, stars:0, hist:[]}, l2:{plays:0, be
   /* 英文隱藏關「危機！流星群襲來」（老師 2026-11-10）：plays 玩過幾次、best 最高分、bestKills 最多打碎幾顆、asked 跳過邀請視窗了沒 */
   ...(KIND === 'en' ? {crisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]},
     ncrisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]},   /* 打字忍者的隱藏關（老師 2026-11-12 同意新增） */
+    wcrisis:{plays:0, best:0, bestKills:0, asked:false, hist:[]},   /* 字母打地鼠的隱藏關「地鼠大暴動」（老師 2026-11-17 同意新增） */
     mole:{novice:{best:0, cleared:false, hist:[]}, brave:{best:0, cleared:false, hist:[]}, master:{best:0, cleared:false, hist:[]}}} : {}),   /* 字母打地鼠（2026-11-10） */
   race:{novice:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, brave:{best:0, bestT:null, cleared:false, hist:[], ghost:null}, master:{best:0, bestT:null, cleared:false, hist:[], ghost:null}},
   awardSeen:-1,
@@ -1679,7 +1693,8 @@ function itemGuide(el, title, sub, done){
   const foe = MODES[CUR_MD].foe, heal = METEOR ? '補血愛心' : '補血飯糰', [fi, fn] = itemTxt('freeze', CUR_MD), [bi, bn] = itemTxt('bomb', CUR_MD);
   const C = N.C, stopTxt = MOLE ? '凍住，不會縮回洞裡' : '停下來', stop3 = MOLE ? `${foe}凍住 ${FREEZE_SEC} 秒<br>（時間照走）` : `${foe}停住<br>${FREEZE_SEC} 秒`;
   const steps = [
-    {ic:guideDemo('heal'), h:`${METEOR ? '💖' : '🍙'} ${heal}`, p:`場上沒有${foe}的時候會飛來。<br>打出上面的字母，<b>加 1 條命</b>！`, on:C.heal},
+    MOLE ? {ic:guideDemo('heal'), h:`⏰ 加秒：時間 +${TIME_ADD} 秒`, p:`每打完一波（${C.wave} 隻），地鼠先回洞裡，接著飛來 ⏰。<br>它飛過的時候<b>時間暫停</b>；打出上面的字母，<b>時間 +${TIME_ADD} 秒</b>！`, on:C.heal}
+    : {ic:guideDemo('heal'), h:`${METEOR ? '💖' : '🍙'} ${heal}`, p:`場上沒有${foe}的時候會飛來。<br>打出上面的字母，<b>加 1 條命</b>！`, on:C.heal},
     {ic:guideDemo('freeze'), h:`${fi} ${fn}：讓${foe}${stopTxt}`, p:`<b>一開始就送你 ${ITEM_START} 個</b>，左上角看得到有幾個。<br><span class="g-flow live"><span>① 打出上面的字母<br>再多存 1 個</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${stop3}</span></span>`, on:C.items || C.ice},
     {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`場上有 <b>2 個以上</b>${foe}時才會飛來。<br>打出上面的字母，<b>一次清光畫面</b>！`, on:C.items},
     {ic:guideDemo('pill'), h:'💊 放大丸：超級大木槌', p:`場上有 <b>2 隻以上</b>地鼠時，會從洞裡冒出來（停 ${PILL_STAY} 秒）。<br>打出上面的字母，木槌變超大，<b>一次敲暈全部地鼠</b>！`, on:MOLE && C.pill}].filter(x => x.on);
@@ -1705,7 +1720,7 @@ function guideDemo(kind){
   const L = [...w], md = METEOR ? 'm' : MOLE ? 'w' : 'n', foe = enemySVG(1), l1 = H(SHOW(L[0])), l2 = H(SHOW(L[1] || L[0]));
   const word = `<div class="d-word"><span class="l1">${l1}</span><span class="l2">${l2}</span></div>`;
   const keys = `<div class="d-keys"><kbd class="k1">${l1}</kbd><kbd class="k2">${l2}</kbd>${kind === 'freeze' ? '<kbd class="ks">空白鍵</kbd>' : ''}</div>`;
-  if (kind === 'heal') return `<div class="gdemo ${md} heal" aria-hidden="true"><div class="d-top"><span class="d-num"><span class="h0">♥♥<i>♥</i></span><span class="h1">♥♥♥</span></span></div>
+  if (kind === 'heal') return `<div class="gdemo ${md} heal" aria-hidden="true"><div class="d-top"><span class="d-num">${MOLE ? '<span class="h0">⏰ 3 秒</span><span class="h1">⏰ 8 秒</span>' : '<span class="h0">♥♥<i>♥</i></span><span class="h1">♥♥♥</span>'}</span></div>
     <div class="d-item fly">${word}${healSVG()}</div>${keys}</div>`;
   if (kind === 'freeze') return `<div class="gdemo ${md} freeze" aria-hidden="true">${MOLE ? '<div class="d-hole"></div>' : ''}<div class="d-foe">${foe}</div><div class="d-tint"></div><div class="d-say">${MOLE ? '凍住' : '停住'} ${FREEZE_SEC} 秒！</div>
     <div class="d-top"><span class="d-sic">${itemSVG('freeze')}</span><span class="d-num"><span class="h0">×${ITEM_START}</span><span class="h1">×${ITEM_START + 1}</span></span></div>
@@ -2036,8 +2051,8 @@ const stageOfKills = (C, k) => Math.min(Math.floor(k / stageEvery(C)) + 1, stage
 const themeOf = (C, st) => C.len.length === THEMES.length ? st : Math.round((st-1) * (THEMES.length-1) / (C.len.length-1)) + 1;
 function ninjaHud(){
   stockDraw();
-  if (N.C.secs) return hud([['等級', N.C.name, 't'], ['剩下', `${N.endAt ? Math.max(0, Math.ceil((N.endAt - performance.now()) / 1000)) : N.C.secs} 秒`, 't'],
-    [MODES[N.md].hit, `${N.kills} 隻`], ['過關', `${N.C.pass} 隻`], ['分數', N.score]]);
+  if (N.C.secs) return hud([['等級', N.C.endless ? CRISIS_TXT[N.md].hud : N.C.name, 't'], ['剩下', `${N.endAt ? Math.max(0, Math.ceil((N.endAt - performance.now()) / 1000)) : N.C.secs} 秒`, 't'],
+    [MODES[N.md].hit, `${N.kills} 隻`], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['過關', `${N.C.pass} 隻`], ['分數', N.score]]);
   hud([[KIND === 'key' || METEOR || MOLE ? '等級' : '忍者', N.C.endless ? CRISIS_TXT[N.md].hud : N.C.name, 't'], ['生命', `<span class="hearts">${Array.from({length:Math.max(N.C.lives, N.lives)},(_,i)=>`<span class="${i<N.lives?'':'off'}">♥</span>`).join('')}</span>`, 'h'],
     [MODES[N.md].hit, N.C.endless ? `${N.kills} ${CRISIS_TXT[N.md].unit}` : `${N.kills}/${N.C.goal}`], ['分數', N.score], N.C.endless ? ['第幾波', `第 ${Math.floor(N.kills / N.C.wave) + 1} 波`, 't'] : ['關卡', `第 ${N.stage} 關`, 't']]);   /* 道具存量改放在遊戲畫面左上角（stockDraw） */
 }
@@ -2066,7 +2081,7 @@ function spawn(){
   if (!word) return false;
   const dur = (C.endless ? crisisDur(N, len) : C.time[N.stage-1] + C.per*(len-1)) * (METEOR ? METEOR_SLOW : 1) * (METEOR && maxNow() > 1 ? METEOR_MULTI_SLOW : 1);
   const twin = !!C.twin && len >= TWIN_MIN;
-  const el = document.createElement('div'); el.className = twin ? (METEOR ? 'enemy twin' : 'enemy horse') : C.endless && !METEOR ? 'enemy mini' : 'enemy';
+  const el = document.createElement('div'); el.className = twin ? (METEOR ? 'enemy twin' : 'enemy horse') : C.endless && !METEOR && !MOLE ? 'enemy mini' : 'enemy';
   /* 兩個黏在一起：流星＝兩顆流星；忍者＝兩個敵人騎一匹馬（老師 2026-11-12） */
   el.innerHTML = `<div class="word"></div>${twin ? (METEOR ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : horseSVG(themeOf(C, N.stage))) : enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
   /* 打地鼠：挑一個空的洞（前排的地鼠疊在後排前面） */
@@ -2197,9 +2212,19 @@ function nextWave(st, rest){
 /* ---------- 字母打地鼠：限時賽、木槌、放大丸（老師 2026-11-10） ---------- */
 /* 計時：時間到就結算；小關依經過的時間推進。回傳 true＝這一局結束了 */
 function moleClock(now){
-  const n = N, left = n.endAt - now, sec = Math.ceil(left / 1000);
+  const n = N;
+  if (n.C.endless){
+    /* ⏰ 加秒飛過的時候倒數暫停（場上沒有地鼠，學生不用白白等） */
+    const dt = Math.min(100, now - (n.lastClk || now)); n.lastClk = now;
+    if (n.es.some(e => e.heart && !e.item)) n.endAt += dt;
+    const wv = Math.floor(n.kills / n.C.wave) + 1;
+    if (wv > (n.wave || 1)){ n.wave = wv; n.stage = Math.min(wv, stageCount(n.C)); n.heartDue = true; if (n.C.ice && wv % 2 === 1) n.itemDue = 'freeze';
+      setTheme(themeOf(n.C, n.stage), 0); ninjaHud();
+      const b = $('#stageBig'); b.textContent = `⚡ 第 ${wv} 波・${crisisT(n) >= 1 ? '已經是大師的速度！' : CRISIS_TXT[n.md].faster + '！'}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
+  }
+  const left = n.endAt - now, sec = Math.ceil(left / 1000);
   if (sec !== n.lastSec){ n.lastSec = sec; ninjaHud(); if (sec <= 5 && sec > 0) Sound.tone(880, .08, 'square', 0, .05); }
-  const st = Math.min(stageCount(n.C), Math.floor((now - n.t0) / (n.C.secs*1000 / stageCount(n.C))) + 1);
+  const st = n.C.endless ? n.stage : Math.min(stageCount(n.C), Math.floor((now - n.t0) / (n.C.secs*1000 / stageCount(n.C))) + 1);
   if (st > n.stage){ n.stage = st; n.holdUntil0 = now + 1200; setTheme(themeOf(n.C, st), st); if (n.C.ice && st === ICE_STAGE) n.itemDue = 'freeze'; }
   if (left > 0) return false;
   n.over = true; n.locked = true; tinReset(); kb.clear();
@@ -2322,20 +2347,39 @@ const RICE_SVG = `<svg viewBox="0 0 100 92" aria-hidden="true">
   <path d="M44 46 Q50 51 56 46" fill="none" stroke="#1B2836" stroke-width="2.5" stroke-linecap="round"/>
   <ellipse cx="31" cy="46" rx="5" ry="3" fill="#FDA4AF"/><ellipse cx="69" cy="46" rx="5" ry="3" fill="#FDA4AF"/></svg>`;
 /* 流星雨＝翅膀愛心、打字忍者＝御飯糰（打法、效果都一樣） */
-const healSVG = () => METEOR ? HEART_SVG : RICE_SVG;
+/* ⏰ 加秒（地鼠大暴動的「補血」）：打到時間 +TIME_ADD 秒 */
+const CLOCK_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 12 L12 26 M74 12 L88 26" stroke="#1B2836" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="50" cy="55" r="38" fill="#FDE68A" stroke="#1B2836" stroke-width="5"/><path d="M50 55 V30 M50 55 L66 46" stroke="#1B2836" stroke-width="6" stroke-linecap="round"/>
+  <text x="50" y="84" text-anchor="middle" font-size="22" font-weight="900" fill="#B45309" font-family="sans-serif">+${TIME_ADD}</text></svg>`;
+const healSVG = () => MOLE ? CLOCK_SVG : METEOR ? HEART_SVG : RICE_SVG;
 function heartSpawn(kind){
   let word = null;
   for (let t=0;t<30 && !word;t++){ const w = makeWord(ri(HEAL_LEN[0], HEAL_LEN[1])); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) word = w; }
   if (!word) return false;
-  const el = document.createElement('div'); el.className = kind ? `enemy heart item ${kind}` : METEOR ? 'enemy heart' : 'enemy heart rice';
+  const el = document.createElement('div'); el.className = kind ? `enemy heart item ${kind}` : METEOR ? 'enemy heart' : MOLE ? 'enemy heart clock' : 'enemy heart rice';
   el.innerHTML = `<div class="word"></div>${kind ? itemSVG(kind) : healSVG()}`; el.style.left = HX0 + '%'; el.style.bottom = '50%';
   $('#enemyLayer').appendChild(el);
   N.es.push({word, el, dur:kind ? ITEM_SEC : HEAL_SEC, heart:true, item:kind || null, lane:-99, start:performance.now(), w:el.querySelector('.word')}); drawWords();
   Sound.tone(988, .12, 'triangle', 0, .06); Sound.tone(1319, .15, 'triangle', .1, .06);
   return true;
 }
+/* 地鼠大暴動：打到 ⏰，飛到上方「剩下」欄位，時間 +TIME_ADD 秒 */
+function clockGot(e){
+  const n = N; n.es = n.es.filter(x => x !== e);
+  const r = e.el.querySelector('svg').getBoundingClientRect(), to = [...document.querySelectorAll('#hud .hud-item')].find(x => x.textContent.includes('剩下')), t = to ? to.getBoundingClientRect() : {left:r.left, top:0, width:0, height:0};
+  const f = document.createElement('div'); f.className = 'heart-fly'; f.innerHTML = CLOCK_SVG;
+  f.style.left = (r.left + r.width/2) + 'px'; f.style.top = (r.top + r.height/2) + 'px'; f.style.width = r.width + 'px';
+  document.body.appendChild(f); e.el.remove();
+  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.left = (t.left + t.width/2) + 'px'; f.style.top = (t.top + t.height/2) + 'px'; f.style.width = '28px'; f.style.opacity = '0'; }));
+  setTimeout(() => f.remove(), 800);
+  n.endAt += TIME_ADD * 1000; n.lastSec = null;
+  [659,784,988,1319].forEach((c,i) => Sound.tone(c,.18,'triangle',i*.08,.1));
+  tinReset(); kb.clear(); drawWords(); ninjaHud();
+  fx($('#nFx'), 'ok', `⏰ 時間 +${TIME_ADD} 秒！`);
+}
 /* 打對了：愛心飛到上方「生命」欄位、淡出，加 1 條命（最多 HEAL_MAX 條） */
 function heartGot(e){
+  if (MOLE) return clockGot(e);
   const n = N; n.es = n.es.filter(x => x !== e);
   const r = e.el.querySelector('svg').getBoundingClientRect(), to = $('#hud .hearts'), t = to ? to.getBoundingClientRect() : {left:r.left, top:0, width:0, height:0};
   const f = document.createElement('div'); f.className = 'heart-fly'; f.innerHTML = healSVG();
@@ -2582,7 +2626,7 @@ function crisisEnd(n){
   const trend = trendOf(n.kills, prev, bestBefore, 2), wave = Math.floor(n.kills / n.C.wave) + 1;
   const avg = n.rts.length ? n.rts.reduce((a,b)=>a+b,0)/n.rts.length : 0;
   const hit = MODES[n.md].hit;
-  const notes = [note(`打到第 ${wave} 波！每${hit} ${n.C.wave} ${T.unit}，${n.md === 'n' ? '敵人' : '流星群'}就會更多、更快。`, true)];
+  const notes = [note(`打到第 ${wave} 波！每${hit} ${n.C.wave} ${T.unit}，${n.md === 'n' ? '敵人' : n.md === 'w' ? '地鼠' : '流星群'}就會更多、更快。`, true)];
   showResult(T.title, trend, `<div class="r-stars">${T.icon}</div><div class="r-score">${n.kills}<small>${T.unit}</small></div>`,
     [['分數', n.score], ['第幾波', `第 ${wave} 波`], ['最多連續', n.maxCombo], ['平均', avg ? avg.toFixed(1)+' 秒' : '—'], [`最多${hit}`, `${R.bestKills} ${T.unit}`]], false,
     notes, n.weak, [], R.hist, h => `${h.kills} ${T.unit}`, 1, () => startNinja('crisis', n.md), '', () => {});
