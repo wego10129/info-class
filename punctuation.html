@@ -206,6 +206,15 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .demo.w .d-hole{position:absolute;left:56%;top:62%;width:70px;height:20px;transform:translateX(-50%);border-radius:50%;background:#3F2A1C;z-index:1}
 .demo.w.freeze .d-foe{left:56%;top:24%;width:58px;transform-origin:50% 100%;animation-name:dFoeW}
 @keyframes dFoeW{0%,28%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3);filter:none}32%,52%{opacity:1;transform:translateX(-50%);filter:none}54%,86%{opacity:1;transform:translateX(-50%);filter:saturate(.3) brightness(1.15) drop-shadow(0 0 6px #7DD3FC)}92%,100%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3);filter:none}}
+/* 放大丸的示範（老師 2026-11-17）：放大丸從洞裡冒出來 → 打字母 → 超級木槌敲下（閃光、震動）→ 地鼠全部頭暈縮回去 */
+.demo.pill .d-hole{left:var(--x)}
+.demo.pill .d-shake>.d-foe{width:50px;top:26%;animation-name:dDizzy;transform-origin:50% 100%}
+@keyframes dDizzy{0%,24%{opacity:1;transform:translateX(-50%)}27%,34%{opacity:1;transform:translateX(-50%) rotate(-12deg)}30%{transform:translateX(-50%) rotate(12deg)}42%,92%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3)}100%{opacity:1;transform:translateX(-50%)}}
+.d-pill{position:absolute;left:50%;top:14%;width:58px;z-index:3;display:grid;justify-items:center;transform-origin:50% 100%;animation-name:dPill}
+.d-pill .pillimg b{font-size:26px}
+@keyframes dPill{0%,4%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3)}8%,22%{opacity:1;transform:translateX(-50%)}25%,100%{opacity:0;transform:translateX(-50%) scale(1.5)}}
+.d-ham{position:absolute;left:32%;top:-4%;width:96px;z-index:5;transform-origin:50% 100%;opacity:0;animation-name:dHam}
+@keyframes dHam{0%,21%{opacity:0;transform:rotate(55deg) scale(.7)}23%{opacity:1;transform:rotate(55deg) scale(1.1)}26%,33%{opacity:1;transform:rotate(-35deg) scale(1.1)}38%,100%{opacity:0;transform:rotate(-35deg) scale(1.1)}}
 .demo.w .d-tint{background:radial-gradient(circle,rgba(186,230,253,.85),rgba(125,211,252,.35))}
 @keyframes dFoeM{0%,28%{top:-45%;opacity:1;filter:none}52%{top:18%;opacity:1;filter:none}54%,86%{top:18%;opacity:1;filter:saturate(.3) brightness(1.15) drop-shadow(0 0 6px #7DD3FC)}94%,100%{top:18%;opacity:0;filter:none}}
 @keyframes dFoeN{0%,28%{left:115%;opacity:1;filter:none}52%{left:56%;opacity:1;filter:none}54%,86%{left:56%;opacity:1;filter:grayscale(.9) drop-shadow(0 0 6px #CBD5E1)}94%,100%{left:56%;opacity:0;filter:none}}
@@ -1672,7 +1681,8 @@ function itemGuide(el, title, sub, done){
   const steps = [
     {ic:guideDemo('heal'), h:`${METEOR ? '💖' : '🍙'} ${heal}`, p:`場上沒有${foe}的時候會飛來。<br>打出上面的字母，<b>加 1 條命</b>！`, on:C.heal},
     {ic:guideDemo('freeze'), h:`${fi} ${fn}：讓${foe}${stopTxt}`, p:`<b>一開始就送你 ${ITEM_START} 個</b>，左上角看得到有幾個。<br><span class="g-flow live"><span>① 打出上面的字母<br>再多存 1 個</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${stop3}</span></span>`, on:C.items || C.ice},
-    {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`場上有 <b>2 個以上</b>${foe}時才會飛來。<br>打出上面的字母，<b>一次清光畫面</b>！`, on:C.items}].filter(x => x.on);
+    {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`場上有 <b>2 個以上</b>${foe}時才會飛來。<br>打出上面的字母，<b>一次清光畫面</b>！`, on:C.items},
+    {ic:guideDemo('pill'), h:'💊 放大丸：超級大木槌', p:`場上有 <b>2 隻以上</b>地鼠時，會從洞裡冒出來（停 ${PILL_STAY} 秒）。<br>打出上面的字母，木槌變超大，<b>一次敲暈全部地鼠</b>！`, on:MOLE && C.pill}].filter(x => x.on);
   let i = 0;
   const finish = () => { document.removeEventListener('keydown', guideKey); guideKey = null; countdown(el, title, sub, done); };
   const draw = () => {
@@ -1700,6 +1710,10 @@ function guideDemo(kind){
   if (kind === 'freeze') return `<div class="demo ${md} freeze" aria-hidden="true">${MOLE ? '<div class="d-hole"></div>' : ''}<div class="d-foe">${foe}</div><div class="d-tint"></div><div class="d-say">${MOLE ? '凍住' : '停住'} ${FREEZE_SEC} 秒！</div>
     <div class="d-top"><span class="d-sic">${itemSVG('freeze')}</span><span class="d-num"><span class="h0">×${ITEM_START}</span><span class="h1">×${ITEM_START + 1}</span></span></div>
     <div class="d-item fly">${word}${itemSVG('freeze')}</div>${keys}</div>`;
+  if (kind === 'pill'){ const xs = [20, 50, 80];
+    return `<div class="demo w pill" aria-hidden="true">${xs.map(x => `<div class="d-hole" style="--x:${x}%"></div>`).join('')}
+    <div class="d-shake">${[20, 80].map(x => `<div class="d-foe" style="left:${x}%">${foe}</div>`).join('')}</div>
+    <div class="d-pill">${word}<div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b></div></div><img class="d-ham" src="assets/hammer.png" alt=""><div class="d-flash"></div>${keys}</div>`; }
   const at = METEOR ? [[22,8],[44,30],[80,12]] : [[40,34],[60,30],[82,34]];
   return `<div class="demo ${md} bomb" aria-hidden="true"><div class="d-shake">${at.map(([x,y]) => `<div class="d-foe" style="left:${x}%;top:${y}%">${foe}</div>`).join('')}</div>
     <div class="d-item poof">${word}${itemSVG('bomb')}</div><div class="d-flash"></div>${keys}</div>`;
@@ -2037,7 +2051,7 @@ function startNinja(id, md){
   show('ninja'); kb.blank(C.blank); $('#enemyLayer').classList.remove('frozen', 'smoked');
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  (C.items || C.ice ? itemGuide : countdown)($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}${C.ice ? `${itemTxt('freeze', md).slice(0,2).join('')}：一開始送你 ${ITEM_START} 個，第 ${ICE_STAGE} 小關還會飛來 1 個；按空白鍵，地鼠凍住 ${FREEZE_SEC} 秒不會縮回去（時間照走）。` : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `${a}${an}：一開始送你 ${ITEM_START} 個（左上角看得到有幾個），換關時還會飛來更多；想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒。還有 ${b}${bn}，打到就清光畫面。`; })() : ''}`, () => {
+  (C.items || C.ice || (MOLE && C.pill) ? itemGuide : countdown)($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}${C.ice ? `${itemTxt('freeze', md).slice(0,2).join('')}：一開始送你 ${ITEM_START} 個，第 ${ICE_STAGE} 小關還會飛來 1 個；按空白鍵，地鼠凍住 ${FREEZE_SEC} 秒不會縮回去（時間照走）。` : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `${a}${an}：一開始送你 ${ITEM_START} 個（左上角看得到有幾個），換關時還會飛來更多；想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒。還有 ${b}${bn}，打到就清光畫面。`; })() : ''}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; if (C.secs){ N.t0 = performance.now(); N.endAt = N.t0 + C.secs*1000; N.pillAt = N.t0 + (C.pill || 0)*1000; ninjaHud(); }
     focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
   if (MOLE) hammerIdle();
