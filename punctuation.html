@@ -165,17 +165,17 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 /* 步驟圖的動畫示範（老師 2026-11-17：只看文字看不懂，改成會動的小畫面，重複播放） */
 .guide{--T:7s;flex-wrap:wrap;justify-content:center;max-width:min(780px,100%);gap:16px}
 .guide .g-txt{flex:1 1 260px}
-.demo{position:relative;flex:none;width:270px;max-width:100%;height:170px;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
-.demo.m{background:linear-gradient(#1E3A5F,#47658F)}
-.demo.n{background:linear-gradient(#FBEBCB 0 72%,#C99A62 72%)}
-.demo>*,.demo .d-num>span,.demo .d-word span,.demo kbd,.demo .d-shake>div{animation-duration:var(--T);animation-iteration-count:infinite;animation-timing-function:linear}
-.demo svg{width:100%;display:block}
+.gdemo{position:relative;flex:none;width:270px;max-width:100%;height:170px;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
+.gdemo.m{background:linear-gradient(#1E3A5F,#47658F)}
+.gdemo.n{background:linear-gradient(#FBEBCB 0 72%,#C99A62 72%)}
+.gdemo>*,.gdemo .d-num>span,.gdemo .d-word span,.gdemo kbd,.gdemo .d-shake>div{animation-duration:var(--T);animation-iteration-count:infinite;animation-timing-function:linear}
+.gdemo svg{width:100%;display:block}
 .d-item{position:absolute;top:22%;left:110%;width:56px;display:grid;justify-items:center;transform:translateX(-50%);z-index:3}
 .d-item.fly{animation-name:dFly}.d-item.poof{animation-name:dPoof}
 @keyframes dFly{0%{left:110%;top:22%;opacity:1;transform:translateX(-50%) scale(1)}12%,22%{left:62%;top:22%;opacity:1;transform:translateX(-50%) scale(1)}30%,100%{left:10%;top:0%;opacity:0;transform:translateX(-50%) scale(.35)}}
 @keyframes dPoof{0%{left:110%;opacity:1;transform:translateX(-50%) scale(1)}12%,22%{left:62%;opacity:1;transform:translateX(-50%) scale(1)}27%,100%{left:62%;opacity:0;transform:translateX(-50%) scale(1.7)}}
 .d-word{font:600 18px/1.1 var(--f-key);background:#fff;border:2px solid #7C3AED;border-radius:8px;padding:0 6px;margin-bottom:3px;white-space:nowrap;text-transform:uppercase;color:var(--ink)}
-.demo.heal .d-word{border-color:#E11D48}
+.gdemo.heal .d-word{border-color:#E11D48}
 .d-word .l1{animation-name:dL1}.d-word .l2{animation-name:dL2}
 @keyframes dL1{0%,13.9%{color:var(--ink)}14%,100%{color:var(--good)}}
 @keyframes dL2{0%,19.9%{color:var(--ink)}20%,100%{color:var(--good)}}
@@ -187,40 +187,40 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 @keyframes dK2{0%,18%,22%,100%{transform:none;border-bottom-width:5px;background:#fff}19%,21%{transform:translateY(3px);border-bottom-width:2px;background:#FDE047}}
 @keyframes dKs{0%,40%{background:#fff;box-shadow:none}44%,48%{background:#FEF9C3;box-shadow:0 0 0 5px #FDE047}46%,50%{box-shadow:0 0 0 1px #FDE047}52%,55%{transform:translateY(3px);border-bottom-width:2px;background:#FDE047;box-shadow:0 0 0 5px #FDE047}57%,100%{transform:none;border-bottom-width:5px;background:#fff;box-shadow:none}}
 .d-top{position:absolute;left:6px;top:6px;z-index:4;display:flex;align-items:center;gap:3px;background:#fff;border:2px solid var(--ink);border-radius:9px;padding:1px 8px 1px 4px;font:600 17px/1.2 var(--f-key);color:var(--ink);animation-name:dTopPop}
-.demo.freeze .d-top{animation-name:dTopPop2}
+.gdemo.freeze .d-top{animation-name:dTopPop2}
 .d-top .d-sic{width:24px}
 .d-num{display:grid}.d-num>span{grid-area:1/1}
-.demo.heal .d-num{color:var(--bad);letter-spacing:2px}.d-num i{font-style:normal;color:var(--cap-dim)}
+.gdemo.heal .d-num{color:var(--bad);letter-spacing:2px}.d-num i{font-style:normal;color:var(--cap-dim)}
 .d-num .h0{animation-name:dA}.d-num .h1{animation-name:dB}
-.demo.freeze .d-num .h0{animation-name:dC}.demo.freeze .d-num .h1{animation-name:dD}
+.gdemo.freeze .d-num .h0{animation-name:dC}.gdemo.freeze .d-num .h1{animation-name:dD}
 @keyframes dA{0%,24.9%{opacity:1}25%,100%{opacity:0}}
 @keyframes dB{0%,24.9%{opacity:0}25%,100%{opacity:1}}
 @keyframes dC{0%,24.9%{opacity:1}25%,53.9%{opacity:0}54%,100%{opacity:1}}
 @keyframes dD{0%,24.9%{opacity:0}25%,53.9%{opacity:1}54%,100%{opacity:0}}
 @keyframes dTopPop{0%,24%,30%,100%{transform:none}27%{transform:scale(1.3)}}
 @keyframes dTopPop2{0%,24%,30%,53%,59%,100%{transform:none}27%,56%{transform:scale(1.3)}}
-.demo.freeze .d-foe{position:absolute;width:54px;z-index:2;transform:translateX(-50%)}
-.demo.m.freeze .d-foe{left:46%;animation-name:dFoeM}
-.demo.n.freeze .d-foe{top:32%;animation-name:dFoeN}
-.demo.w{background:linear-gradient(#BFE6FF 0 34%,#7CC86A 34%)}
-.demo.w .d-hole{position:absolute;left:56%;top:62%;width:70px;height:20px;transform:translateX(-50%);border-radius:50%;background:#3F2A1C;z-index:1}
-.demo.w.freeze .d-foe{left:56%;top:24%;width:58px;transform-origin:50% 100%;animation-name:dFoeW}
+.gdemo.freeze .d-foe{position:absolute;width:54px;z-index:2;transform:translateX(-50%)}
+.gdemo.m.freeze .d-foe{left:46%;animation-name:dFoeM}
+.gdemo.n.freeze .d-foe{top:32%;animation-name:dFoeN}
+.gdemo.w{background:linear-gradient(#BFE6FF 0 34%,#7CC86A 34%)}
+.gdemo.w .d-hole{position:absolute;left:56%;top:62%;width:70px;height:20px;transform:translateX(-50%);border-radius:50%;background:#3F2A1C;z-index:1}
+.gdemo.w.freeze .d-foe{left:56%;top:24%;width:58px;transform-origin:50% 100%;animation-name:dFoeW}
 @keyframes dFoeW{0%,28%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3);filter:none}32%,52%{opacity:1;transform:translateX(-50%);filter:none}54%,86%{opacity:1;transform:translateX(-50%);filter:saturate(.3) brightness(1.15) drop-shadow(0 0 6px #7DD3FC)}92%,100%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3);filter:none}}
 /* 放大丸的示範（老師 2026-11-17）：放大丸從洞裡冒出來 → 打字母 → 超級木槌敲下（閃光、震動）→ 地鼠全部頭暈縮回去 */
-.demo.pill .d-hole{left:var(--x)}
-.demo.pill .d-shake>.d-foe{width:50px;top:26%;animation-name:dDizzy;transform-origin:50% 100%}
+.gdemo.pill .d-hole{left:var(--x)}
+.gdemo.pill .d-shake>.d-foe{width:50px;top:26%;animation-name:dDizzy;transform-origin:50% 100%}
 @keyframes dDizzy{0%,24%{opacity:1;transform:translateX(-50%)}27%,34%{opacity:1;transform:translateX(-50%) rotate(-12deg)}30%{transform:translateX(-50%) rotate(12deg)}42%,92%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3)}100%{opacity:1;transform:translateX(-50%)}}
 .d-pill{position:absolute;left:50%;top:14%;width:58px;z-index:3;display:grid;justify-items:center;transform-origin:50% 100%;animation-name:dPill}
 .d-pill .pillimg b{font-size:26px}
 @keyframes dPill{0%,4%{opacity:0;transform:translateX(-50%) translateY(40%) scaleY(.3)}8%,22%{opacity:1;transform:translateX(-50%)}25%,100%{opacity:0;transform:translateX(-50%) scale(1.5)}}
 .d-ham{position:absolute;left:32%;top:-4%;width:96px;z-index:5;transform-origin:50% 100%;opacity:0;animation-name:dHam}
 @keyframes dHam{0%,21%{opacity:0;transform:rotate(55deg) scale(.7)}23%{opacity:1;transform:rotate(55deg) scale(1.1)}26%,33%{opacity:1;transform:rotate(-35deg) scale(1.1)}38%,100%{opacity:0;transform:rotate(-35deg) scale(1.1)}}
-.demo.w .d-tint{background:radial-gradient(circle,rgba(186,230,253,.85),rgba(125,211,252,.35))}
+.gdemo.w .d-tint{background:radial-gradient(circle,rgba(186,230,253,.85),rgba(125,211,252,.35))}
 @keyframes dFoeM{0%,28%{top:-45%;opacity:1;filter:none}52%{top:18%;opacity:1;filter:none}54%,86%{top:18%;opacity:1;filter:saturate(.3) brightness(1.15) drop-shadow(0 0 6px #7DD3FC)}94%,100%{top:18%;opacity:0;filter:none}}
 @keyframes dFoeN{0%,28%{left:115%;opacity:1;filter:none}52%{left:56%;opacity:1;filter:none}54%,86%{left:56%;opacity:1;filter:grayscale(.9) drop-shadow(0 0 6px #CBD5E1)}94%,100%{left:56%;opacity:0;filter:none}}
 .d-tint{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;animation-name:dTint}
-.demo.m .d-tint{background:radial-gradient(circle,rgba(186,230,253,.85),rgba(125,211,252,.35))}
-.demo.n .d-tint{background:rgba(226,232,240,.75)}
+.gdemo.m .d-tint{background:radial-gradient(circle,rgba(186,230,253,.85),rgba(125,211,252,.35))}
+.gdemo.n .d-tint{background:rgba(226,232,240,.75)}
 @keyframes dTint{0%,53%{opacity:0}55%{opacity:1}60%,84%{opacity:.35}88%,100%{opacity:0}}
 .d-say{position:absolute;right:8px;top:8px;z-index:4;background:#E0F2FE;color:#0369A1;border:2px solid #0369A1;border-radius:9px;padding:0 8px;font-weight:900;font-size:15px;opacity:0;animation-name:dSay}
 @keyframes dSay{0%,54%{opacity:0;transform:scale(.5)}57%{opacity:1;transform:scale(1.15)}60%,84%{opacity:1;transform:none}88%,100%{opacity:0;transform:none}}
@@ -1705,17 +1705,17 @@ function guideDemo(kind){
   const L = [...w], md = METEOR ? 'm' : MOLE ? 'w' : 'n', foe = enemySVG(1), l1 = H(SHOW(L[0])), l2 = H(SHOW(L[1] || L[0]));
   const word = `<div class="d-word"><span class="l1">${l1}</span><span class="l2">${l2}</span></div>`;
   const keys = `<div class="d-keys"><kbd class="k1">${l1}</kbd><kbd class="k2">${l2}</kbd>${kind === 'freeze' ? '<kbd class="ks">空白鍵</kbd>' : ''}</div>`;
-  if (kind === 'heal') return `<div class="demo ${md} heal" aria-hidden="true"><div class="d-top"><span class="d-num"><span class="h0">♥♥<i>♥</i></span><span class="h1">♥♥♥</span></span></div>
+  if (kind === 'heal') return `<div class="gdemo ${md} heal" aria-hidden="true"><div class="d-top"><span class="d-num"><span class="h0">♥♥<i>♥</i></span><span class="h1">♥♥♥</span></span></div>
     <div class="d-item fly">${word}${healSVG()}</div>${keys}</div>`;
-  if (kind === 'freeze') return `<div class="demo ${md} freeze" aria-hidden="true">${MOLE ? '<div class="d-hole"></div>' : ''}<div class="d-foe">${foe}</div><div class="d-tint"></div><div class="d-say">${MOLE ? '凍住' : '停住'} ${FREEZE_SEC} 秒！</div>
+  if (kind === 'freeze') return `<div class="gdemo ${md} freeze" aria-hidden="true">${MOLE ? '<div class="d-hole"></div>' : ''}<div class="d-foe">${foe}</div><div class="d-tint"></div><div class="d-say">${MOLE ? '凍住' : '停住'} ${FREEZE_SEC} 秒！</div>
     <div class="d-top"><span class="d-sic">${itemSVG('freeze')}</span><span class="d-num"><span class="h0">×${ITEM_START}</span><span class="h1">×${ITEM_START + 1}</span></span></div>
     <div class="d-item fly">${word}${itemSVG('freeze')}</div>${keys}</div>`;
   if (kind === 'pill'){ const xs = [20, 50, 80];
-    return `<div class="demo w pill" aria-hidden="true">${xs.map(x => `<div class="d-hole" style="--x:${x}%"></div>`).join('')}
+    return `<div class="gdemo w pill" aria-hidden="true">${xs.map(x => `<div class="d-hole" style="--x:${x}%"></div>`).join('')}
     <div class="d-shake">${[20, 80].map(x => `<div class="d-foe" style="left:${x}%">${foe}</div>`).join('')}</div>
     <div class="d-pill">${word}<div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b></div></div><img class="d-ham" src="assets/hammer.png" alt=""><div class="d-flash"></div>${keys}</div>`; }
   const at = METEOR ? [[22,8],[44,30],[80,12]] : [[40,34],[60,30],[82,34]];
-  return `<div class="demo ${md} bomb" aria-hidden="true"><div class="d-shake">${at.map(([x,y]) => `<div class="d-foe" style="left:${x}%;top:${y}%">${foe}</div>`).join('')}</div>
+  return `<div class="gdemo ${md} bomb" aria-hidden="true"><div class="d-shake">${at.map(([x,y]) => `<div class="d-foe" style="left:${x}%;top:${y}%">${foe}</div>`).join('')}</div>
     <div class="d-item poof">${word}${itemSVG('bomb')}</div><div class="d-flash"></div>${keys}</div>`;
 }
 /* 左上角的道具存量（老師 2026-11-17）：有道具的關卡才顯示；pop＝數字變了，跳一下 */
