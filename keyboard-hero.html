@@ -329,6 +329,9 @@ html.mole .enemy.pill{width:clamp(80px,15vh,124px)}
   -webkit-text-stroke:1.5px #3F6212;text-shadow:0 0 6px #D9FF3B,0 0 14px #A3E635,0 0 24px #84CC16;animation:glow .6s ease-in-out infinite alternate}
 @keyframes glow{to{text-shadow:0 0 10px #F7FF9E,0 0 22px #BEF264,0 0 34px #84CC16}}
 html.mole .enemy.pill.poof .pillimg{animation:poof .35s forwards}
+/* 放大丸冒出來時，外面擴散兩圈螢光，讓學生先注意到它（學生 2026-11-17 回饋） */
+.pill-ring{position:absolute;inset:-25%;border-radius:50%;border:6px solid #D9FF3B;box-shadow:0 0 18px #D9FF3B,inset 0 0 12px #D9FF3B;pointer-events:none;animation:pring .8s ease-out 2}
+@keyframes pring{from{transform:scale(.3);opacity:1}to{transform:scale(1.5);opacity:0}}
 /* 超級木槌（放大丸）：整個畫面大小的木槌敲在正中央；地鼠頭暈、頭上冒星星，再回到地底（老師 2026-11-10） */
 #bigHammer{position:absolute;z-index:8;pointer-events:none;transform-origin:50% 93%;display:none;filter:drop-shadow(0 10px 10px rgba(0,0,0,.45)) drop-shadow(0 0 14px #FDE047)}
 .smash-flash{position:absolute;inset:0;z-index:8;pointer-events:none;background:#fff;animation:sflash .4s ease-out forwards}
@@ -1010,7 +1013,7 @@ const MOLE_TUNE = {
   brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:20},
   master:{name:'打擊大師', secs:60, pass:15, goal:Infinity, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], time:[4.8,4.5,4.2,4,3.8], per:2.2, multi:[3,3,3,4,4], gap:1.6, pill:12, heal:false, items:false},   /* 打地鼠沒有補血（忍者大師的 heal 不要帶過來） */
 };
-const PILL_STAY = 4.5, PILL_LEN = 2;   /* 放大丸停留幾秒、幾個字母 */
+const PILL_STAY = 8, PILL_LEN = 2;   /* 放大丸停留幾秒、幾個字母（學生 2026-11-17 回饋太快消失：4.5→8 秒，和流星雨、忍者的道具 ITEM_SEC 一樣） */
 /* 草地上的洞：後排 3 個、前排 4 個，前後排錯開（字卡才不會疊在一起）；x＝左右（%）、b＝離地面（%） */
 const HOLES = [{x:36,b:30},{x:56,b:30},{x:76,b:30},{x:26,b:4},{x:46,b:4},{x:66,b:4},{x:86,b:4}];
 /* 某個關卡（流星雨 m／忍者 n／打地鼠 w）某一級實際用的設定 */
@@ -2156,11 +2159,12 @@ function pillSpawn(){
   for (let t=0;t<30 && !word;t++){ const w = makeWord(PILL_LEN); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) word = w; }
   if (!word) return false;
   const hole = free[ri(0, free.length-1)], el = document.createElement('div'); el.className = 'enemy pill';
-  el.innerHTML = `<div class="word"></div><div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b></div><div class="tbar"><i></i></div>`;
+  el.innerHTML = `<div class="word"></div><div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b><i class="pill-ring"></i></div><div class="tbar"><i></i></div>`;
+  setTimeout(() => { const r = el.querySelector('.pill-ring'); if (r) r.remove(); }, 1700);
   el.style.left = hole.x + '%'; el.style.bottom = (hole.b + 4.5) + '%'; el.style.zIndex = hole.b < 10 ? 5 : 4;
   $('#enemyLayer').appendChild(el);
   N.es.push({word, el, dur:PILL_STAY, pill:true, hole, lane:-99, start:performance.now(), w:el.querySelector('.word'), bar:el.querySelector('.tbar')}); drawWords();
-  Sound.tone(1047, .1, 'triangle', 0, .07); Sound.tone(1319, .12, 'triangle', .08, .07);
+  [1047,1319,1568,2093].forEach((f,i) => Sound.tone(f, .12, 'triangle', i*.07, .09));   /* 「叮叮叮！」比以前長一點、亮一點 */
   return true;
 }
 /* 超級木槌：倒數暫停約 SMASH_MS；木槌變成整個畫面大 → 用力敲在正中央（畫面震動＋重擊聲）→ 地鼠全部頭暈冒星星（每隻都算分）
