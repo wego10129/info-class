@@ -1009,8 +1009,8 @@ const L2_CROWN_STARS = 5;              /* 第二關 5 顆星＝皇冠（老師 2
    難度差異（老師 2026-10-28）：靠字數、同時出現的敵人數、速度；勇者的速度＝「適中」的基準 */
 const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組（老師 2026-10-30：病毒來襲難度比照標點忍者） */
   novice:{name:'新手', open:3, goal:15, lives:3, glow:true,  blank:false, len:[[1,1],[1,2],[2,2]],                 time:[6,5.5,5],           per:1.4, multi:[1,1,1],       gap:2},
-  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8, items:'freeze'},   /* 勇者只有暫停道具（老師 2026-11-18） */
-  master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[2,3],[3,3],[3,4],[3,4],[4,4]],     time:[4.6,4.3,4,3.8,3.6], per:1,   multi:[1,1,2,2,2],   gap:1.5, heal:true, items:true},   /* heal：補血飯糰（老師 2026-11-12，比照流星雨） */
+  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8, items:'freeze', blankFrom:5},   /* 勇者只有暫停道具；第 5 關起鍵帽沒有字，先預習大師的盲打（老師 2026-11-18） */
+  master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[2,3],[2,3],[3,4],[3,4],[4,4]],     time:[4.6,4.3,4,3.8,3.6], per:1,   multi:[1,1,2,2,2],   gap:1.5, heal:true, items:true},   /* heal：補血飯糰（老師 2026-11-12，比照流星雨） */
 } : {
   /* 標點（老師 2026-10-29）：10／20／30 隻；勇者、大師下修（字數少一點、走慢一點），三級仍有差異：
      新手＝一次 1 個、最慢、鍵盤提示；勇者＝1 個 → 偶爾 2 個、不提示；大師＝1～2 個 → 2 個、最後有 2 隻同時出現、鍵帽沒有字 */
@@ -1027,10 +1027,11 @@ const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組�
    同時 2 顆的小關（老師 2026-11-10）：兩顆之間至少隔 gap 秒（忍者是 1.8／1.5）；每顆的秒數再乘 METEOR_MULTI_SLOW（多 10%）
    大師後段（老師 2026-11-10：學生打到手抖，續航力撐不住）：第 5 小關從 4 個字母改成 3～4 個；
    rest＝進入這幾個小關之前先停在「休息站」，至少休息 REST_SEC 秒，準備好了自己按空白鍵再繼續 */
+/* 老師 2026-11-18：勇者到大師落差太大（一局要打的字母約 60 → 128 個），大師第 2 關從 3 個字母改成 2～3 個（忍者大師一樣） */
 const METEOR_TUNE = {
   novice:{per:3.6},
   brave: {per:3.2, len:[[1,2],[1,2],[2,2],[2,3],[2,3]], multi:[1,1,1,1,2], gap:3},
-  master:{per:2.6, goal:40, len:[[2,3],[3,3],[3,4],[3,4],[3,4]], multi:[1,1,1,2,2], gap:3, rest:[3,4,5], heal:true, items:true},
+  master:{per:2.6, goal:40, len:[[2,3],[2,3],[3,4],[3,4],[3,4]], multi:[1,1,1,2,2], gap:3, rest:[3,4,5], heal:true, items:true},
 };
 const REST_SEC = 5;
 /* 補血愛心（老師 2026-11-10 修正）：大師、隱藏關（heal:true）每換到下一關／下一波，就有一顆長翅膀的愛心，帶著 2～3 個字母（HEAL_LEN），
@@ -1067,7 +1068,7 @@ const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度�
    門檻取三分之二左右：12／15／15；試玩後再調 */
 const MOLE_TUNE = {
   novice:{name:'打擊新手', secs:60, pass:12, goal:Infinity, glow:true,  blank:false, len:[[1,1],[1,1],[1,1]],             time:[6,5.5,5],           per:2.5, multi:[1,1,2],     gap:2.5, pill:null},
-  brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:20, items:false, ice:true},   /* items:false：忍者勇者的過關獎勵不要帶過來 */
+  brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:20, items:false, blankFrom:null, ice:true},   /* items、blankFrom：忍者勇者的過關獎勵、第 5 關鍵帽沒有字不要帶過來 */
   master:{name:'打擊大師', secs:60, pass:15, goal:Infinity, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], time:[4.8,4.5,4.2,4,3.8], per:2.2, multi:[3,3,3,4,4], gap:1.6, pill:12, heal:false, items:false, ice:true},   /* 打地鼠沒有補血（忍者大師的 heal 不要帶過來） */
 };
 /* ice＝❄ 冰凍槌（學生 2026-11-17 回饋，老師同意）：開局送 ITEM_START 個，第 ICE_STAGE 小關再飛來 1 個；按空白鍵，地鼠凍住 FREEZE_SEC 秒不會縮回洞裡。
@@ -1602,7 +1603,7 @@ function renderHome(){
   const nCard = md => { useMode(md); const M = MODES[md], sN = startIdx(md);
     const nBtns = NINJA_ORDER.map((id,i) => { const C = nConf(md, id), R = recOf(md)[id], o = nOpen(md, id);
       const lock = nLock(md, i);
-      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${C.secs ? `${C.secs} 秒限時賽・${M.hit} ${C.pass} ${M.cnt}就過關・沒敲到不扣分${C.pill ? '・會出現放大丸' : ''}${C.ice ? '・有冰凍槌' : ''}` : `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命`}${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}${C.heal ? (md === 'm' ? '・換關時會飛來補血愛心' : '・換關時會飛來補血飯糰') : ''}${C.items ? '・還有道具' : ''}` : lock}</small></span>
+      return `<button class="diff" type="button" data-n="${id}" data-md="${md}" ${o?'':'disabled'}><span>${C.name}${star(i, sN)}<small>${o ? `${C.secs ? `${C.secs} 秒限時賽・${M.hit} ${C.pass} ${M.cnt}就過關・沒敲到不扣分${C.pill ? '・會出現放大丸' : ''}${C.ice ? '・有冰凍槌' : ''}` : `${M.hit} ${C.goal} ${M.cnt}${M.foe}・${C.lives} 條命・${KIND === 'key' ? '按錯' : '打錯'}不扣命`}${C.tip ? '・' + C.tip : C.glow ? '・鍵盤會提示' : C.blank ? '・鍵帽沒有字' : C.blankFrom ? `・第 ${C.blankFrom} 關起鍵帽沒有字` : ''}${C.rest && C.rest.length ? '・中途有休息站' : ''}${C.heal ? (md === 'm' ? '・換關時會飛來補血愛心' : '・換關時會飛來補血飯糰') : ''}${C.items ? '・還有道具' : ''}` : lock}</small></span>
         <span class="lv-r">${o ? `<span class="lv-best">${R.cleared ? '🏆 通關！' : ''}</span><span class="lv-best">${R.best ? `最高 ${R.best} 分` : '還沒挑戰'}</span>` : '🔒'}</span></button>`; }).join('');
     const CR = crisisOpen(md) ? crisisRec(md) : null, CT = CRISIS_TXT[md];
     const crisisBtn = !CR ? '' : `<button class="diff crisis" type="button" data-n="crisis" data-md="${md}"><span>🔥 ${CT.title}<small>隱藏關卡・${CT.menu}</small></span>
@@ -2248,7 +2249,8 @@ function nextWave(st, rest){
   const n = N; if (!n) return;
   const up = st > n.stage; n.stage = st;
   if (rest) return restStop();
-  if (up){ n.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud(); } }, 300); }
+  if (up){ n.holdUntil0 = performance.now() + 1700; setTimeout(() => { if (N===n){ setTheme(themeOf(n.C, st), st); ninjaHud();
+    if (n.C.blankFrom && st === n.C.blankFrom){ kb.blank(true); $('#stageBig').textContent += '・鍵帽的字不見了！'; } } }, 300); }   /* 勇者第 5 關起鍵帽沒有字 */
   else { const b = $('#stageBig'); b.textContent = `⚡ 第 ${Math.floor(n.kills / n.C.wave) + 1} 波・${crisisT(n) >= 1 ? '已經是大師的速度！' : CRISIS_TXT[n.md].faster + '！'}`; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); n.holdUntil0 = performance.now() + 1200; }
 }
 /* ---------- 字母打地鼠：限時賽、木槌、放大丸（老師 2026-11-10） ---------- */
