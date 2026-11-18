@@ -352,6 +352,10 @@ html.mole .enemy.poof .word{transition:opacity .2s .1s;opacity:0}
 @keyframes whack{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
 /* 放大丸（老師 2026-11-10 提供的圖 assets/pill.png，上面用螢光字寫「大」） */
 .enemy.pill .word{border-color:#65A30D}
+/* 「先打」提示（老師 2026-11-18）：場上 2 個以上敵人時，最快碰到的那一個字框發金光；只提示打哪一個，不提示鍵盤位置 */
+.enemy.first{z-index:5}
+.enemy.first .word{position:relative;border-color:#B45309;box-shadow:0 0 0 4px #FDE047,0 0 18px 6px rgba(253,224,71,.8)}
+.enemy.first .word::before{content:'先打';position:absolute;left:50%;bottom:100%;transform:translate(-50%,-8px);background:#FDE047;color:#1B2836;border:2px solid #1B2836;border-radius:8px;padding:0 8px;font:900 15px/1.4 var(--f-body);letter-spacing:0;white-space:nowrap}
 html.mole .enemy.pill{width:clamp(80px,15vh,124px)}
 .pillimg{position:relative;width:100%;animation:rise .28s ease-out;transform-origin:50% 100%}
 .pillimg img{width:100%;display:block}
@@ -2137,7 +2141,18 @@ function target(v){
   return (c.length ? c : N.es).slice().sort((x,y) => progress(y) - progress(x))[0];
 }
 const progress = e => (performance.now() - e.start) / (e.dur*1000);
-const X0 = KIND === 'en' ? 96 : 90, X1 = 22;   /* 敵人從右邊（96%）走到忍者前面（22%） */
+const X0 = KIND === 'en' ? 96 : 90, X1 = 22;
+/* 幫學生專心（老師 2026-11-18：大師後段學生抓不到先打哪一組，看到新的一組出現又會緊張）：英文的流星雨、忍者（含隱藏關）
+   1. 場上 2 個以上敵人時，最快碰到的那一個標「先打」（正在打某一個時，標正在打的那一個）
+   2. 學生正在打某一組字母時，先不出新敵人，打完再出來；最多等 TYPE_HOLD 秒 */
+const FOCUS = () => KIND === 'en' && !MOLE, TYPE_HOLD = 4;
+function markFirst(){
+  const foes = N.es.filter(e => !e.heart && !e.pill);
+  let t = null;
+  if (FOCUS() && foes.length >= 2){ const v = $('#tin').value.toLowerCase(), c = foes.filter(e => !v || e.word.startsWith(v));
+    t = (c.length ? c : foes).reduce((a, b) => progress(b) > progress(a) ? b : a); }
+  if (t !== N.first){ if (N.first) N.first.el.classList.remove('first'); if (t) t.el.classList.add('first'); N.first = t; }
+}   /* 敵人從右邊（96%）走到忍者前面（22%） */
 function ninjaTick(now){
   if (!N || N.over || screen!=='ninja') return;
   if (!N.locked && paused==null){
@@ -2147,7 +2162,9 @@ function ninjaTick(now){
     /* 暫停道具：敵人、道具全部停住，時間到再一起往後挪 */
     if (N.frozenUntil){ if (now >= N.frozenUntil) unfreeze(now); else if (!MOLE){ loop = requestAnimationFrame(ninjaTick); return; } }   /* 打地鼠：凍住時照樣冒新地鼠 */
     /* 老師 2026-11-12：補血（防禦型）要等場上沒有敵人才出現，飄過時也不出新敵人；暫停、大絕招（攻擊型）出現時可以有敵人 */
-    if (!N.heartDue && !N.pickDue && !N.es.some(e => e.heart && (!e.item || e.pick)) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+    const tv = $('#tin').value; if (!tv) N.typingAt = 0; else if (!N.typingAt) N.typingAt = now;
+    const hold = FOCUS() && foes > 0 && N.typingAt && now - N.typingAt < TYPE_HOLD*1000;   /* 正在打字：先不出新敵人 */
+    if (!hold && !N.heartDue && !N.pickDue && !N.es.some(e => e.heart && (!e.item || e.pick)) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
       if (spawn()) N.nextAt = now + N.C.gap*1000;
     }
     if (N.heartDue && foes === 0 && now >= N.holdUntil0 && heartSpawn()) N.heartDue = false;
@@ -2163,6 +2180,7 @@ function ninjaTick(now){
       if (METEOR) e.el.style.bottom = (e.y0 + (e.y1 - e.y0)*p) + 'px'; else if (MOLE){ e.bar.firstChild.style.width = ((1-p)*100) + '%'; e.bar.classList.toggle('low', p > .7); } else e.el.style.left = (X0 + (X1 - X0)*p) + '%';
       if (p >= 1){ enemyHits(e); if (!N || N.locked) break; }
     }
+    if (N && !N.locked) markFirst();
   }
   loop = requestAnimationFrame(ninjaTick);
 }
