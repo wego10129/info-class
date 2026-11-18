@@ -241,8 +241,23 @@ main>[data-screen=home],main>[data-screen=sets],main>[data-screen=result]{overfl
 .stock .s-ic{width:34px;flex:none}.stock .s-ic svg{width:100%;display:block}
 .stock b{font:600 24px var(--f-key);font-variant-numeric:tabular-nums}
 .stock kbd{border:2px solid var(--ink);border-bottom-width:4px;border-radius:6px;padding:0 6px;background:var(--wash);font:inherit;font-size:14px}
-.stock.zero{opacity:.6}
+.stock>span{display:flex;align-items:center;gap:6px}
+.stock .s-b{border-left:2px dashed var(--cap-dim);padding-left:8px}
+.stock .zero{opacity:.55}
 .stock.on{background:#E0F2FE;border-color:#0369A1}
+/* 過關獎勵的字卡（老師 2026-11-18）：停在畫面上等學生打字選 */
+.enemy.heart.item.pick{transform:translateX(-50%) scale(1.1)}
+.enemy.heart.item.pick .pname{display:grid;justify-items:center;margin-top:4px;background:#fff;border:2px solid var(--ink);border-radius:9px;padding:1px 8px;font-size:15px;line-height:1.3;white-space:nowrap;color:var(--ink)}
+.enemy.heart.item.pick .pname small{font-size:12px;color:#475569}
+.enemy.heart.item.pick.bomb .word{border-color:#D97706}
+/* 步驟圖：過關選道具、按 Enter 用大絕招 */
+.gdemo.pick .d-item{top:20%;width:60px}
+.gdemo.pick .d-item.a{left:32%;animation-name:dPickA}.gdemo.pick .d-item.b{left:72%;animation-name:dPickB}
+.gdemo.pick .d-item.b .d-word{border-color:#D97706}
+@keyframes dPickA{0%{opacity:0;left:32%;top:20%;transform:translateX(-50%) scale(1)}4%,22%{opacity:1;left:32%;top:20%;transform:translateX(-50%) scale(1)}32%,100%{opacity:0;left:8%;top:0%;transform:translateX(-50%) scale(.35)}}
+@keyframes dPickB{0%{opacity:0}4%,21%{opacity:1}28%,100%{opacity:0}}
+.gdemo.bomb .d-keys .ks{animation-name:dKe}
+@keyframes dKe{0%,12%{background:#fff;box-shadow:none}15%,17%{background:#FEF9C3;box-shadow:0 0 0 5px #FDE047}19%,22%{transform:translateY(3px);border-bottom-width:2px;background:#FDE047;box-shadow:0 0 0 5px #FDE047}24%,100%{transform:none;border-bottom-width:5px;background:#fff;box-shadow:none}}
 .g-dots{display:flex;gap:8px;justify-content:center}.g-dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.35)}.g-dots i.on{background:#FDE047}
 .count{font:600 72px/1 var(--f-key)}
 .remind{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:8;background:#FFC233;border:3px solid var(--ink);border-radius:12px;padding:2px 14px;font-weight:900;white-space:nowrap}
@@ -990,7 +1005,7 @@ const L2_CROWN_STARS = 5;              /* 第二關 5 顆星＝皇冠（老師 2
    難度差異（老師 2026-10-28）：靠字數、同時出現的敵人數、速度；勇者的速度＝「適中」的基準 */
 const NINJA = KIND === 'en' ? {   /* 標點、鍵盤小勇士用下面同一組（老師 2026-10-30：病毒來襲難度比照標點忍者） */
   novice:{name:'新手', open:3, goal:15, lives:3, glow:true,  blank:false, len:[[1,1],[1,2],[2,2]],                 time:[6,5.5,5],           per:1.4, multi:[1,1,1],       gap:2},
-  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8},
+  brave: {name:'勇者', open:4, goal:30, lives:3, glow:false, blank:false, len:[[1,2],[2,2],[2,3],[3,3],[3,3]],     time:[5,4.6,4.3,4,3.8],   per:1.1, multi:[1,1,1,2,2],   gap:1.8, items:'freeze'},   /* 勇者只有暫停道具（老師 2026-11-18） */
   master:{name:'大師', open:5, goal:50, lives:3, glow:false, blank:true,  len:[[2,3],[3,3],[3,4],[3,4],[4,4]],     time:[4.6,4.3,4,3.8,3.6], per:1,   multi:[1,1,2,2,2],   gap:1.5, heal:true, items:true},   /* heal：補血飯糰（老師 2026-11-12，比照流星雨） */
 } : {
   /* 標點（老師 2026-10-29）：10／20／30 隻；勇者、大師下修（字數少一點、走慢一點），三級仍有差異：
@@ -1019,20 +1034,23 @@ const REST_SEC = 5;
    命是滿的也可以加（額外的命，最多 HEAL_MAX 條），為後面的關卡做準備。要不要打由學生自己判斷；沒打到不扣命
    老師 2026-11-12：愛心飛過去的時候不出現新的流星（等愛心被打到或飛走才出現）；飛過去的時間 7→10 秒 */
 const HEAL_SEC = 10, HEAL_LEN = [2,3], HEAL_MAX = 5;
-/* 道具（老師 2026-11-12 同意清單）：大師、隱藏關（items:true）換關時，補血之後再飄來一個道具，打法和補血一樣（打出上面的字母）
-   freeze＝暫停（流星雨：❄ 冰凍星／忍者：🌀 煙霧彈／打地鼠：❄ 冰凍槌，見 ICE_STAGE）：先存起來（可以存好幾個，見 ITEM_START），學生想休息時按空白鍵，敵人全部停住 FREEZE_SEC 秒
-   bomb＝一次消滅畫面上的敵人（流星雨：🌠 彗星大掃除／忍者：💥 手裡劍風暴）：打到馬上發動，算分、不算進字母熟練度；
-        場上同時有 2 個以上敵人才飄來（老師 2026-11-12），不在換關時飄來
-   頻率：大師第 3、5 關＝暫停，第 4 關＝消滅；隱藏關每 2 波（第 3、5、9…波）＝暫停，每 3 波（第 4、7、10…波）＝消滅（同一波都有時給消滅） */
-const ITEM_SEC = 8, FREEZE_SEC = 5;
-/* 道具存量（老師 2026-11-17）：要自己按空白鍵發動的道具（暫停），開局先送 ITEM_START 個，打到一個再多存一個（最多 ITEM_MAX 個），
-   畫面左上角顯示存了幾個。補血、大絕招打到就馬上發動，不用存，所以不送 */
-const ITEM_START = 1, ITEM_MAX = 9;
-function itemFor(n, st){
-  if (!n.C.items) return null;
-  if (n.C.endless){ const w = Math.floor(n.kills / n.C.wave) + 1; return w % 3 === 1 && w > 1 ? 'bomb' : w % 2 === 1 ? 'freeze' : null; }
-  return st === 4 ? 'bomb' : st === 3 || st === 5 ? 'freeze' : null;
-}
+/* 道具（老師 2026-11-12 同意清單）：
+   freeze＝暫停（流星雨：❄ 冰凍星／忍者：🌀 煙霧彈／打地鼠：❄ 冰凍槌，見 ICE_STAGE）：先存起來，學生想休息時按空白鍵，敵人全部停住 FREEZE_SEC 秒
+   bomb＝大絕招，一次消滅畫面上的敵人（流星雨：🌠 彗星大掃除／忍者：💥 手裡劍風暴）：算分、不算進字母熟練度
+   過關獎勵（老師 2026-11-18：以前道具在換關時飛過去，8 秒內沒打到就沒了，學生很少拿到）：
+   每過一關（隱藏關是每過一波），補血之後、場上沒有敵人時，出現「選一個道具」的字卡（不會飛走，也不出新敵人），
+   打出哪一張的字母就拿到哪一個，另一張消失。拿道具也要打字，道具只是附加的，主要還是練打字：
+   - items:true（大師、隱藏關）：暫停（PICK_LEN 個字母）和大絕招（BOMB_LEN 個字母，想要大絕招就要多打一點）二選一
+   - items:'freeze'（勇者）：只有暫停
+   - 存量：暫停最多 ITEM_MAX 個、大絕招最多 BOMB_MAX 個（存滿的那一種就不出現；兩種都滿就不出現字卡）
+   - 大絕招按 Enter 發動，場上有 2 個以上敵人才能用（不到 2 個時按了不會用掉）。場上最多 2 個敵人，所以每用一次只少打 2 個 */
+const FREEZE_SEC = 5;
+/* 道具存量（老師 2026-11-17、11-18）：暫停開局先送 ITEM_START 個；畫面左上角顯示存了幾個 */
+const ITEM_START = 1, ITEM_MAX = 3, BOMB_MAX = 1, PICK_LEN = [2,3], BOMB_LEN = 4;
+const ITEM_SEC = 8;   /* 打地鼠第 ICE_STAGE 小關飛來的冰凍槌，飛過畫面的秒數 */
+const hasBomb = C => C.items === true;
+/* 這次過關可以選哪些道具（存滿的不給） */
+const pickKinds = n => !n.C.items ? [] : [(n.stock || 0) < ITEM_MAX && 'freeze', hasBomb(n.C) && (n.bombs || 0) < BOMB_MAX && 'bomb'].filter(Boolean);
 const ITEM_TXT = {m:{freeze:['❄','冰凍星','流星'], bomb:['🌠','彗星大掃除','流星']}, n:{freeze:['🌀','煙霧彈','敵人'], bomb:['💥','手裡劍風暴','敵人']}, w:{freeze:['❄','冰凍槌','地鼠']}};
 const itemTxt = (kind, md) => (ITEM_TXT[md] || ITEM_TXT.n)[kind] || ITEM_TXT.n[kind];   /* 打地鼠只有冰凍槌，其他用忍者的（不會出現） */
 const ICY = () => METEOR || MOLE;   /* 冰凍的樣子（變藍、雪花）；忍者是煙霧 */
@@ -1045,7 +1063,7 @@ const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度�
    門檻取三分之二左右：12／15／15；試玩後再調 */
 const MOLE_TUNE = {
   novice:{name:'打擊新手', secs:60, pass:12, goal:Infinity, glow:true,  blank:false, len:[[1,1],[1,1],[1,1]],             time:[6,5.5,5],           per:2.5, multi:[1,1,2],     gap:2.5, pill:null},
-  brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:20, ice:true},
+  brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:20, items:false, ice:true},   /* items:false：忍者勇者的過關獎勵不要帶過來 */
   master:{name:'打擊大師', secs:60, pass:15, goal:Infinity, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], time:[4.8,4.5,4.2,4,3.8], per:2.2, multi:[3,3,3,4,4], gap:1.6, pill:12, heal:false, items:false, ice:true},   /* 打地鼠沒有補血（忍者大師的 heal 不要帶過來） */
 };
 /* ice＝❄ 冰凍槌（學生 2026-11-17 回饋，老師同意）：開局送 ITEM_START 個，第 ICE_STAGE 小關再飛來 1 個；按空白鍵，地鼠凍住 FREEZE_SEC 秒不會縮回洞裡。
@@ -1695,8 +1713,9 @@ function itemGuide(el, title, sub, done){
   const steps = [
     MOLE ? {ic:guideDemo('heal'), h:`⏰ 加秒：時間 +${TIME_ADD} 秒`, p:`每打完一波（${C.wave} 隻），地鼠先回洞裡，接著飛來 ⏰。<br>它飛過的時候<b>時間暫停</b>；打出上面的字母，<b>時間 +${TIME_ADD} 秒</b>！`, on:C.heal}
     : {ic:guideDemo('heal'), h:`${METEOR ? '💖' : '🍙'} ${heal}`, p:`場上沒有${foe}的時候會飛來。<br>打出上面的字母，<b>加 1 條命</b>！`, on:C.heal},
-    {ic:guideDemo('freeze'), h:`${fi} ${fn}：讓${foe}${stopTxt}`, p:`<b>一開始就送你 ${ITEM_START} 個</b>，左上角看得到有幾個。<br><span class="g-flow live"><span>① 打出上面的字母<br>再多存 1 個</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${stop3}</span></span>`, on:C.items || C.ice},
-    {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`場上有 <b>2 個以上</b>${foe}時才會飛來。<br>打出上面的字母，<b>一次清光畫面</b>！`, on:C.items},
+    {ic:guideDemo('pick'), h:'🎁 過關獎勵：選一個道具', p:`每過一${C.endless ? '波' : '關'}，場上沒有${foe}時會出現兩張字卡。<br>打出哪一張的字母，<b>就拿到哪一個道具</b>。<br>${bi} ${bn}的字母比較多；存滿的道具不會出現。`, on:!MOLE && hasBomb(C)},
+    {ic:guideDemo('freeze'), h:`${fi} ${fn}：讓${foe}${stopTxt}`, p:`<b>一開始就送你 ${ITEM_START} 個</b>，左上角看得到有幾個（最多存 ${ITEM_MAX} 個）。<br><span class="g-flow live"><span>① ${MOLE ? '打出上面的字母' : `每過一${C.endless ? '波' : '關'}，打出字母`}<br>再多存 1 個</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${stop3}</span></span>`, on:C.items || C.ice},
+    {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`過關時選它，先存起來（最多 ${BOMB_MAX} 個）。<br>場上有 <b>2 個以上</b>${foe}時，按 <kbd>Enter</kbd>，<b>一次清光畫面</b>！`, on:hasBomb(C)},
     {ic:guideDemo('pill'), h:'💊 放大丸：超級大木槌', p:`場上有 <b>2 隻以上</b>地鼠時，會從洞裡冒出來（停 ${PILL_STAY} 秒）。<br>打出上面的字母，木槌變超大，<b>一次敲暈全部地鼠</b>！`, on:MOLE && C.pill}].filter(x => x.on);
   let i = 0;
   const finish = () => { document.removeEventListener('keydown', guideKey); guideKey = null; countdown(el, title, sub, done); };
@@ -1729,18 +1748,23 @@ function guideDemo(kind){
     return `<div class="gdemo w pill" aria-hidden="true">${xs.map(x => `<div class="d-hole" style="--x:${x}%"></div>`).join('')}
     <div class="d-shake">${[20, 80].map(x => `<div class="d-foe" style="left:${x}%">${foe}</div>`).join('')}</div>
     <div class="d-pill">${word}<div class="pillimg"><img src="assets/pill.png" alt=""><b>大</b></div></div><img class="d-ham" src="assets/hammer.png" alt=""><div class="d-flash"></div>${keys}</div>`; }
+  if (kind === 'pick'){ let w4 = 'abcd'; try { w4 = makeWord(BOMB_LEN) || w4; } catch (_){}
+    return `<div class="gdemo ${md} pick" aria-hidden="true"><div class="d-top"><span class="d-sic">${itemSVG('freeze')}</span><span class="d-num"><span class="h0">×${ITEM_START}</span><span class="h1">×${ITEM_START + 1}</span></span></div>
+    <div class="d-item a">${word}${itemSVG('freeze')}</div><div class="d-item b"><div class="d-word">${H([...w4].map(SHOW).join(''))}</div>${itemSVG('bomb')}</div>${keys}</div>`; }
   const at = METEOR ? [[22,8],[44,30],[80,12]] : [[40,34],[60,30],[82,34]];
   return `<div class="gdemo ${md} bomb" aria-hidden="true"><div class="d-shake">${at.map(([x,y]) => `<div class="d-foe" style="left:${x}%;top:${y}%">${foe}</div>`).join('')}</div>
-    <div class="d-item poof">${word}${itemSVG('bomb')}</div><div class="d-flash"></div>${keys}</div>`;
+    <div class="d-top"><span class="d-sic">${itemSVG('bomb')}</span><span class="d-num"><span class="h0">×1</span><span class="h1">×0</span></span></div>
+    <div class="d-flash"></div><div class="d-keys"><kbd class="ks">Enter</kbd></div></div>`;
 }
 /* 左上角的道具存量（老師 2026-11-17）：有道具的關卡才顯示；pop＝數字變了，跳一下 */
 function stockDraw(pop){
   const el = $('#nStock'); if (!el) return;
   if (!N || !(N.C.items || N.C.ice) || KIND === 'key'){ el.hidden = true; return; }
-  const k = N.stock || 0, on = !!N.frozenUntil;
-  el.hidden = false; el.className = 'stock' + (k || on ? '' : ' zero') + (on ? ' on' : '');
+  const k = N.stock || 0, on = !!N.frozenUntil, bk = N.bombs || 0;
+  el.hidden = false; el.className = 'stock' + (on ? ' on' : '');
   el.title = itemTxt('freeze', N.md)[1];
-  el.innerHTML = `<span class="s-ic">${itemSVG('freeze')}</span><b>×${k}</b>${on ? `<span>${MOLE ? '凍住中' : '停住中'}</span>` : k ? '<kbd>空白鍵</kbd>' : ''}`;
+  el.innerHTML = `<span class="s-f${k || on ? '' : ' zero'}"><span class="s-ic">${itemSVG('freeze')}</span><b>×${k}</b>${on ? `<span>${MOLE ? '凍住中' : '停住中'}</span>` : k ? '<kbd>空白鍵</kbd>' : ''}</span>`
+    + (hasBomb(N.C) ? `<span class="s-b${bk ? '' : ' zero'}" title="${itemTxt('bomb', N.md)[1]}"><span class="s-ic">${itemSVG('bomb')}</span><b>×${bk}</b>${bk ? '<kbd>Enter</kbd>' : ''}</span>` : '');
   if (pop && el.animate) el.animate([{transform:'scale(1)'}, {transform:'scale(1.35)'}, {transform:'scale(1)'}], {duration:450});
 }
 function fx(el, kind, text){ el.className = 'fixfx' + (kind==='no'?' no':kind==='mid'?' mid':''); el.innerHTML = `<span>${H(text)}</span>`; clearTimeout(el._t); el._t = setTimeout(()=>el.innerHTML='', 800); }
@@ -2062,11 +2086,11 @@ function startNinja(id, md){
   if (KIND === 'key') return vStart(id);
   stopAll();
   const C = id === 'crisis' ? crisisConf(md) : nConf(md, id);
-  N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0, stock:C.items || C.ice ? ITEM_START : 0};
+  N = {id, md, C, lives:C.lives, kills:0, score:0, stage:1, combo:0, maxCombo:0, rts:[], weak:new Set(), over:false, locked:true, hurtUntil:0, es:[], nextAt:0, badLen:0, lastLen:0, holdUntil0:0, stock:C.items || C.ice ? ITEM_START : 0, bombs:0};
   show('ninja'); kb.blank(C.blank); $('#enemyLayer').classList.remove('frozen', 'smoked');
   setTheme(themeOf(C,1), 0); ninjaHud();
   const d = N;
-  (C.items || C.ice || (MOLE && C.pill) ? itemGuide : countdown)($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}${C.ice ? `${itemTxt('freeze', md).slice(0,2).join('')}：一開始送你 ${ITEM_START} 個，第 ${ICE_STAGE} 小關還會飛來 1 個；按空白鍵，地鼠凍住 ${FREEZE_SEC} 秒不會縮回去（時間照走）。` : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `${a}${an}：一開始送你 ${ITEM_START} 個（左上角看得到有幾個），換關時還會飛來更多；想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒。還有 ${b}${bn}，打到就清光畫面。`; })() : ''}`, () => {
+  (C.items || C.ice || (MOLE && C.pill) ? itemGuide : countdown)($('#nCover'), `${PK.ninjaName}・${C.name}`, `${C.hint === 'use' ? '病毒頭上寫著用途，想一想要按哪個鍵' : C.hint === 'sit' ? '病毒頭上是一個情境，想一想要按哪個鍵（2 個情境就要按 2 個鍵）' : PK.enemyHint}！${C.endless ? CRISIS_TXT[md].rule : METEOR ? `打碎 ${C.goal} 顆就通關。流星掉到地上才扣命，` : MOLE ? `${C.secs} 秒內敲越多，分數越高，敲到 ${C.pass} 隻就過關！地鼠縮回洞裡不扣分，${C.pill ? '看到發光的「大」放大丸，打出上面的字母，木槌會變得超級大，一次敲暈全部的地鼠！' : ''}${C.ice ? `${itemTxt('freeze', md).slice(0,2).join('')}：一開始送你 ${ITEM_START} 個，第 ${ICE_STAGE} 小關還會飛來 1 個；按空白鍵，地鼠凍住 ${FREEZE_SEC} 秒不會縮回去（時間照走）。` : ''}` : `擊退 ${C.goal} 個就通關。被${FOE}碰到才扣命，`}${KIND === 'key' ? '按錯不扣命。' : '打錯不扣命（打錯了按 Backspace 改正）。'}${C.items ? (() => { const [a, an, f] = itemTxt('freeze', md), [b, bn] = itemTxt('bomb', md); return `每過一${C.endless ? '波' : '關'}，打出字卡上的字母${hasBomb(C) ? '選一個道具' : '拿道具'}。${a}${an}：一開始送你 ${ITEM_START} 個（左上角看得到有幾個）；想休息時按空白鍵，${f}停住 ${FREEZE_SEC} 秒。${hasBomb(C) ? `${b}${bn}：${f} 2 個以上時按 Enter，一次清光畫面。` : ''}`; })() : ''}`, () => {
     if (N!==d) return; N.locked = false; N.nextAt = 0; if (C.secs){ N.t0 = performance.now(); N.endAt = N.t0 + C.secs*1000; N.pillAt = N.t0 + (C.pill || 0)*1000; ninjaHud(); }
     focusTin(); cancelAnimationFrame(loop); loop = requestAnimationFrame(ninjaTick); });
   if (MOLE) hammerIdle();
@@ -2123,17 +2147,17 @@ function ninjaTick(now){
     /* 暫停道具：敵人、道具全部停住，時間到再一起往後挪 */
     if (N.frozenUntil){ if (now >= N.frozenUntil) unfreeze(now); else if (!MOLE){ loop = requestAnimationFrame(ninjaTick); return; } }   /* 打地鼠：凍住時照樣冒新地鼠 */
     /* 老師 2026-11-12：補血（防禦型）要等場上沒有敵人才出現，飄過時也不出新敵人；暫停、大絕招（攻擊型）出現時可以有敵人 */
-    if (!N.heartDue && !N.es.some(e => e.heart && !e.item) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
+    if (!N.heartDue && !N.pickDue && !N.es.some(e => e.heart && (!e.item || e.pick)) && foes < maxNow() && N.kills + foes < N.C.goal && (foes === 0 || now >= N.nextAt) && now >= N.holdUntil0){
       if (spawn()) N.nextAt = now + N.C.gap*1000;
     }
     if (N.heartDue && foes === 0 && now >= N.holdUntil0 && heartSpawn()) N.heartDue = false;
-    else if (!N.heartDue && N.itemDue && now >= N.holdUntil0 && !N.es.some(e => e.heart) && heartSpawn(N.itemDue)) N.itemDue = null;
-    /* 大絕招：這一關（這一波）裡，第一次同時有 2 個以上敵人時才飄來；飄到一半敵人剩不到 2 個就淡出 */
-    if (N.bombDue && foes >= 2 && !N.es.some(e => e.heart) && heartSpawn('bomb')) N.bombDue = false;
-    for (const e of N.es) if (e.item === 'bomb' && foes < 2 && !e.fading){ e.fading = true; itemFade(e); }
+    else if (!N.heartDue && N.itemDue && now >= N.holdUntil0 && !N.es.some(e => e.heart) && heartSpawn(N.itemDue)) N.itemDue = null;   /* 打地鼠的冰凍槌 */
+    /* 過關獎勵：補血之後、場上沒有敵人時，出現「選一個道具」的字卡（老師 2026-11-18） */
+    else if (!N.heartDue && N.pickDue && foes === 0 && now >= N.holdUntil0 && !N.es.some(e => e.heart)){ pickSpawn(); N.pickDue = false; }
     if (N.C.pill && now >= N.pillAt && foes >= 2 && !N.es.some(e => e.pill) && pillSpawn()) N.pillAt = now + N.C.pill*1000*(.8 + Math.random()*.4);
     if (!N.frozenUntil) for (const e of N.es.slice()){   /* 凍住時，地鼠、道具都不會縮回去或飄走 */
       const p = Math.min(1, (now - e.start) / (e.dur*1000));
+      if (e.pick) continue;   /* 過關獎勵的字卡不會飛走 */
       if (e.heart){ e.el.style.left = (HX0 + (HX1 - HX0)*p) + '%'; if (p >= 1) heartGone(e); continue; }
       if (e.pill){ e.bar.firstChild.style.width = ((1-p)*100) + '%'; if (p >= 1) itemGone(e); continue; }
       if (METEOR) e.el.style.bottom = (e.y0 + (e.y1 - e.y0)*p) + 'px'; else if (MOLE){ e.bar.firstChild.style.width = ((1-p)*100) + '%'; e.bar.classList.toggle('low', p > .7); } else e.el.style.left = (X0 + (X1 - X0)*p) + '%';
@@ -2199,7 +2223,7 @@ function defeat(e, auto){   /* auto＝放大丸自動敲到的（不算進學生
   if (!waveEnd){ if (!N.es.length) N.holdUntil0 = performance.now() + 450; return; }
   const rest = (st > N.stage && (N.C.rest || []).includes(st)) || !!(N.C.endless && N.C.restEvery && Math.floor(N.kills / N.C.wave) % N.C.restEvery === 0);
   if (N.C.heal) N.heartDue = true;   /* 下一關開始（休息站之後）飛來補血愛心 */
-  { const it = itemFor(N, st); N.itemDue = it === 'freeze' ? it : null; N.bombDue = it === 'bomb'; }   /* 暫停：補血之後飄來；大絕招：場上 2 個以上敵人才飄來 */
+  if (N.C.items) N.pickDue = true;   /* 補血之後出現「選一個道具」（老師 2026-11-18） */
   nextWave(st, rest);
 }
 function nextWave(st, rest){
@@ -2363,6 +2387,24 @@ function heartSpawn(kind){
   Sound.tone(988, .12, 'triangle', 0, .06); Sound.tone(1319, .15, 'triangle', .1, .06);
   return true;
 }
+/* 過關獎勵（老師 2026-11-18）：場上沒有敵人時，出現「選一個道具」的字卡，不會飛走；打出哪一張的字母就拿哪一個 */
+const PICK_X = {1:[50], 2:[38, 64]};
+function pickSpawn(){
+  const kinds = pickKinds(N); if (!kinds.length) return;
+  kinds.forEach((kind, i) => {
+    let word = null;
+    for (let t=0;t<30 && !word;t++){ const w = makeWord(kind === 'bomb' ? BOMB_LEN : ri(PICK_LEN[0], PICK_LEN[1])); if (!N.es.some(e => e.word.startsWith(w) || w.startsWith(e.word))) word = w; }
+    if (!word) return;
+    const [ic, name] = itemTxt(kind, N.md), el = document.createElement('div'); el.className = `enemy heart item pick ${kind}`;
+    el.innerHTML = `<div class="word"></div>${itemSVG(kind)}<b class="pname">${ic} ${name}<small>${kind === 'bomb' ? '按 Enter 用' : '按空白鍵用'}</small></b>`;
+    el.style.left = PICK_X[kinds.length][i] + '%'; el.style.bottom = '42%';
+    $('#enemyLayer').appendChild(el);
+    N.es.push({word, el, dur:Infinity, heart:true, item:kind, pick:true, lane:-99, start:performance.now(), w:el.querySelector('.word')});
+  });
+  drawWords();
+  const b = $('#stageBig'); b.textContent = kinds.length > 1 ? '🎁 過關獎勵：打字選一個道具！' : '🎁 過關獎勵：打出字母拿道具！'; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+  [784,988,1175,1568].forEach((c,i) => Sound.tone(c,.14,'triangle',i*.07,.06));
+}
 /* 地鼠大暴動：打到 ⏰，飛到上方「剩下」欄位，時間 +TIME_ADD 秒 */
 function clockGot(e){
   const n = N; n.es = n.es.filter(x => x !== e);
@@ -2411,16 +2453,18 @@ function itemSVG(kind){
 function itemGot(e){
   const n = N; n.es = n.es.filter(x => x !== e); e.el.classList.add('poof'); setTimeout(() => e.el.remove(), 400);
   const [ic, name, foe] = itemTxt(e.item, n.md);
+  if (e.pick) n.es.filter(x => x.pick).forEach(x => itemFade(x));   /* 選了一個，另一張消失 */
   tinReset(); kb.clear(); drawWords();
   [784,988,1175].forEach((c,i) => Sound.tone(c,.15,'triangle',i*.08,.08));
   if (e.item === 'freeze'){ n.stock = Math.min(ITEM_MAX, (n.stock || 0) + 1); stockFly(e, n);
     fx($('#nFx'), 'ok', `${ic} 拿到${name}！現在有 ${n.stock} 個`); return; }
-  bombAll(n, ic, name);
+  n.bombs = Math.min(BOMB_MAX, (n.bombs || 0) + 1); stockFly(e, n);
+  fx($('#nFx'), 'ok', `${ic} 拿到${name}！${foe} 2 個以上時按 Enter`);
 }
 /* 拿到的暫停道具飛到左上角的存量，飛到了數字才加上去 */
 function stockFly(e, n){
-  const r = (e.el.querySelector('svg') || e.el).getBoundingClientRect(), t = $('#nStock').getBoundingClientRect();
-  const f = document.createElement('div'); f.className = 'heart-fly'; f.innerHTML = itemSVG('freeze');
+  const r = (e.el.querySelector('svg') || e.el).getBoundingClientRect(), t = ($(e.item === 'bomb' ? '#nStock .s-b' : '#nStock .s-f') || $('#nStock')).getBoundingClientRect();
+  const f = document.createElement('div'); f.className = 'heart-fly'; f.innerHTML = itemSVG(e.item);
   f.style.left = (r.left + r.width/2) + 'px'; f.style.top = (r.top + r.height/2) + 'px'; f.style.width = r.width + 'px';
   document.body.appendChild(f); e.el.style.visibility = 'hidden';
   requestAnimationFrame(() => requestAnimationFrame(() => { f.style.left = (t.left + 20) + 'px'; f.style.top = (t.top + t.height/2) + 'px'; f.style.width = '34px'; f.style.opacity = '.3'; }));
@@ -2486,7 +2530,7 @@ function bombAll(n, ic, name){
     if (!waveEnd) return;
     const rest = (st > n.stage && (n.C.rest || []).includes(st)) || !!(n.C.endless && n.C.restEvery && Math.floor(n.kills / n.C.wave) % n.C.restEvery === 0);
     if (n.C.heal) n.heartDue = true;
-    { const it = itemFor(n, st); n.itemDue = it === 'freeze' ? it : null; n.bombDue = it === 'bomb'; }
+    if (n.C.items) n.pickDue = true;
     nextWave(st, rest);
   });
   ninjaHud();
@@ -2532,6 +2576,15 @@ function unfreeze(now){
   $('#enemyLayer').classList.remove('frozen', 'smoked'); ninjaHud();
 }
 document.addEventListener('keydown', e => { if (e.code === 'Space' && N && !N.rest && N.stock > 0 && screen === 'ninja'){ e.preventDefault(); useFreeze(); } });
+/* 按 Enter 用大絕招（老師 2026-11-18）：場上有 2 個以上敵人才發動；不到 2 個時提示，不會用掉 */
+function useBomb(){
+  const n = N; if (!n || !(n.bombs > 0) || n.locked || n.rest) return false;
+  const [ic, name, foe] = itemTxt('bomb', n.md);
+  if (n.es.filter(x => !x.heart && !x.pill).length < 2){ fx($('#nFx'), 'no', `${foe} 2 個以上才能用${name}`); Sound.bad(); return false; }
+  n.bombs--; stockDraw(); bombAll(n, ic, name);
+  return true;
+}
+document.addEventListener('keydown', e => { if ((e.code === 'Enter' || e.code === 'NumpadEnter') && N && !N.rest && N.bombs > 0 && screen === 'ninja' && !e.isComposing){ e.preventDefault(); useBomb(); } });
 /* 沒打到：飄出畫面就消失，不扣命 */
 function heartGone(e){
   const v = $('#tin').value.toLowerCase(), wasTarget = v && e.word.startsWith(v) && !N.es.some(x => x!==e && x.word.startsWith(v));
