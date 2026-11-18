@@ -344,6 +344,7 @@ html.mole #hammer{display:block}
 #hammer.swing{transform:rotate(-70deg)}   /* 不支援動畫 API 時的備用 */
 /* 地鼠沒被敲到、自己縮回洞裡：往下沉（被敲到才是壓扁） */
 html.mole .enemy.hide svg{animation:hide .3s ease-in forwards}
+html.mole .enemy.ebb:not(.dizzy):not(.poof):not(.hide) svg{transform:translateY(16%);transition:transform .9s ease-in}
 @keyframes hide{to{transform:translateY(60%) scaleY(.4);opacity:0}}
 html.mole .enemy.hide .word,html.mole .enemy.hide .tbar,html.mole .enemy.poof .tbar{visibility:hidden}
 html.mole .enemy.poof .word{transition:opacity .2s .1s;opacity:0}
@@ -1074,6 +1075,8 @@ const MOLE_TUNE = {
 /* ice＝❄ 冰凍槌（學生 2026-11-17 回饋，老師同意）：開局送 ITEM_START 個，第 ICE_STAGE 小關再飛來 1 個；按空白鍵，地鼠凍住 FREEZE_SEC 秒不會縮回洞裡。
    凍住時 60 秒倒數照走（老師決定：分數才能和以前公平比較），也照樣冒新地鼠（新地鼠一樣凍住） */
 const ICE_STAGE = 3;
+/* 快縮回洞裡的提醒（老師 2026-11-18：拿掉地鼠底下的進度條）：剩 EBB_SEC 秒時，地鼠輕輕往下沉一點（不變紅、不閃）；放大丸保留進度條 */
+const EBB_SEC = 1;
 const PILL_STAY = 8, PILL_LEN = 2;   /* 放大丸停留幾秒、幾個字母（學生 2026-11-17 回饋太快消失：4.5→8 秒，和流星雨、忍者的道具 ITEM_SEC 一樣） */
 /* 草地上的洞：後排 3 個、前排 4 個，前後排錯開（字卡才不會疊在一起）；x＝左右（%）、b＝離地面（%） */
 const HOLES = [{x:36,b:30},{x:56,b:30},{x:76,b:30},{x:26,b:4},{x:46,b:4},{x:66,b:4},{x:86,b:4}];
@@ -2112,7 +2115,7 @@ function spawn(){
   const twin = !!C.twin && len >= TWIN_MIN;
   const el = document.createElement('div'); el.className = twin ? (METEOR ? 'enemy twin' : 'enemy horse') : C.endless && !METEOR && !MOLE ? 'enemy mini' : 'enemy';
   /* 兩個黏在一起：流星＝兩顆流星；忍者＝兩個敵人騎一匹馬（老師 2026-11-12） */
-  el.innerHTML = `<div class="word"></div>${twin ? (METEOR ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : horseSVG(themeOf(C, N.stage))) : enemySVG(themeOf(C, N.stage))}${MOLE ? '<div class="tbar"><i></i></div>' : ''}`; el.style.left = X0 + '%';
+  el.innerHTML = `<div class="word"></div>${twin ? (METEOR ? `<div class="twin">${enemySVG(themeOf(C, N.stage)).repeat(2)}</div>` : horseSVG(themeOf(C, N.stage))) : enemySVG(themeOf(C, N.stage))}`;   /* 地鼠底下不放時間進度條（老師 2026-11-18：學生看了會緊張，沒敲到也不扣分） */ el.style.left = X0 + '%';
   /* 打地鼠：挑一個空的洞（前排的地鼠疊在後排前面） */
   let hole = null;
   if (MOLE){ const free = HOLES.filter(h => !N.es.some(o => o.hole === h)); if (!free.length) return false; hole = free[ri(0, free.length-1)];
@@ -2178,7 +2181,7 @@ function ninjaTick(now){
       if (e.pick) continue;   /* 過關獎勵的字卡不會飛走 */
       if (e.heart){ e.el.style.left = (HX0 + (HX1 - HX0)*p) + '%'; if (p >= 1) heartGone(e); continue; }
       if (e.pill){ e.bar.firstChild.style.width = ((1-p)*100) + '%'; if (p >= 1) itemGone(e); continue; }
-      if (METEOR) e.el.style.bottom = (e.y0 + (e.y1 - e.y0)*p) + 'px'; else if (MOLE){ e.bar.firstChild.style.width = ((1-p)*100) + '%'; e.bar.classList.toggle('low', p > .7); } else e.el.style.left = (X0 + (X1 - X0)*p) + '%';
+      if (METEOR) e.el.style.bottom = (e.y0 + (e.y1 - e.y0)*p) + 'px'; else if (MOLE) e.el.classList.toggle('ebb', (1-p)*e.dur < EBB_SEC); else e.el.style.left = (X0 + (X1 - X0)*p) + '%';
       if (p >= 1){ enemyHits(e); if (!N || N.locked) break; }
     }
     if (N && !N.locked) markFirst();
