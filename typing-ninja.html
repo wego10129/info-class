@@ -1053,7 +1053,10 @@ const ITEM_START = 1, ITEM_MAX = 3, BOMB_MAX = 1, PICK_LEN = [2,3], BOMB_LEN = 4
 const ITEM_SEC = 8;   /* 飛過畫面的道具停留秒數（目前只剩舊程式用到） */
 const hasBomb = C => C.items === true;
 /* 這次過關可以選哪些道具（存滿的不給） */
-const pickKinds = n => !n.C.items ? [] : [(n.stock || 0) < ITEM_MAX && 'freeze', hasBomb(n.C) && (MOLE ? (n.pills || 0) < PILL_MAX : (n.bombs || 0) < BOMB_MAX) && 'bomb'].filter(Boolean);   /* 打地鼠的 bomb＝放大丸 */
+const pickKinds = n => !n.C.items ? [] : [(n.stock || 0) < ITEM_MAX && 'freeze', hasBomb(n.C) && (MOLE ? (n.pills || 0) < PILL_MAX && pillReady(n) : (n.bombs || 0) < BOMB_MAX) && 'bomb'].filter(Boolean);   /* 打地鼠的 bomb＝放大丸 */
+/* 打地鼠：選過放大丸，下一次換小關（大暴動是換波）的字卡只有冰凍槌，再下一次才能再選（老師 2026-11-24：大槌子太好用，每次都選放大丸就太容易過關）
+   pickNo＝第幾次換小關（換波），pillPick＝在第幾次選了放大丸 */
+const pillReady = n => n.pillPick == null || (n.pickNo || 0) - n.pillPick >= 2;
 const ITEM_TXT = {m:{freeze:['❄','冰凍星','流星'], bomb:['🌠','彗星大掃除','流星']}, n:{freeze:['🌀','煙霧彈','敵人'], bomb:['💥','手裡劍風暴','敵人']}, w:{freeze:['❄','冰凍槌','地鼠'], bomb:['💊','放大丸','地鼠']}};
 const itemTxt = (kind, md) => (ITEM_TXT[md] || ITEM_TXT.n)[kind] || ITEM_TXT.n[kind];   /* 沒有的用忍者的 */
 const ICY = () => METEOR || MOLE;   /* 冰凍的樣子（變藍、雪花）；忍者是煙霧 */
@@ -1721,7 +1724,7 @@ function itemGuide(el, title, sub, done){
     {ic:guideDemo('pick'), h:'🎁 過關獎勵：選一個道具', p:`每過一${C.endless ? '波' : MOLE ? '小關' : '關'}，${MOLE ? '地鼠先回洞裡，<b>倒數暫停</b>，' : `場上沒有${foe}時`}會出現兩張字卡。<br>打出哪一張的字母，<b>就拿到哪一個道具</b>。<br>${bi} ${bn}的字母比較多；存滿的道具不會出現。`, on:hasBomb(C)},
     {ic:guideDemo('freeze'), h:`${fi} ${fn}：讓${foe}${stopTxt}`, p:`<b>一開始就送你 ${ITEM_START} 個</b>，左上角看得到有幾個（最多存 ${ITEM_MAX} 個）。<br><span class="g-flow live"><span>① 每過一${C.endless ? '波' : MOLE ? '小關' : '關'}，打出字母<br>再多存 1 個</span><b>→</b><span>② 想休息時<br>按 <kbd>空白鍵</kbd></span><b>→</b><span>③ ${stop3}</span></span>`, on:C.items || C.ice},
     {ic:guideDemo('bomb'), h:`${bi} ${bn}：大絕招`, p:`過關時選它，先存起來（最多 ${BOMB_MAX} 個）。<br>場上有 <b>2 個以上</b>${foe}時，按 <kbd>Enter</kbd>，<b>一次清光畫面</b>！`, on:hasBomb(C) && !MOLE},
-    {ic:guideDemo('pill'), h:'💊 放大丸：超級大木槌', p:`過關時選它，先存起來（最多 ${PILL_MAX} 個）。<br>場上有 <b>2 隻以上</b>地鼠時按 <kbd>Enter</kbd>，木槌變超大，<b>一次敲暈全部地鼠</b>！`, on:MOLE && C.pill}].filter(x => x.on);
+    {ic:guideDemo('pill'), h:'💊 放大丸：超級大木槌', p:`過關時選它，先存起來（最多 ${PILL_MAX} 個）。選過一次，下一次只能選冰凍槌。<br>場上有 <b>2 隻以上</b>地鼠時按 <kbd>Enter</kbd>，木槌變超大，<b>一次敲暈全部地鼠</b>！`, on:MOLE && C.pill}].filter(x => x.on);
   let i = 0;
   const finish = () => { document.removeEventListener('keydown', guideKey); guideKey = null; countdown(el, title, sub, done); };
   const draw = () => {
@@ -2254,6 +2257,7 @@ function nextWave(st, rest){
 /* 換小關（大暴動是換波）：要選道具（或飛來 ⏰）時，場上的地鼠馬上回洞裡（不扣分），接著倒數暫停、出現字卡（老師 2026-11-18）
    不讓地鼠留在場上慢慢縮回去：那段時間倒數照走又不冒新地鼠，學生會白白少掉時間 */
 function molePick(n, clock){
+  n.pickNo = (n.pickNo || 0) + 1;
   const pick = !!n.C.items && pickKinds(n).length > 0;
   if (pick) n.pickDue = true;
   if (!pick && !clock) return;
@@ -2477,7 +2481,7 @@ function itemGot(e){
   [784,988,1175].forEach((c,i) => Sound.tone(c,.15,'triangle',i*.08,.08));
   if (e.item === 'freeze'){ n.stock = Math.min(ITEM_MAX, (n.stock || 0) + 1); stockFly(e, n);
     fx($('#nFx'), 'ok', `${ic} 拿到${name}！現在有 ${n.stock} 個`); return; }
-  if (MOLE) n.pills = Math.min(PILL_MAX, (n.pills || 0) + 1); else n.bombs = Math.min(BOMB_MAX, (n.bombs || 0) + 1);
+  if (MOLE){ n.pills = Math.min(PILL_MAX, (n.pills || 0) + 1); n.pillPick = n.pickNo || 0; } else n.bombs = Math.min(BOMB_MAX, (n.bombs || 0) + 1);
   stockFly(e, n);
   fx($('#nFx'), 'ok', `${ic} 拿到${name}！${foe} 2 ${MOLE ? '隻' : '個'}以上時按 Enter`);
 }
