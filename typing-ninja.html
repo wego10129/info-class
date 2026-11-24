@@ -744,6 +744,13 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 .rc-car.rcg{opacity:.45}
 .rc-finish{position:absolute;top:0;bottom:0;left:91%;width:18px;background:repeating-conic-gradient(#fff 0 25%,#111 0 50%) 0 0/18px 18px;z-index:1;border-left:2px solid #111;border-right:2px solid #111}
 /* 英文：題目、打字欄位都用大寫顯示（老師 2026-11-10：學生覺得大寫比較看得懂，出版社也用大寫）；打大寫、小寫都算對，大寫燈不用管 */
+/* 暫停時蓋住遊戲畫面（老師 2026-11-24：學生點到瀏覽器外面就能暫停，以前暫停時字母還看得到，可以趁機找字母）
+   點回來後先倒數 3 秒才繼續 */
+#pauseCover{position:fixed;inset:0;z-index:40;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:16px;cursor:pointer}
+#pauseCover[hidden]{display:none}
+#pauseCover h2{margin:0;font:900 clamp(30px,6vh,48px)/1.2 var(--f-display);color:var(--hl)}
+#pauseCover p{margin:0;font:700 clamp(17px,2.6vh,22px)/1.5 var(--f-body)}
+#pauseCover .pc-num{font:900 clamp(80px,18vh,150px)/1 var(--f-display);color:var(--hl)}
 .focus-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:#fff;border:3px solid var(--hl);border-radius:999px;padding:10px 22px;font:700 16px var(--f-body);cursor:pointer;max-width:calc(100% - 32px)}
 @media (max-width:720px){ html,body{height:auto} .wrap{height:auto} .stage{min-height:360px} }
 @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
@@ -854,6 +861,7 @@ html[data-kind=key] .word.txt span{display:block;margin:2px 0}
 <div id="certWrap" class="cert-wrap" hidden><div class="cert" role="dialog" aria-label="獎狀"><div class="cert-in" id="certIn"></div>
   <div class="r-btns" style="justify-content:center;margin-top:12px"><button class="btn primary" type="button" id="certPrint">列印獎狀</button><button class="btn" type="button" id="certL4" hidden>⚔ 挑戰第四關</button><button class="btn" type="button" id="certClose">回關卡選單</button></div></div></div>
 <button id="focusPill" class="focus-pill" type="button" hidden>點一下這裡，讓鍵盤連上遊戲</button>
+<div id="pauseCover" role="button" tabindex="-1" hidden></div>
 
 <script>
 /* =====================================================================
@@ -3379,10 +3387,26 @@ function resumeGame(){ if (paused == null) return; const d = performance.now() -
 /* ---------- 視窗失去焦點時暫停 ---------- */
 (function(){
   const pill = $('#focusPill');
-  const off = () => { if (!$('#signWrap').hidden || !$('#certWrap').hidden) return; pill.hidden = false; pill.textContent = (D||N||B||RC) ? '遊戲暫停中：點一下這裡繼續' : '點一下這裡，讓鍵盤連上遊戲'; if (paused==null) paused = performance.now(); kbEl.querySelectorAll('.down').forEach(x => x.classList.remove('down')); };
-  const on = () => { pill.hidden = true; resumeGame(); focusTin(); };
+  /* 遊戲進行中暫停：整個畫面蓋住（看不到字母、鍵盤），點回來後倒數 PAUSE_CD 秒才繼續（老師 2026-11-24） */
+  const cover = $('#pauseCover'), PAUSE_CD = 3; let cdT = 0;
+  const inGame = () => !!(D||N||B||RC) && ['drill','ninja','boss','race'].includes(screen);
+  const coverMsg = () => { cover.innerHTML = '<h2>⏸ 遊戲暫停中</h2><p>時間已經停住了。<br>點一下這裡繼續（會先倒數 3 秒）</p>'; };
+  const off = () => { if (!$('#signWrap').hidden || !$('#certWrap').hidden) return;
+    if (paused==null) paused = performance.now(); kbEl.querySelectorAll('.down').forEach(x => x.classList.remove('down'));
+    if (inGame()){ clearInterval(cdT); cdT = 0; coverMsg(); cover.hidden = false; pill.hidden = true; return; }
+    pill.hidden = false; pill.textContent = (D||N||B||RC) ? '遊戲暫停中：點一下這裡繼續' : '點一下這裡，讓鍵盤連上遊戲'; };
+  const go = () => { cover.hidden = true; pill.hidden = true; resumeGame(); focusTin(); };
+  const on = () => {
+    if (cover.hidden){ pill.hidden = true; resumeGame(); focusTin(); return; }
+    if (cdT) return;   /* 已經在倒數 */
+    if (!inGame()){ go(); return; }
+    let n = PAUSE_CD; const draw = () => { cover.innerHTML = `<p>準備好，要繼續囉！</p><div class="pc-num">${n}</div>`; };
+    draw(); Sound.tone(660, .1, 'sine', 0, .05);
+    cdT = setInterval(() => { n--; if (n > 0){ draw(); Sound.tone(660, .1, 'sine', 0, .05); return; } clearInterval(cdT); cdT = 0; Sound.tone(990, .15, 'sine', 0, .06); go(); }, 1000);
+  };
   window.addEventListener('blur', off); window.addEventListener('focus', on);
   pill.onclick = () => { window.focus(); on(); focusTin(); };
+  cover.onclick = () => { window.focus(); on(); };
 })();
 
 /* ---------- 獎狀（老師 2026-11-02：到「領取獎狀的時間」關卡選單出現按鈕；時間前破完最高一級，回關卡選單時自動跳出） ---------- */
