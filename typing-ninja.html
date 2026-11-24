@@ -1066,11 +1066,11 @@ const METEOR_MULTI_SLOW = 1.1;   /* 隱藏關不套用（它有自己的速度�
    小關依時間推進（secs ÷ 小關數）；pill＝有沒有放大丸（老師 2026-11-18 起放大丸只從換小關的字卡選，不再從洞裡冒出來；null＝沒有）
    過關門檻的推算（老師 2026-11-10 實測流星雨大師「多半在 26～30 顆沒命」→ 鍵帽沒有字時平均每個字母約 2 秒）：
    60 秒扣掉換關停頓約 53 秒可以敲；新手（每隻約 2.3 秒）約 23 隻、高手（約 2.4 秒＋放大丸）約 25 隻、大師（約 3 秒＋放大丸）約 20～25 隻，
-   門檻取三分之二左右：12／15／15；試玩後再調 */
+   門檻取三分之二左右：12／15／15；老師 2026-11-24 試玩覺得太容易，高手、大師改成 20 隻（新手不變） */
 const MOLE_TUNE = {
   novice:{name:'打擊新手', secs:60, pass:12, goal:Infinity, glow:true,  blank:false, len:[[1,1],[1,1],[1,1]],             time:[6,5.5,5],           per:2.5, multi:[1,1,2],     gap:2.5, pill:null},
-  brave: {name:'打擊高手', secs:60, pass:15, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:true, items:true, blankFrom:null, ice:true},   /* items、blankFrom：忍者勇者的過關獎勵、第 5 關鍵帽沒有字不要帶過來 */
-  master:{name:'打擊大師', secs:60, pass:15, goal:Infinity, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], time:[4.8,4.5,4.2,4,3.8], per:2.2, multi:[3,3,3,4,4], gap:1.6, pill:true, heal:false, items:true, ice:true},   /* 打地鼠沒有補血（忍者大師的 heal 不要帶過來） */
+  brave: {name:'打擊高手', secs:60, pass:20, goal:Infinity, glow:false, blank:false, len:[[1,1],[1,1],[1,1],[1,2],[1,2]], time:[5.2,4.8,4.5,4.2,4], per:2.5, multi:[2,2,2,3,3], gap:2,   pill:true, items:true, blankFrom:null, ice:true},   /* items、blankFrom：忍者勇者的過關獎勵、第 5 關鍵帽沒有字不要帶過來 */
+  master:{name:'打擊大師', secs:60, pass:20, goal:Infinity, glow:false, blank:true,  len:[[1,1],[1,2],[1,2],[1,2],[1,2]], time:[4.8,4.5,4.2,4,3.8], per:2.2, multi:[3,3,3,4,4], gap:1.6, pill:true, heal:false, items:true, ice:true},   /* 打地鼠沒有補血（忍者大師的 heal 不要帶過來） */
 };
 /* ice＝❄ 冰凍槌（學生 2026-11-17 回饋，老師同意）：開局送 ITEM_START 個，之後換小關時從字卡選（老師 2026-11-18）；按空白鍵，地鼠凍住 FREEZE_SEC 秒不會縮回洞裡。
    凍住時 60 秒倒數照走（老師決定：分數才能和以前公平比較），也照樣冒新地鼠（新地鼠一樣凍住） */
