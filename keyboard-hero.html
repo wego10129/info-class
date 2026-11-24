@@ -352,6 +352,8 @@ html.mole .enemy.poof svg{animation:bonk .35s forwards}
 /* 圖片本身已加白框（看得清楚）；再加一層影子。transform 由 hammerHit 用動畫控制 */
 #hammer{position:absolute;z-index:7;pointer-events:none;transform-origin:50% 93%;transform:rotate(15deg);transition:left .1s ease-out,top .1s ease-out,height .25s,width .25s;display:none;filter:drop-shadow(0 6px 5px rgba(0,0,0,.45))}
 html.mole #hammer{display:block}
+/* 道具字卡、⏰ 加秒要在木槌上面，字母才不會被木槌擋住（老師 2026-11-24 回報：放大丸字卡的字母被木槌蓋住） */
+html.mole .enemy.heart{z-index:9}
 #hammer.swing{transform:rotate(-70deg)}   /* 不支援動畫 API 時的備用 */
 /* 地鼠沒被敲到、自己縮回洞裡：往下沉（被敲到才是壓扁） */
 html.mole .enemy.hide svg{animation:hide .3s ease-in forwards}
@@ -2203,7 +2205,7 @@ function ninjaInput(v){
   const ms = N.es.filter(e => e.word.startsWith(v));
   if (!ms.length && N.graceUntil && performance.now() < N.graceUntil){ tinReset(); tinState('ime', GRACE_MSG); drawWords(); return; }
   if (ms.length){
-    if (v.length > N.lastLen) { Sound.key(); if (MOLE) hammerAim(target(v)); else throwStar(target(v)); }
+    if (v.length > N.lastLen) { Sound.key(); if (MOLE){ const t = target(v); if (t && !t.heart) hammerAim(t); } else throwStar(target(v)); }   /* 打地鼠：打道具的字母時木槌不移過去（不擋住字卡） */
     N.lastLen = v.length; N.badLen = 0; tinState('');
     const hit = ms.find(e => e.word === v);
     if (hit) return defeat(hit);
@@ -2270,7 +2272,7 @@ function molePick(n, clock){
   if (pick) n.pickDue = true;
   if (!pick && !clock) return;
   const v = $('#tin').value; n.es.filter(e => !e.heart).forEach(e => removeEnemy(e, 'hide'));
-  if (v) tinReset(); kb.clear(); drawWords();
+  if (v) tinReset(); kb.clear(); drawWords(); hammerIdle();   /* 木槌回到原位，不要停在字卡上 */
 }
 /* 計時：時間到就結算；小關依經過的時間推進。回傳 true＝這一局結束了 */
 function moleClock(now){
